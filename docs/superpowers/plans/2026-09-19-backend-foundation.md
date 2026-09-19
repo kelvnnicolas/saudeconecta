@@ -917,7 +917,7 @@ This creates `apps/api/alembic/versions/<some_hash>_initial_schema.py` with a ra
 
 - [ ] **Step 6: Fill in the migration's `upgrade()` and `downgrade()`**
 
-Open the generated file and replace its imports and function bodies with:
+Open the generated file and replace its imports and function bodies with the code below. Note `create_type=False` on each `postgresql.ENUM(...)` definition: the enum types are created explicitly via `papel_enum.create(bind, checkfirst=True)` etc. a few lines below, so `op.create_table(...)` must not also try to create them — without `create_type=False`, Postgres raises `type "papel_enum" already exists` the moment `create_table` runs.
 
 ```python
 from alembic import op
@@ -930,15 +930,17 @@ from sqlalchemy.dialects import postgresql
 def upgrade() -> None:
     op.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")
 
-    papel_enum = postgresql.ENUM("profissional", "empresa", name="papel_enum")
+    papel_enum = postgresql.ENUM(
+        "profissional", "empresa", name="papel_enum", create_type=False
+    )
     tipo_empresa_enum = postgresql.ENUM(
-        "clinica", "hospital", "homecare", "pessoa_fisica", name="tipo_empresa_enum"
+        "clinica", "hospital", "homecare", "pessoa_fisica", name="tipo_empresa_enum", create_type=False
     )
     status_contato_enum = postgresql.ENUM(
-        "pendente", "respondido", "encerrado", name="status_contato_enum"
+        "pendente", "respondido", "encerrado", name="status_contato_enum", create_type=False
     )
     status_pagamento_enum = postgresql.ENUM(
-        "pendente", "pago", "cancelado", name="status_pagamento_enum"
+        "pendente", "pago", "cancelado", name="status_pagamento_enum", create_type=False
     )
 
     bind = op.get_bind()
