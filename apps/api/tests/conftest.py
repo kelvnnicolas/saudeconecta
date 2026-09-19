@@ -6,17 +6,22 @@ os.environ.setdefault(
 )
 
 import pytest
+from alembic import command
+from alembic.config import Config
 
-from app.core.database import Base, SessionLocal, engine
+from app.core.database import SessionLocal, engine
+
+
+def _alembic_config() -> Config:
+    return Config("alembic.ini")
 
 
 @pytest.fixture(scope="session", autouse=True)
 def _create_test_schema():
-    import app.models  # noqa: F401  ensure all models are registered on Base.metadata
-
-    Base.metadata.create_all(bind=engine)
+    cfg = _alembic_config()
+    command.upgrade(cfg, "head")
     yield
-    Base.metadata.drop_all(bind=engine)
+    command.downgrade(cfg, "base")
 
 
 @pytest.fixture
