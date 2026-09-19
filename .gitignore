@@ -1,0 +1,12 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+venv/
+apps/api/.env
+apps/web/.env
+apps/web/.env.local
+apps/web/node_modules/
+apps/web/.next/
+.pytest_cache/
+*.egg-info/
