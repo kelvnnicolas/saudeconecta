@@ -1,8 +1,8 @@
 import enum
 import uuid
 
-from sqlalchemy import ForeignKey, String
 from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 

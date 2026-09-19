@@ -5,7 +5,11 @@ from app.models import Empresa, Especialidade, Papel, Profile, Profissional, Tip
 
 def test_create_profissional_with_especialidade(db_session):
     profile = Profile(
-        id=uuid.uuid4(), papel=Papel.profissional, nome="Maria Silva", cidade="São Paulo", estado="SP"
+        id=uuid.uuid4(),
+        papel=Papel.profissional,
+        nome="Maria Silva",
+        cidade="São Paulo",
+        estado="SP",
     )
     db_session.add(profile)
     db_session.flush()
@@ -14,7 +18,9 @@ def test_create_profissional_with_especialidade(db_session):
     db_session.add(especialidade)
     db_session.flush()
 
-    profissional = Profissional(user_id=profile.id, bio="Fisioterapeuta domiciliar", preco_hora=120.00)
+    profissional = Profissional(
+        user_id=profile.id, bio="Fisioterapeuta domiciliar", preco_hora=120.00
+    )
     profissional.especialidades.append(especialidade)
     db_session.add(profissional)
     db_session.commit()
@@ -30,7 +36,11 @@ def test_create_empresa(db_session):
     db_session.flush()
 
     empresa = Empresa(
-        user_id=profile.id, nome_fantasia="Clínica Vida", tipo=TipoEmpresa.clinica, cidade="Curitiba", estado="PR"
+        user_id=profile.id,
+        nome_fantasia="Clínica Vida",
+        tipo=TipoEmpresa.clinica,
+        cidade="Curitiba",
+        estado="PR",
     )
     db_session.add(empresa)
     db_session.commit()

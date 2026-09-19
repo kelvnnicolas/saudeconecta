@@ -7,7 +7,9 @@ def test_settings_reads_database_url_from_env(monkeypatch):
     )
     get_settings.cache_clear()
     settings = get_settings()
-    assert settings.database_url == "postgresql+psycopg://postgres:postgres@localhost:5432/example_db"
+    assert (
+        settings.database_url == "postgresql+psycopg://postgres:postgres@localhost:5432/example_db"
+    )
     get_settings.cache_clear()
 
 

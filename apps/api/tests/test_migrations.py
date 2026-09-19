@@ -1,8 +1,8 @@
 import sqlalchemy as sa
-from alembic import command
-from alembic.config import Config
 from sqlalchemy import inspect
 
+from alembic import command
+from alembic.config import Config
 from app.core.database import engine
 
 EXPECTED_TABLES = {

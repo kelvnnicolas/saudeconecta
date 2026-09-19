@@ -6,9 +6,9 @@ os.environ.setdefault(
 )
 
 import pytest
+
 from alembic import command
 from alembic.config import Config
-
 from app.core.database import SessionLocal, engine
 
 
