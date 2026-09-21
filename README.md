@@ -41,6 +41,20 @@ Ainda **fora de escopo** nesta etapa (ver o design spec para a lista
 completa): autenticação, endpoints de negócio, frontend, pagamento,
 relatório de analytics, CI/CD, deploy.
 
+### Prontidão para deploy e QA de produção
+
+O backend funciona localmente, mas **ainda não está pronto para um deploy de
+produção**. Já resolvido: configuração validada na inicialização (falha
+rápido se faltar variável obrigatória), segredos fora do controle de versão,
+migrations com rollback testado de ponta a ponta, e todo acesso a dado hoje
+passa pelo ORM (sem SQL cru fora da migration). Ainda faltando, antes de
+qualquer teste real de segurança/estabilidade em produção: autenticação
+(maior item pendente), CORS, rate limiting, health check consciente do
+banco, verificação de vulnerabilidades de dependências, CI, separação de
+dependências de produção/desenvolvimento, e a própria infraestrutura de
+produção (Postgres gerenciado, hospedagem do backend, estratégia de
+segredos). Checklist completo, item a item, em [`STATUS.md`](STATUS.md).
+
 ## Stack tecnológico
 
 | Camada | Tecnologia |

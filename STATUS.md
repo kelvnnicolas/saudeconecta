@@ -53,6 +53,40 @@ código do backend existe.
 | Layout responsivo (mobile e desktop) | ❌ Não iniciado | Frontend não existe. |
 | README permite rodar o projeto do zero | 🟡 Parcial | README atual (na `main`) documenta status e stack, mas ainda não tem passo a passo de setup local — decisão consciente de escrever isso quando a branch do backend for integrada à `main`, para não documentar comandos que ainda não existem no branch principal. |
 
+## Checklist de prontidão para deploy e QA de produção (segurança e estabilidade)
+
+Objetivo desta seção: dar visibilidade do que falta resolver antes de fazer
+sentido testar segurança e estabilidade em um ambiente de produção real —
+separado do checklist de funcionalidades acima, porque um backend pode
+passar 100% nos critérios de aceite funcionais e ainda não estar pronto
+para produção.
+
+| Item | Status | Observações |
+|---|---|---|
+| Configuração validada na inicialização | ✅ Concluído | `Settings.database_url` é campo obrigatório (Pydantic) — o processo nem sobe sem `DATABASE_URL` definido, falha rápido em vez de falhar silenciosamente depois. |
+| Segredos fora do controle de versão | ✅ Concluído | `apps/api/.env` no `.gitignore`; só `.env.example` com placeholders é versionado. Confirmado que nenhuma chave real foi commitada. |
+| Migrations com rollback testado | ✅ Concluído | `alembic upgrade head` / `downgrade base` testados de ponta a ponta contra Postgres real na revisão final do Plano 1 (não só teoria). |
+| Acesso a dado via ORM (proteção contra SQL injection) | ✅ Concluído por enquanto | Todo o código hoje usa SQLAlchemy ORM; nenhum SQL cru fora da própria migration (que é código controlado, não input de usuário). Precisa ser reconfirmado quando os endpoints de busca (Plano 2) forem escritos — busca por texto é onde esse tipo de vulnerabilidade costuma aparecer se alguém usar concatenação manual em vez de `ILIKE` parametrizado. |
+| Captura de erro (Sentry) | 🟡 Parcial | `init_sentry()` implementado e testado com mock; hoje é um no-op silencioso porque `SENTRY_DSN` está vazio. Sem efeito em produção até a credencial real existir. |
+| CORS configurado | ❌ Não iniciado | Nenhum `CORSMiddleware` em `app/main.py`. Obrigatório antes do frontend (Plano 3) conseguir chamar a API de outro domínio — e importante configurar com a lista explícita de origens permitidas, não `allow_origins=["*"]`, já que a API vai lidar com dado de saúde. |
+| Rate limiting / proteção contra abuso | ❌ Não iniciado | Nenhum limite de requisição configurado. Relevante antes de expor publicamente endpoints de busca e de contato (que disparam e-mail — um alvo óbvio de abuso). |
+| Autenticação e autorização | ❌ Não iniciado | **Maior item de segurança pendente.** Hoje o backend inteiro não tem autenticação — só existe `GET /health`. Faz parte do Plano 2 (validação de JWT do Supabase Auth). Nenhum teste de segurança de acesso faz sentido antes disso existir. |
+| Health check consciente de dependências | 🟡 Parcial | `/health` hoje é estático (`{"status":"ok"}`) e não verifica conexão com o banco — um load balancer poderia continuar roteando tráfego para uma instância com o Postgres fora do ar. Recomendado adicionar um `/ready` que rode `SELECT 1` antes do primeiro deploy. |
+| Verificação de vulnerabilidades em dependências | ❌ Não iniciado | Nenhum `pip-audit`, `safety` ou Dependabot configurado ainda. |
+| CI (lint + testes automáticos a cada PR) | ❌ Não iniciado | Sem isso, nada impede código quebrado (ou uma regressão de segurança) de chegar à branch principal antes de um deploy. |
+| Separação de dependências de produção e desenvolvimento | ❌ Não iniciado | `apps/api/requirements.txt` hoje mistura `pytest`/`ruff`/`black` (dev) com as dependências de runtime — tudo isso iria para produção como está. Vale separar em `requirements-dev.txt` antes do primeiro deploy real (reduz superfície de ataque e tamanho da imagem). |
+| Nomes de constraints do banco (naming convention) | ❌ Adiado deliberadamente | Decisão registrada na revisão final do Plano 1: sem convenção de nomes, futuras alterações de schema em produção exigem descobrir nomes autogerados pelo Postgres. Barato de resolver agora (nada em produção ainda); fica mais caro depois que houver dado real. Ver `.superpowers/sdd/2026-09-19-backend-foundation/progress.md` na branch `worktree-backend-foundation` para o raciocínio completo. |
+| Ambiente de produção (Postgres gerenciado, backend hospedado) | ❌ Não iniciado | Só existem os containers Docker locais (dev/test) usados para desenvolvimento. Nenhuma instância de produção foi criada em Railway/Render/Supabase. |
+| Estratégia de segredos em produção | ❌ Não iniciado | Ainda não decidido/documentado como `SENTRY_DSN`, `STRIPE_SECRET_KEY`, `SUPABASE_SERVICE_ROLE_KEY` etc. vão ser injetados no ambiente hospedado (variáveis de ambiente do Railway/Render/Vercel, provavelmente — mas isso precisa ser decidido e documentado antes do deploy, não durante). |
+| Teste de carga / estabilidade sob concorrência | ❌ Não iniciado | Nenhum teste de carga rodado ainda. Só faz sentido depois que os endpoints de negócio (Plano 2) existirem — hoje só há um `/health` estático para testar. |
+
+**Leitura recomendada da tabela acima:** os itens ✅ já reduzem risco real
+hoje (configuração falha rápido, segredos protegidos, migrations
+reversíveis, sem SQL injection óbvio). Os itens ❌ não são bugs — são
+trabalho ainda não iniciado, na maioria dos casos porque dependem de algo
+que vem depois na sequência (autenticação do Plano 2, ambiente de produção,
+etc.). Não há nenhum item aqui que bloqueie o início do Plano 2.
+
 ## ⛔ Bloqueado — o que precisa de você
 
 Nada impede a continuação técnica do Plano 2 (auth + endpoints de negócio)
@@ -60,9 +94,13 @@ sem essas credenciais — o trabalho de auth/endpoints não depende delas. Mas
 os itens abaixo **não podem ser verificados de ponta a ponta** sem contas
 externas que só você pode criar:
 
-1. **Supabase** — preciso do projeto criado (URL, chave de service role e o
-   JWT secret) para: sincronização de perfil via Supabase Auth (Plano 2),
-   upload real de avatar/logo no Storage.
+1. **Supabase** — 🟡 parcial: o projeto `saudeConecta` já existe
+   (`rhjatedvqqginixlkdxh`) e o MCP do Supabase já está autenticado e
+   conectado. Ainda faltam, especificamente para colocar no
+   `apps/api/.env`: a chave de `service_role` e o JWT secret do projeto
+   (Project Settings → API e API → JWT Settings) — necessários para
+   sincronização de perfil via Supabase Auth (Plano 2) e upload real de
+   avatar/logo no Storage.
 2. **Sentry** — preciso de um projeto Sentry (DSN) para verificar captura de
    erro de ponta a ponta; sem isso o `init_sentry()` continua sendo um no-op
    silencioso (comportamento correto, só não é verificável).
@@ -74,6 +112,22 @@ externas que só você pode criar:
 Nenhum desses bloqueia o início do Plano 2 (auth + endpoints) — só bloqueia
 os itens de Storage, Sentry, e-mail e pagamento serem *verificados* de
 verdade em vez de só implementados com testes mockados.
+
+**Adicionalmente, específico para deploy** (só relevante quando o projeto
+chegar nessa etapa, não bloqueia nenhum plano de implementação agora):
+
+5. **Escolha de hospedagem do backend** — Railway ou Render (o spec deixa
+   as duas como opção equivalente; precisa de uma decisão e da conta criada
+   quando chegar a hora).
+6. **Projeto Supabase de produção** — decidir se produção usa o mesmo
+   projeto `rhjatedvqqginixlkdxh` (mais simples, mas mistura dado de teste
+   e produção) ou um projeto Supabase separado só para produção (mais
+   seguro, recomendado para dado de saúde, mas exige recriar/migrar o
+   schema lá também).
+7. **Domínio**, se houver um definido para o produto (frontend na Vercel e
+   backend no Railway/Render normalmente ganham subdomínios gratuitos por
+   padrão, então isso não é bloqueante — só relevante se houver domínio
+   próprio a configurar).
 
 ## Por onde retomar
 
