@@ -8,3 +8,4 @@ node_modules/
 .env
 .env.local
 .pytest_cache/
+nextmove.md
