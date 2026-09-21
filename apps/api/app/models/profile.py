@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, String
+from sqlalchemy import DateTime, Float, Index, String
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -18,6 +18,14 @@ class Papel(str, enum.Enum):
 
 class Profile(Base):
     __tablename__ = "profiles"
+    __table_args__ = (
+        Index(
+            "ix_profiles_nome_trgm",
+            "nome",
+            postgresql_using="gin",
+            postgresql_ops={"nome": "gin_trgm_ops"},
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     papel: Mapped[Papel] = mapped_column(SQLEnum(Papel, name="papel_enum"), nullable=False)

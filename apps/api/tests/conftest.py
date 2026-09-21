@@ -1,19 +1,27 @@
 import os
+from pathlib import Path
 
-os.environ.setdefault(
-    "DATABASE_URL",
+_TEST_DATABASE_URL = os.environ.get(
+    "TEST_DATABASE_URL",
     "postgresql+psycopg://postgres:postgres@localhost:5433/saudeconecta_test",
 )
+if not _TEST_DATABASE_URL.rsplit("/", 1)[-1].endswith("_test"):
+    raise RuntimeError(
+        "Refusing to run tests against a database that doesn't look like "
+        f"a test database: {_TEST_DATABASE_URL!r}"
+    )
+os.environ["DATABASE_URL"] = _TEST_DATABASE_URL
 
-import pytest
+import pytest  # noqa: E402
 
-from alembic import command
-from alembic.config import Config
-from app.core.database import SessionLocal, engine
+from alembic import command  # noqa: E402
+from alembic.config import Config  # noqa: E402
+from app.core.database import SessionLocal, engine  # noqa: E402
 
 
 def _alembic_config() -> Config:
-    return Config("alembic.ini")
+    ini_path = Path(__file__).resolve().parent.parent / "alembic.ini"
+    return Config(str(ini_path))
 
 
 @pytest.fixture(scope="session", autouse=True)

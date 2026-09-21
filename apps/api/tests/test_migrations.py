@@ -2,8 +2,8 @@ import sqlalchemy as sa
 from sqlalchemy import inspect
 
 from alembic import command
-from alembic.config import Config
 from app.core.database import engine
+from tests.conftest import _alembic_config
 
 EXPECTED_TABLES = {
     "profiles",
@@ -27,7 +27,7 @@ def test_migration_creates_all_tables_and_seeds_especialidades():
 
 
 def test_migration_downgrade_and_upgrade_round_trip():
-    cfg = Config("alembic.ini")
+    cfg = _alembic_config()
 
     command.downgrade(cfg, "base")
     inspector = inspect(engine)
