@@ -1,6 +1,7 @@
 # Status do projeto — auditoria de retomada
 
-Data da auditoria: 2026-09-21
+Data da auditoria: 2026-09-21 (atualizado em 2026-09-22 com a rodada de
+configuração externa — ver seção específica abaixo)
 Branch com a implementação: `worktree-backend-foundation` (não integrada à `main`)
 
 ## Contexto
@@ -24,7 +25,7 @@ código do backend existe.
 |---|---|---|---|
 | 1 | Backend inicializado (FastAPI + SQLAlchemy + Alembic + estrutura de pastas) | ✅ Concluído | Estrutura completa em `apps/api/app/` (core, models, routers, storage, schemas/services/analytics como placeholders para planos futuros). `pytest`, `black`, `ruff` configurados. |
 | 2 | Conexão com PostgreSQL + primeira migration aplicada | ✅ Concluído | Migration `d6a1d35da1f9_initial_schema` cria as 8 tabelas, 4 enums e 2 índices `pg_trgm`, e semeia 10 especialidades. Verificado `alembic current` = head e `\dt` no banco de dev: todas as tabelas presentes, `especialidades` com 10 linhas. |
-| 3 | Supabase Storage (bucket) e Sentry configurados no backend | 🟡 Parcial | Código pronto e testado (`app/storage/supabase_storage.py`, `app/core/sentry.py`), mas **sem credenciais reais** — `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` e `SENTRY_DSN` estão vazios em `apps/api/.env`. Sentry hoje é um no-op (DSN vazio faz `init_sentry()` não fazer nada); upload real ao Storage falharia por falta de credenciais. |
+| 3 | Supabase Storage (bucket) e Sentry configurados no backend | ✅ Concluído | Credenciais reais confirmadas em `apps/api/.env` e testadas por conexão real em 2026-09-22 (ver "Rodada de configuração externa" abaixo): `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` autenticam contra a API real do projeto (HTTP 200); `SENTRY_DSN` inicializa e um evento de teste foi enviado com sucesso. Falta apenas exercitar isso em um endpoint real de upload (ainda não existe — Plano 2/3). |
 | 4 | Validação do token do Supabase Auth + sincronização de perfil | ❌ Não iniciado | Pertence ao Plano 2 (ainda não escrito/executado), por decisão deliberada de escopo — não é um bloqueio, é a próxima etapa. |
 | 5 | Endpoints REST: perfis, especialidades, busca, avaliações, contatos | ❌ Não iniciado | Idem — Plano 2. Só existe o endpoint `GET /health`. |
 | 6 | Frontend Next.js inicializado + Sentry + cliente HTTP para a API | ❌ Não iniciado | `apps/web/` não existe no repositório. |
@@ -43,12 +44,12 @@ código do backend existe.
 | Backend e frontend rodam localmente sem erro | 🟡 Parcial | Backend: ✅ testado agora — `uvicorn app.main:app` sobe limpo, `GET /health` retorna `200 {"status":"ok"}`. Frontend: ❌ não existe. |
 | Cadastro e login funcionam para os dois papéis | ❌ Não iniciado | Depende do item 4 acima (Plano 2). |
 | Busca lista profissionais reais, com texto e filtros | ❌ Não iniciado | Depende do item 5. |
-| Upload de foto de perfil/logo funciona (Storage) | ⛔ Bloqueado | Código pronto e testado com mocks; falta `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` reais para funcionar de fato. |
+| Upload de foto de perfil/logo funciona (Storage) | 🟡 Parcial | Credenciais reais confirmadas por conexão (2026-09-22); falta só o endpoint de upload em si (Plano 2/3) para exercitar de ponta a ponta. |
 | Perfil público exibe dados e avaliações | ❌ Não iniciado | Depende dos itens 5 e 6. |
-| Fluxo de contato registra mensagem e dispara e-mail | ⛔ Bloqueado | Endpoint ainda não existe (item 5) **e** depende de `RESEND_API_KEY`. |
-| Link de pagamento é gerado e abre checkout válido | ⛔ Bloqueado | Não implementado ainda; depende de `STRIPE_SECRET_KEY` (ou credencial Pagar.me). |
+| Fluxo de contato registra mensagem e dispara e-mail | 🟡 Parcial | `RESEND_API_KEY` confirmada válida (2026-09-22, ver nota sobre o HTTP 401 abaixo); falta o endpoint de contato em si (item 5). |
+| Link de pagamento é gerado e abre checkout válido | 🟡 Parcial | `STRIPE_SECRET_KEY` confirmada válida por chamada real à API Stripe (2026-09-22, modo teste); falta a integração em si (Plano 4). |
 | Relatório em pandas retorna métricas corretas | ❌ Não iniciado | Não implementado ainda (item 10). |
-| Erro forçado aparece no Sentry (frontend e backend) | ⛔ Bloqueado | `init_sentry()` implementado e testado (com mock), mas não há como verificar de ponta a ponta sem `SENTRY_DSN` real. |
+| Erro forçado aparece no Sentry (frontend e backend) | 🟡 Parcial | `SENTRY_DSN` real confirmado — um evento de teste foi enviado com sucesso em 2026-09-22 (event_id nos logs da sessão). Falta verificar um erro real disparado por um endpoint de negócio (ainda não existem). |
 | CI (lint + testes) passa | 🟡 Parcial | `pytest`, `black --check` e `ruff check` passam localmente (11/11 testes, 0 findings) — verificado agora. Não há workflow de CI configurado ainda (item 11). |
 | Layout responsivo (mobile e desktop) | ❌ Não iniciado | Frontend não existe. |
 | README permite rodar o projeto do zero | 🟡 Parcial | README atual (na `main`) documenta status e stack, mas ainda não tem passo a passo de setup local — decisão consciente de escrever isso quando a branch do backend for integrada à `main`, para não documentar comandos que ainda não existem no branch principal. |
@@ -67,7 +68,7 @@ para produção.
 | Segredos fora do controle de versão | ✅ Concluído | `apps/api/.env` no `.gitignore`; só `.env.example` com placeholders é versionado. Confirmado que nenhuma chave real foi commitada. |
 | Migrations com rollback testado | ✅ Concluído | `alembic upgrade head` / `downgrade base` testados de ponta a ponta contra Postgres real na revisão final do Plano 1 (não só teoria). |
 | Acesso a dado via ORM (proteção contra SQL injection) | ✅ Concluído por enquanto | Todo o código hoje usa SQLAlchemy ORM; nenhum SQL cru fora da própria migration (que é código controlado, não input de usuário). Precisa ser reconfirmado quando os endpoints de busca (Plano 2) forem escritos — busca por texto é onde esse tipo de vulnerabilidade costuma aparecer se alguém usar concatenação manual em vez de `ILIKE` parametrizado. |
-| Captura de erro (Sentry) | 🟡 Parcial | `init_sentry()` implementado e testado com mock; hoje é um no-op silencioso porque `SENTRY_DSN` está vazio. Sem efeito em produção até a credencial real existir. |
+| Captura de erro (Sentry) | ✅ Concluído | `SENTRY_DSN` real configurado e testado por conexão em 2026-09-22 — evento de teste enviado com sucesso. Falta só exercitar via um erro real de endpoint de negócio, quando esses existirem. |
 | CORS configurado | ❌ Não iniciado | Nenhum `CORSMiddleware` em `app/main.py`. Obrigatório antes do frontend (Plano 3) conseguir chamar a API de outro domínio — e importante configurar com a lista explícita de origens permitidas, não `allow_origins=["*"]`, já que a API vai lidar com dado de saúde. |
 | Rate limiting / proteção contra abuso | ❌ Não iniciado | Nenhum limite de requisição configurado. Relevante antes de expor publicamente endpoints de busca e de contato (que disparam e-mail — um alvo óbvio de abuso). |
 | Autenticação e autorização | ❌ Não iniciado | **Maior item de segurança pendente.** Hoje o backend inteiro não tem autenticação — só existe `GET /health`. Faz parte do Plano 2 (validação de JWT do Supabase Auth). Nenhum teste de segurança de acesso faz sentido antes disso existir. |
@@ -87,60 +88,77 @@ trabalho ainda não iniciado, na maioria dos casos porque dependem de algo
 que vem depois na sequência (autenticação do Plano 2, ambiente de produção,
 etc.). Não há nenhum item aqui que bloqueie o início do Plano 2.
 
+## Rodada de configuração externa (2026-09-22)
+
+Você colou as credenciais reais em `apps/api/.env` (não versionado — segue
+só local, nunca commitado). Testei cada uma com uma chamada de conexão real
+(não só "a variável existe"), a partir da branch `worktree-backend-foundation`:
+
+| Credencial | Resultado do teste de conexão |
+|---|---|
+| `DATABASE_URL` | ✅ `SELECT 1` funcionou — segue apontando para o Postgres local via Docker (não mudou para o Supabase; ver nota abaixo). |
+| `SUPABASE_URL` | 🔧 **Corrigido por mim.** O valor colado era a URL do *dashboard* (`https://supabase.com/dashboard/project/rhjatedvqqginixlkdxh`), que não é um host de API — retornava HTTP 308 e não autenticaria nada. Troquei para o valor correto do projeto: `https://rhjatedvqqginixlkdxh.supabase.co`, confirmado por uma chamada real à API REST do projeto (HTTP 200) usando a `service_role key` que você colou. |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ Autentica corretamente contra o host certo do projeto. |
+| `SENTRY_DSN` | ✅ `sentry_sdk.init()` + um evento de teste enviado com sucesso (fica registrado no seu projeto Sentry como "[SaúdeConecta] Teste de conectividade do backend (auditoria de configuração — pode ignorar)" — é só o teste, pode ignorar/arquivar lá). |
+| `STRIPE_SECRET_KEY` | ✅ Confirmada por chamada real a `GET /v1/balance` da API do Stripe (HTTP 200). É uma chave de **modo teste** (`sk_test_...`), o que é o esperado nesta fase. |
+| `RESEND_API_KEY` | ✅ Válida — mas restrita a **apenas enviar e-mails** (a Resend recusou com HTTP 401 quando testei o endpoint de listar domínios, com a mensagem explícita `"This API key is restricted to only send emails"`). Isso não é um problema, é boa prática de segurança: a chave só pode fazer exatamente o que o backend precisa. Não tentei enviar um e-mail de verdade para não gerar ruído — se quiser, posso confirmar o envio real quando o fluxo de contato existir. |
+
+### Determinação do sistema de JWT do Supabase
+
+Testei diretamente, em vez de só ler a documentação: o projeto
+`rhjatedvqqginixlkdxh` **expõe tanto o secret legado quanto o JWKS**
+(`{SUPABASE_URL}/auth/v1/.well-known/jwks.json` responde HTTP 200 com 1
+chave de assinatura publicada). Como o JWKS está disponível — e é o caminho
+recomendado pelo próprio Supabase para projetos que o suportam — a
+implementação do Plano 2 vai validar o token via **JWKS**, não via o
+`SUPABASE_JWT_SECRET` compartilhado. Vou manter a variável no `.env` como
+referência/fallback, mas o código não vai depender dela.
+
+### Pendência que continua em aberto (não é bloqueio)
+
+`DATABASE_URL` ainda aponta para o Postgres local via Docker, não para o
+Postgres hospedado no Supabase. Ainda não decidimos se isso deve mudar agora
+ou só na hora do deploy — ver item 6 abaixo ("Projeto Supabase de
+produção"). Não bloqueia o Plano 2: a validação de JWT do Supabase Auth
+funciona independente de onde a tabela `profiles` está hospedada.
+
 ## ⛔ Bloqueado — o que precisa de você
 
-Nada impede a continuação técnica do Plano 2 (auth + endpoints de negócio)
-sem essas credenciais — o trabalho de auth/endpoints não depende delas. Mas
-os itens abaixo **não podem ser verificados de ponta a ponta** sem contas
-externas que só você pode criar:
+Depois da rodada acima, **nenhuma das quatro contas externas continua
+bloqueando verificação de ponta a ponta** — Supabase, Sentry, Resend e
+Stripe (modo teste) estão todas configuradas e testadas por conexão real.
 
-1. **Supabase** — 🟡 parcial: o projeto `saudeConecta` já existe
-   (`rhjatedvqqginixlkdxh`) e o MCP do Supabase já está autenticado e
-   conectado. Ainda faltam, especificamente para colocar no
-   `apps/api/.env`: a chave de `service_role` e o JWT secret do projeto
-   (Project Settings → API e API → JWT Settings) — necessários para
-   sincronização de perfil via Supabase Auth (Plano 2) e upload real de
-   avatar/logo no Storage.
-2. **Sentry** — preciso de um projeto Sentry (DSN) para verificar captura de
-   erro de ponta a ponta; sem isso o `init_sentry()` continua sendo um no-op
-   silencioso (comportamento correto, só não é verificável).
-3. **Resend** — preciso de uma API key para o envio de e-mail no fluxo de
-   contato (ainda não implementado, mas vai precisar disso assim que for).
-4. **Stripe (ou Pagar.me)** — preciso da chave secreta para gerar links de
-   pagamento (etapa posterior, Plano 4).
+Os itens abaixo são específicos de **deploy** (só relevantes quando o
+projeto chegar nessa etapa — não bloqueiam nenhum plano de implementação
+agora):
 
-Nenhum desses bloqueia o início do Plano 2 (auth + endpoints) — só bloqueia
-os itens de Storage, Sentry, e-mail e pagamento serem *verificados* de
-verdade em vez de só implementados com testes mockados.
-
-**Adicionalmente, específico para deploy** (só relevante quando o projeto
-chegar nessa etapa, não bloqueia nenhum plano de implementação agora):
-
-5. **Escolha de hospedagem do backend** — Railway ou Render (o spec deixa
+1. **Escolha de hospedagem do backend** — Railway ou Render (o spec deixa
    as duas como opção equivalente; precisa de uma decisão e da conta criada
    quando chegar a hora).
-6. **Projeto Supabase de produção** — decidir se produção usa o mesmo
+2. **Projeto Supabase de produção** — decidir se produção usa o mesmo
    projeto `rhjatedvqqginixlkdxh` (mais simples, mas mistura dado de teste
    e produção) ou um projeto Supabase separado só para produção (mais
    seguro, recomendado para dado de saúde, mas exige recriar/migrar o
-   schema lá também).
-7. **Domínio**, se houver um definido para o produto (frontend na Vercel e
+   schema lá também). Essa decisão também resolve a pendência do
+   `DATABASE_URL` acima.
+3. **Domínio**, se houver um definido para o produto (frontend na Vercel e
    backend no Railway/Render normalmente ganham subdomínios gratuitos por
    padrão, então isso não é bloqueante — só relevante se houver domínio
    próprio a configurar).
+4. **Stripe em modo produção** (chave `sk_live_...`) quando o projeto
+   estiver pronto para cobrar de verdade — a chave de teste atual é
+   suficiente para todo o desenvolvimento do Plano 4.
 
 ## Por onde retomar
 
 Seguindo a ordem da tabela, sem pular etapas: a primeira linha não-✅ é o
 **item 4 — validação do token do Supabase Auth + endpoint de sincronização
-de perfil**, que é exatamente o começo do "Plano 2" já previsto na
-sequência original. Isso pode começar **antes** de você configurar as
-contas externas listadas acima — só a verificação de ponta a ponta do
-Storage/Sentry/e-mail/pagamento depende delas.
+de perfil**, início do Plano 2. Diferente da auditoria anterior, agora não
+há mais nenhuma credencial pendente para isso — Supabase, Sentry, Resend e
+Stripe (teste) já estão configurados e confirmados por conexão real. Nada
+impede começar o Plano 2 agora.
 
-Recomendação: comece o Plano 2 (que vai cobrir os itens 4 e 5 da tabela —
-auth + endpoints REST de perfis/especialidades/busca/avaliações/contatos)
-enquanto você providencia as credenciais do Supabase em paralelo, já que o
-item 4 especificamente (sync de perfil) vai precisar do `SUPABASE_JWT_SECRET`
-real para ser testado de ponta a ponta (os testes unitários podem usar um
-segredo de teste, mas a verificação real exige o projeto Supabase existir).
+Próximo passo concreto: escrever o plano de implementação do Plano 2 (auth
+via JWKS do Supabase + endpoints REST de perfis/especialidades/busca/
+avaliações/contatos), seguindo o mesmo processo do Plano 1 — brainstorm →
+plano detalhado → execução tarefa por tarefa com revisão.
