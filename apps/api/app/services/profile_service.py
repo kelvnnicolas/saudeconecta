@@ -6,7 +6,9 @@ from app.models.profile import Profile
 from app.schemas.profile import AuthSyncRequest
 
 
-def upsert_profile(db: Session, user_id: uuid.UUID, data: AuthSyncRequest) -> Profile:
+def upsert_profile(
+    db: Session, user_id: uuid.UUID, data: AuthSyncRequest, email: str | None
+) -> Profile:
     profile = db.get(Profile, user_id)
     if profile is None:
         profile = Profile(id=user_id, papel=data.papel, nome=data.nome)
@@ -17,6 +19,7 @@ def upsert_profile(db: Session, user_id: uuid.UUID, data: AuthSyncRequest) -> Pr
     profile.telefone = data.telefone
     profile.cidade = data.cidade
     profile.estado = data.estado
+    profile.email = email
     db.commit()
     db.refresh(profile)
     return profile

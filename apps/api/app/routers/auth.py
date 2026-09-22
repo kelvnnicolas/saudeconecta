@@ -16,4 +16,4 @@ def sync_profile(
     current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> Profile:
-    return upsert_profile(db, current_user.id, data)
+    return upsert_profile(db, current_user.id, data, current_user.email)

@@ -24,4 +24,5 @@ class ProfileRead(BaseModel):
     cidade: str | None
     estado: str | None
     avatar_url: str | None
+    email: str | None
     criado_em: datetime
