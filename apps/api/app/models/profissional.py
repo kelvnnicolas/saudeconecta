@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 from app.models.especialidade import Especialidade
+from app.models.profile import Profile
 from app.models.profissional_especialidade import profissional_especialidades
 
 
@@ -20,6 +21,7 @@ class Profissional(Base):
     preco_hora: Mapped[float | None] = mapped_column(Numeric(10, 2))
     verificado: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
+    profile: Mapped[Profile] = relationship()
     especialidades: Mapped[list[Especialidade]] = relationship(
         secondary=profissional_especialidades
     )
