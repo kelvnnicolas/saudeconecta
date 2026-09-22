@@ -12,6 +12,12 @@ if not _TEST_DATABASE_URL.rsplit("/", 1)[-1].endswith("_test"):
     )
 os.environ["DATABASE_URL"] = _TEST_DATABASE_URL
 
+# Force Sentry off for the whole test session, regardless of what's in .env —
+# otherwise importing app.main (which calls init_sentry() at module load)
+# initializes the real SDK against whatever real SENTRY_DSN a developer has
+# configured for local dev, and test runs leak events into production Sentry.
+os.environ["SENTRY_DSN"] = ""
+
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
