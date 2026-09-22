@@ -13,10 +13,12 @@ if not _TEST_DATABASE_URL.rsplit("/", 1)[-1].endswith("_test"):
 os.environ["DATABASE_URL"] = _TEST_DATABASE_URL
 
 import pytest  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
 
 from alembic import command  # noqa: E402
 from alembic.config import Config  # noqa: E402
-from app.core.database import SessionLocal, engine  # noqa: E402
+from app.core.database import SessionLocal, engine, get_db  # noqa: E402
+from app.main import app  # noqa: E402
 
 
 def _alembic_config() -> Config:
@@ -41,3 +43,14 @@ def db_session():
     session.close()
     transaction.rollback()
     connection.close()
+
+
+@pytest.fixture
+def client(db_session):
+    def _override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = _override_get_db
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
