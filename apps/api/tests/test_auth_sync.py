@@ -65,9 +65,7 @@ def test_sync_stores_caller_email(client, db_session):
         id=user_id, email="maria@example.com", role="authenticated"
     )
 
-    response = client.post(
-        "/auth/sync", json={"papel": "profissional", "nome": "Maria Silva"}
-    )
+    response = client.post("/auth/sync", json={"papel": "profissional", "nome": "Maria Silva"})
 
     assert response.status_code == 200
     assert response.json()["email"] == "maria@example.com"
