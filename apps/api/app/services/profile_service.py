@@ -41,7 +41,8 @@ def update_avatar(
             detail="Sincronize seu perfil primeiro via POST /auth/sync",
         )
 
-    extension = _AVATAR_CONTENT_TYPES.get(content_type or "")
+    normalized_content_type = (content_type or "").split(";")[0].strip().lower()
+    extension = _AVATAR_CONTENT_TYPES.get(normalized_content_type)
     if extension is None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -53,7 +54,7 @@ def update_avatar(
             detail="Imagem maior que o limite de 5MB.",
         )
 
-    avatar_url = upload_avatar(f"{user_id}.{extension}", file_bytes, content_type)
+    avatar_url = upload_avatar(f"{user_id}.{extension}", file_bytes, normalized_content_type)
     profile.avatar_url = avatar_url
     db.commit()
     db.refresh(profile)

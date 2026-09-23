@@ -10,10 +10,10 @@ router = APIRouter(prefix="/perfis", tags=["perfis"])
 
 
 @router.post("/me/avatar", response_model=ProfileRead)
-async def upload_own_avatar(
+def upload_own_avatar(
     file: UploadFile,
     current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> ProfileRead:
-    file_bytes = await file.read()
+    file_bytes = file.file.read()
     return update_avatar(db, current_user.id, file_bytes, file.content_type)
