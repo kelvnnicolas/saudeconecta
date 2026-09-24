@@ -57,3 +57,17 @@ def test_sync_updates_existing_profile(client, db_session):
     assert response.status_code == 200
     assert response.json()["nome"] == "Nome Novo"
     assert response.json()["estado"] == "RJ"
+
+
+def test_sync_stores_caller_email(client, db_session):
+    user_id = uuid.uuid4()
+    app.dependency_overrides[get_current_user] = lambda: CurrentUser(
+        id=user_id, email="maria@example.com", role="authenticated"
+    )
+
+    response = client.post("/auth/sync", json={"papel": "profissional", "nome": "Maria Silva"})
+
+    assert response.status_code == 200
+    assert response.json()["email"] == "maria@example.com"
+    saved = db_session.get(Profile, user_id)
+    assert saved.email == "maria@example.com"
