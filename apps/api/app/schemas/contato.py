@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models.contato import StatusContato
+from app.models.contato import OrigemContato, StatusContato
 
 
 class ContatoCreateRequest(BaseModel):
@@ -19,4 +19,6 @@ class ContatoRead(BaseModel):
     profissional_id: uuid.UUID
     mensagem: str
     status: StatusContato
+    origem: OrigemContato
+    demanda_id: uuid.UUID | None
     criado_em: datetime

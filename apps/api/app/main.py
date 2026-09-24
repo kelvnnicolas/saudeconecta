@@ -3,14 +3,18 @@ from fastapi import FastAPI
 from app.core.sentry import init_sentry
 from app.routers import (
     analytics,
+    assinaturas,
     auth,
     avaliacoes,
     contatos,
+    demandas,
     empresas,
     especialidades,
     health,
     perfis,
+    planos,
     profissionais,
+    webhooks,
 )
 
 init_sentry()
@@ -26,3 +30,7 @@ app.include_router(perfis.router)
 app.include_router(contatos.router)
 app.include_router(avaliacoes.router)
 app.include_router(analytics.router)
+app.include_router(planos.router)
+app.include_router(assinaturas.router)
+app.include_router(webhooks.router)
+app.include_router(demandas.router)
