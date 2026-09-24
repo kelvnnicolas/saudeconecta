@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 
 import pandas as pd
 
@@ -20,5 +20,5 @@ def contar_volume_contatos_no_periodo(
 ) -> int:
     if not datas_criacao:
         return 0
-    datas = pd.Series([d.date() for d in datas_criacao])
+    datas = pd.Series([d.astimezone(UTC).date() for d in datas_criacao])
     return int(((datas >= data_inicio) & (datas <= data_fim)).sum())

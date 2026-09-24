@@ -1,4 +1,4 @@
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta, timezone
 
 from app.analytics.relatorio import (
     calcular_nota_media_geral,
@@ -49,3 +49,14 @@ def test_contar_volume_contatos_no_periodo_excludes_dates_outside_range():
         datetime(2026, 2, 1, 0, 0, tzinfo=UTC),
     ]
     assert contar_volume_contatos_no_periodo(datas, date(2026, 1, 1), date(2026, 1, 31)) == 1
+
+
+def test_contar_volume_contatos_no_periodo_normalizes_non_utc_offsets_to_utc():
+    fuso_brasil = timezone(timedelta(hours=-3))
+    data_meia_noite_utc_seguinte = datetime(2026, 1, 31, 22, 0, tzinfo=fuso_brasil)
+
+    resultado = contar_volume_contatos_no_periodo(
+        [data_meia_noite_utc_seguinte], date(2026, 1, 1), date(2026, 1, 31)
+    )
+
+    assert resultado == 0
