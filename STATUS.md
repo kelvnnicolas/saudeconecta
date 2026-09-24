@@ -42,7 +42,7 @@ foi verificado rodando comandos, não por suposição.
 | Endpoints das seções 6 e 8, documentados no `/docs` | ✅ | Todos com schema de resposta e os `code` de erro por status (verificado no `/openapi.json`). |
 | Webhook: assinatura, idempotência, `Subscription.retrieve` | ✅ | Testado com payloads assinados de verdade (HMAC), não com `construct_event` mockado. |
 | Testes da seção 13 | ✅ | Webhook, entitlements (um por linha da tabela), checkout, demandas, LGPD. |
-| CI verde | 🟡 | Workflow criado nesta branch; o primeiro run acontece ao abrir o PR. |
+| CI verde | ✅ | Primeiro run no PR #1: `Backend (lint + testes)` passou em 57s. O check `Vercel` falha por outro motivo (ver abaixo). |
 | Teste manual ponta a ponta com Stripe CLI | ⛔ Bloqueado | Ver abaixo — faltam price ids, Customer Portal, `whsec_` e o Stripe CLI instalado. |
 | `.env.example` e `README.md` | ✅ | Inclui passo a passo do Stripe (modo de teste) e do `stripe listen`. |
 | Nenhum arquivo de `apps/web` alterado | ✅ | `apps/web` nem existe. |
@@ -153,6 +153,13 @@ e Sentry de ponta a ponta, é preciso fornecê-las de novo.
 
 ### Para o deploy (não bloqueia implementação)
 
+0. **Check `Vercel` falhando nos PRs** ("Deployment was blocked"): a integração
+   da Vercel está ligada ao repositório inteiro e tenta publicar a raiz, mas o
+   frontend (`apps/web`) ainda não existe. Não é causado pelo código do backend.
+   Quando o frontend existir, configure na Vercel o *Root Directory* como
+   `apps/web`; até lá, dá para desligar os deploys automáticos do projeto ou
+   ignorar esse check.
+
 1. Hospedagem do backend (Render free / Railway / outra).
 2. Projeto Supabase de produção: o mesmo `rhjatedvqqginixlkdxh` ou um separado
    (recomendado para dado de saúde) — decide também o `DATABASE_URL` de produção.
@@ -172,7 +179,7 @@ e Sentry de ponta a ponta, é preciso fornecê-las de novo.
 | Link de pagamento abre checkout válido | ❌ | Item 9 não iniciado (a assinatura B2B desta branch é outra coisa). |
 | Relatório pandas retorna métricas corretas | ✅ | Plano 5, com dados reais desde a integração do Plano 3. |
 | Erro forçado aparece no Sentry | 🟡 | Código pronto; passo manual pendente de `SENTRY_DSN` real. |
-| CI (lint + testes) passa | 🟡 | Workflow criado; primeiro run no PR. |
+| CI (lint + testes) passa | ✅ | GitHub Actions verde no PR #1. |
 | Layout responsivo | ❌ | Frontend não existe. |
 | README permite rodar do zero | ✅ | Backend, incluindo Stripe CLI. |
 
@@ -187,7 +194,7 @@ e Sentry de ponta a ponta, é preciso fornecê-las de novo.
 | Autenticação e autorização | ✅ | JWT via JWKS; regras na camada de serviço; RLS nas tabelas novas. Tabelas antigas sem RLS (ver desvio 1). |
 | Webhook de pagamento seguro | ✅ | Assinatura HMAC validada no corpo bruto, idempotência, sem payload armazenado. |
 | LGPD no Sentry | ✅ | `descricao`/`mensagem` filtradas; teste de ponta a ponta com o SDK real. |
-| CI | 🟡 | Criado nesta branch. |
+| CI | ✅ | GitHub Actions a cada PR/push na `main`. |
 | CORS | ❌ | Obrigatório antes do frontend — lista explícita de origens, nunca `*`. |
 | Rate limiting | ❌ | Relevante para busca, contato, interesse em demanda e checkout. |
 | Health check consciente do banco | 🟡 | `/health` é estático; recomendado `/ready` com `SELECT 1`. |
