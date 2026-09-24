@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import field_validator
+from pydantic import ValidationError, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _OBRIGATORIAS_NAO_VAZIAS = (
@@ -46,4 +46,12 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    try:
+        return Settings()
+    except ValidationError as exc:
+        # `from None`: pydantic's own message embeds input_value, i.e. every other
+        # env value — including secrets — which would end up in boot logs.
+        nomes = sorted({str(erro["loc"][0]).upper() for erro in exc.errors()})
+        raise RuntimeError(
+            "Configuração inválida — defina em apps/api/.env (ver README): " + ", ".join(nomes)
+        ) from None
