@@ -51,7 +51,25 @@ def _frames(evento: dict):
             yield from (valor.get("stacktrace") or {}).get("frames", [])
 
 
+def _contem_dado_sensivel(texto: Any) -> bool:
+    # "[SQL" marks any SQLAlchemy DB error, whose server-side text can quote row values.
+    return isinstance(texto, str) and (
+        "[SQL" in texto
+        or "[parameters:" in texto
+        or any(campo in texto for campo in CAMPOS_SENSIVEIS)
+    )
+
+
 def remover_dados_sensiveis(evento: dict, _hint: dict | None = None) -> dict:
+    for valor in (evento.get("exception") or {}).get("values", []):
+        if _contem_dado_sensivel(valor.get("value")):
+            valor["value"] = FILTRADO
+    logentry = evento.get("logentry")
+    if logentry and _contem_dado_sensivel(logentry.get("message")):
+        logentry["message"] = FILTRADO
+        logentry.pop("params", None)
+    if _contem_dado_sensivel(evento.get("message")):
+        evento["message"] = FILTRADO
     request = evento.get("request")
     if request and "data" in request:
         request["data"] = _limpar_corpo(request["data"])
@@ -60,6 +78,8 @@ def remover_dados_sensiveis(evento: dict, _hint: dict | None = None) -> dict:
     for breadcrumb in (evento.get("breadcrumbs") or {}).get("values", []):
         if "data" in breadcrumb:
             breadcrumb["data"] = _limpar(breadcrumb["data"])
+        if _contem_dado_sensivel(breadcrumb.get("message")):
+            breadcrumb["message"] = FILTRADO
     for frame in _frames(evento):
         if "vars" in frame:
             frame["vars"] = _limpar_variaveis(frame["vars"])

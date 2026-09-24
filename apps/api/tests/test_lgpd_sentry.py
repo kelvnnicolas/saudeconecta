@@ -2,16 +2,20 @@ import json
 import uuid
 from unittest.mock import patch
 
+import pytest
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sentry_sdk.transport import Transport
+from sqlalchemy import text
+from sqlalchemy.exc import DBAPIError
 
 from app.core.auth import CurrentUser, get_current_user
-from app.core.database import get_db
+from app.core.database import engine, get_db
+from app.core.errors import registrar_tratadores
 from app.core.sentry import FILTRADO, opcoes_sentry, remover_dados_sensiveis
 from app.routers import demandas
-from tests.fabrica import payload_demanda
+from tests.fabrica import criar_assinatura, criar_empresa, payload_demanda
 
 DESCRICAO_SECRETA = "descricao-secreta-8f2c"
 MENSAGEM_SECRETA = "mensagem-secreta-3a91"
@@ -139,3 +143,75 @@ def test_opcoes_sentry_desligam_variaveis_locais_e_pii():
     assert opcoes["send_default_pii"] is False
     assert opcoes["before_send"] is remover_dados_sensiveis
     assert opcoes["before_send_transaction"] is remover_dados_sensiveis
+
+
+@pytest.mark.filterwarnings("ignore::sqlalchemy.exc.SAWarning")
+def test_erro_de_banco_ao_gravar_demanda_nao_vaza_descricao_para_sentry_nem_log(db_session, caplog):
+    empresa_id = criar_empresa(db_session)
+    criar_assinatura(db_session, empresa_id)
+    # Stands in for a DB failure whose server-side message quotes the row, like a
+    # CHECK/NOT NULL violation's "Failing row contains (...)"; DDL is transactional in
+    # Postgres, so the test's rollback removes it.
+    db_session.execute(
+        text(
+            "CREATE FUNCTION teste_falhar_insert() RETURNS trigger LANGUAGE plpgsql AS "
+            "$$ BEGIN RAISE EXCEPTION 'Failing row contains (%)', NEW.descricao; END $$"
+        )
+    )
+    db_session.execute(
+        text(
+            "CREATE TRIGGER teste_falhar BEFORE INSERT ON demandas "
+            "FOR EACH ROW EXECUTE FUNCTION teste_falhar_insert()"
+        )
+    )
+    db_session.commit()
+
+    transporte = TransporteCapturador()
+    sentry_sdk.init(**opcoes_sentry("https://public@sentry.example.com/1"), transport=transporte)
+    try:
+        app = FastAPI()
+        registrar_tratadores(app)
+        app.include_router(demandas.router)
+        app.dependency_overrides[get_db] = lambda: db_session
+        app.dependency_overrides[get_current_user] = lambda: CurrentUser(
+            id=empresa_id, email=None, role="authenticated"
+        )
+        corpo = payload_demanda(db_session, descricao=DESCRICAO_SECRETA)
+        response = TestClient(app, raise_server_exceptions=False).post("/demandas", json=corpo)
+        sentry_sdk.flush()
+    finally:
+        sentry_sdk.init(dsn=None)
+
+    assert response.status_code == 500
+    assert response.json() == {"detail": "Erro interno do servidor"}
+    enviado = _serializar(transporte.envelopes)
+    assert "InternalError" in enviado or "RaiseException" in enviado
+    assert DESCRICAO_SECRETA not in enviado
+    assert DESCRICAO_SECRETA not in caplog.text
+    assert "erro de banco em POST /demandas" in caplog.text
+
+
+def test_sqlalchemy_nao_ecoa_parametros_nas_mensagens_de_erro():
+    with engine.connect() as conexao:
+        with pytest.raises(DBAPIError) as exc_info:
+            conexao.execute(text("SELECT CAST(:valor AS integer)"), {"valor": "12a"})
+    assert "[SQL parameters hidden due to hide_parameters=True]" in str(exc_info.value)
+
+
+def test_remover_dados_sensiveis_limpa_mensagem_de_excecao_e_log_com_parametros():
+    evento = remover_dados_sensiveis(
+        {
+            "exception": {
+                "values": [
+                    {"type": "IntegrityError", "value": "[parameters: {'descricao': 'x'}]"},
+                    {"type": "RuntimeError", "value": "falha qualquer"},
+                ]
+            },
+            "logentry": {"message": "mensagem=%s", "params": ["segredo"]},
+            "breadcrumbs": {"values": [{"message": "INSERT ... descricao ..."}]},
+        }
+    )
+    assert evento["exception"]["values"][0]["value"] == FILTRADO
+    assert evento["exception"]["values"][1]["value"] == "falha qualquer"
+    assert evento["logentry"] == {"message": FILTRADO}
+    assert evento["breadcrumbs"]["values"][0]["message"] == FILTRADO

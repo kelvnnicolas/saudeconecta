@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from app.core.errors import registrar_tratadores
 from app.core.sentry import init_sentry
 from app.routers import (
     analytics,
@@ -20,6 +21,7 @@ from app.routers import (
 init_sentry()
 
 app = FastAPI(title="SaúdeConecta API")
+registrar_tratadores(app)
 
 app.include_router(health.router)
 app.include_router(auth.router)
