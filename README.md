@@ -34,7 +34,7 @@ branch antes de ser integrado à `main`.
 
 ### O que já funciona (backend, na `main`)
 
-Backend FastAPI + SQLAlchemy 2.0 + Alembic, com 177 testes automatizados
+Backend FastAPI + SQLAlchemy 2.0 + Alembic, com 189 testes automatizados
 rodando contra Postgres real via Docker (não SQLite/mocks):
 
 - **Autenticação**: `POST /auth/sync` valida o JWT do Supabase (via JWKS) e
@@ -63,11 +63,14 @@ rodando contra Postgres real via Docker (não SQLite/mocks):
   plano); profissionais veem oportunidades compatíveis
   (`GET /demandas/oportunidades`) e demonstram interesse
   (`POST /demandas/{id}/interesse`), o que cria um **contato** comum — que
-  segue o fluxo já existente (contato → avaliação). Erros de acesso usam
-  `code` estável (`nao_elegivel`, `assinatura_necessaria`,
-  `pagamento_pendente`, `limite_atingido`), documentados no `/docs`.
+  segue o fluxo já existente (contato → avaliação). Erros de regra de negócio
+  trazem um `code` estável em `detail.code` (ex.: `nao_elegivel`,
+  `assinatura_necessaria`, `pagamento_pendente`, `limite_atingido`),
+  documentados por rota no `/docs`.
 - **LGPD**: `descricao` de demandas e `mensagem` de contatos são removidas de
-  qualquer evento enviado ao Sentry; payloads do Stripe não são armazenados.
+  qualquer evento enviado ao Sentry e nunca aparecem em log — inclusive quando
+  vêm dentro da mensagem de um erro do banco; payloads do Stripe não são
+  armazenados.
 - **Infra**: 12 tabelas, migrations com rollback testado, RLS nas tabelas de
   billing/demandas, helper de upload para o Supabase Storage, Sentry
   inicializado, `GET /health`, CI no GitHub Actions.
@@ -218,7 +221,7 @@ saudeconecta/
     │   │   ├── services/    # regras de negócio, autorização, billing (único ponto que usa o Stripe)
     │   │   └── storage/     # helper do Supabase Storage
     │   ├── alembic/         # migrations
-    │   ├── tests/           # 177 testes, rodando contra Postgres real
+    │   ├── tests/           # 189 testes, rodando contra Postgres real
     │   └── .env.example
     └── web/       # frontend Next.js (ainda não iniciado)
 ```

@@ -9,7 +9,7 @@ foi verificado rodando comandos, não por suposição.
 - **Backend**: Planos 1–5 integrados à `main` (fundação, auth, perfis, busca,
   avaliações, contatos, avatar, analytics). Esta branch adiciona assinatura
   B2B recorrente (Stripe), demandas, proteção de LGPD no Sentry e CI.
-- **Testes**: 177 passando (`pytest`), `black --check` e `ruff check` limpos,
+- **Testes**: 189 passando (`pytest`), `black --check` e `ruff check` limpos,
   inclusive em Python 3.11 (versão alvo). Nenhum teste chama serviço real.
 - **Frontend**: não iniciado.
 - **Bloqueado**: teste manual ponta a ponta com o Stripe real — depende de
@@ -21,7 +21,7 @@ foi verificado rodando comandos, não por suposição.
 | # | Etapa | Status | Observações |
 |---|---|---|---|
 | 1 | Backend inicializado (FastAPI + SQLAlchemy + Alembic) | ✅ | Plano 1. |
-| 2 | Postgres + migrations | ✅ | 8 migrations lineares (`alembic heads` = 1), todas com `downgrade` testado ida e volta. |
+| 2 | Postgres + migrations | ✅ | 7 migrations lineares (`alembic heads` = 1), todas com `downgrade` testado ida e volta. |
 | 3 | Supabase Storage + Sentry no backend | ✅ | Upload de avatar em `POST /perfis/me/avatar` (Plano 4). Storage real ainda não reconfirmado de ponta a ponta — credenciais perdidas no incidente de 2026-09-22 (ver abaixo). |
 | 4 | Validação de JWT do Supabase + sync de perfil | ✅ | Plano 2 — JWKS, `POST /auth/sync`. |
 | 5 | Endpoints REST: perfis, especialidades, busca, avaliações, contatos | ✅ | Planos 2 e 3. |
@@ -56,8 +56,11 @@ foi verificado rodando comandos, não por suposição.
    bloqueado se o banco for o do Supabase. As policies de leitura de
    `demandas` só são criadas onde o schema `auth` existe (Supabase), porque o
    Postgres local/CI não tem `auth.uid()`; o SQL delas foi validado num banco
-   descartável simulando esse schema. As tabelas antigas continuam **sem**
-   RLS — risco pré-existente, fora do escopo desta etapa.
+   descartável simulando esse schema, mas nenhum teste automatizado o exercita.
+   A policy de profissional consulta `profiles`: se `profiles` ganhar RLS um
+   dia, ela precisa ser revista. As tabelas antigas (inclusive `contatos`, que
+   agora também guarda mensagens de interesse) continuam **sem** RLS — risco
+   pré-existente, fora do escopo desta etapa.
 2. **Checkout abandonado**: uma linha `incomplete` sem subscription (usuário fechou
    o Checkout) nunca é encerrada por webhook — pela spec literal a empresa ficaria
    bloqueada com 409 para sempre. O checkout reaproveita essa linha; o 409 vale
@@ -80,7 +83,40 @@ foi verificado rodando comandos, não por suposição.
    o código lê. `invoice.payment_failed` identifica a empresa pelo `customer`
    da invoice (estável entre versões).
 8. **Sentry/LGPD**: além do `before_send` pedido, `before_send_transaction` também
-   filtra, e a captura de variáveis locais foi desligada por completo.
+   filtra, e a captura de variáveis locais foi desligada por completo. A revisão
+   independente achou um vazamento que o teste original não cobria: o texto de
+   erros do banco (o próprio Postgres cita valores, ex. `Failing row contains
+   (...)`) levava `descricao`/`mensagem` ao Sentry e ao log do uvicorn. Corrigido
+   com `hide_parameters`, filtro da mensagem de qualquer erro SQL no Sentry e um
+   tratador que devolve 500 genérico e loga só o tipo do erro.
+9. **Webhook — erros permanentes respondem 200** (desvio do item 6.2.7): eventos
+   que nunca vão se aplicar (subscription duplicada, subscription sem assinatura
+   local) são gravados em `eventos_stripe.erro`, alertados no Sentry e respondidos
+   com 200 — com 500 o Stripe reenviaria por dias sem chance de sucesso. Erros
+   transitórios (Stripe/banco fora do ar) continuam 500 para o Stripe reenviar.
+10. **Checkout nunca deixa duas sessões pagáveis**: antes de criar uma sessão nova,
+    a anterior ainda aberta é expirada; se ela já foi paga, responde 409
+    `assinatura_em_processamento`. Sem isso a empresa podia ser cobrada duas vezes.
+11. **Códigos de erro adicionais** (além dos da seção 7): `plano_inexistente`,
+    `assinatura_existente`, `assinatura_em_processamento`, `assinatura_inexistente`,
+    `stripe_indisponivel` (502), `apenas_empresas`, `apenas_profissionais`,
+    `demanda_inexistente`, `especialidade_inexistente`, `transicao_invalida`,
+    `interesse_existente`, `demanda_indisponivel` (410),
+    `perfil_profissional_incompleto`, `assinatura_webhook_invalida`.
+
+### Ponto de produto em aberto
+
+- **Avaliação via demanda**: como a spec pede que o contato gerado pela demanda siga
+  o fluxo existente até a avaliação, um profissional que demonstra interesse passa a
+  poder **avaliar a empresa** — sem que a empresa tenha feito nada além de publicar.
+  A mesma assimetria já existia no sentido oposto (qualquer empresa que envia um
+  contato pode avaliar o profissional). Se isso não for desejado, a regra natural é
+  exigir que o contato tenha sido respondido antes de liberar avaliação (nos dois
+  sentidos) — mudança pequena, mas de regra de negócio, então não foi feita sem
+  confirmação.
+- **Troca de conta Stripe (teste → produção)**: o `stripe_customer_id` salvo é
+  reutilizado nos próximos checkouts; ids do modo de teste não existem no modo de
+  produção. Produção deve começar com banco próprio (já recomendado abaixo).
 
 ## ⛔ Bloqueado — o que precisa de você
 
