@@ -14,3 +14,4 @@ ruff==0.6.9
 black==24.10.0
 PyJWT[crypto]==2.9.0
 pandas==2.2.3
+stripe==15.6.1
