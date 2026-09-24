@@ -32,7 +32,7 @@ código do backend existe.
 | 7 | Páginas construídas (Landing, Cadastro, Busca, Perfil público, Painel, Avaliações) com validação Zod | ❌ Não iniciado | Depende do item 6. |
 | 8 | Fluxo de contato (endpoint + e-mail) e criação de avaliação | ❌ Não iniciado | Depende do item 5. |
 | 9 | Link de pagamento integrado | ❌ Não iniciado | Planejado para uma etapa posterior (Plano 4). |
-| 10 | Relatório com pandas em `app/analytics/` exposto como endpoint | ❌ Não iniciado | `app/analytics/` existe só como pacote vazio, reservado. |
+| 10 | Relatório com pandas em `app/analytics/` exposto como endpoint | ✅ Concluído | `GET /analytics/relatorio?data_inicio&data_fim` implementado no Plano 5 (`apps/api/app/routers/analytics.py`), com a agregação em funções pandas puras e testáveis (`apps/api/app/analytics/relatorio.py`) separadas da camada de I/O (`apps/api/app/services/relatorio_service.py`). `profissionais_por_especialidade` já reflete dados reais (escritos desde o Plano 2 via `PUT /profissionais/me`); `nota_media_geral` e `volume_contatos_periodo` retornam `null`/`0` até o Plano 3 (avaliações/contatos) ser integrado à `main`, pois é isso que popula essas tabelas. |
 | 11 | Workflow de CI (lint + testes) configurado | ❌ Não iniciado | Nenhum arquivo em `.github/workflows/` em nenhuma branch. |
 | 12 | `.env.example` e `README.md` completos | 🟡 Parcial | `apps/api/.env.example` existe e está completo (na branch do backend). `README.md` da raiz existe na `main` com resumo de status, mas ainda não tem instruções de setup passo a passo (vai fazer mais sentido depois que a branch do backend for integrada). Falta `apps/web/.env.example` (frontend não existe ainda). |
 | 13 | Deploy (backend no Railway/Render, frontend na Vercel) | ❌ Não iniciado | Nenhuma configuração de deploy criada. Depende de credenciais externas (ver bloqueios). |
@@ -48,7 +48,7 @@ código do backend existe.
 | Perfil público exibe dados e avaliações | ❌ Não iniciado | Depende dos itens 5 e 6. |
 | Fluxo de contato registra mensagem e dispara e-mail | 🟡 Parcial | `RESEND_API_KEY` confirmada válida (2026-09-22, ver nota sobre o HTTP 401 abaixo); falta o endpoint de contato em si (item 5). |
 | Link de pagamento é gerado e abre checkout válido | 🟡 Parcial | `STRIPE_SECRET_KEY` confirmada válida por chamada real à API Stripe (2026-09-22, modo teste); falta a integração em si (Plano 4). |
-| Relatório em pandas retorna métricas corretas | ❌ Não iniciado | Não implementado ainda (item 10). |
+| Relatório em pandas retorna métricas corretas | 🟡 Parcial | Endpoint implementado e testado com dados sintéticos (Plano 5). Falta apenas dados reais de avaliações/contatos, que dependem do Plano 3 (ainda não integrado à `main`) — `profissionais_por_especialidade` já é real hoje. |
 | Erro forçado aparece no Sentry (frontend e backend) | 🟡 Parcial | `SENTRY_DSN` real confirmado por um evento de teste em 2026-09-22, mas foi perdido no incidente de perda de credenciais e está em branco em `apps/api/.env` hoje. Endpoints de negócio já existem (Planos 2-4) e poderiam disparar um erro real assim que o DSN for refornecido — passo manual pendente, não uma tarefa de código. |
 | CI (lint + testes) passa | 🟡 Parcial | `pytest`, `black --check` e `ruff check` passam localmente (11/11 testes, 0 findings) — verificado agora. Não há workflow de CI configurado ainda (item 11). |
 | Layout responsivo (mobile e desktop) | ❌ Não iniciado | Frontend não existe. |
