@@ -17,8 +17,8 @@ from app.core.sentry import FILTRADO, opcoes_sentry, remover_dados_sensiveis
 from app.routers import demandas
 from tests.fabrica import criar_assinatura, criar_empresa, payload_demanda
 
-DESCRICAO_SECRETA = "descricao-secreta-8f2c"
-MENSAGEM_SECRETA = "mensagem-secreta-3a91"
+DESCRICAO_SECRETA = "dor-cronica-hiv-7731"
+MENSAGEM_SECRETA = "sigilo-psiquiatrico-4410"
 TURNO_VISIVEL = "turno-visivel-77b0"
 
 
@@ -212,6 +212,32 @@ def test_remover_dados_sensiveis_limpa_mensagem_de_excecao_e_log_com_parametros(
         }
     )
     assert evento["exception"]["values"][0]["value"] == FILTRADO
-    assert evento["exception"]["values"][1]["value"] == "falha qualquer"
+    assert evento["exception"]["values"][1]["value"] == FILTRADO
     assert evento["logentry"] == {"message": FILTRADO}
     assert evento["breadcrumbs"]["values"][0]["message"] == FILTRADO
+
+
+def test_remover_dados_sensiveis_limpa_toda_a_cadeia_de_um_erro_de_banco():
+    evento = remover_dados_sensiveis(
+        {
+            "exception": {
+                "values": [
+                    {
+                        "module": "psycopg.errors",
+                        "type": "InvalidTextRepresentation",
+                        "value": f'invalid input syntax for type integer: "{DESCRICAO_SECRETA}"',
+                    },
+                    {
+                        "module": "sqlalchemy.exc",
+                        "type": "DataError",
+                        "value": "(psycopg.errors.InvalidTextRepresentation) ... [SQL: ...]",
+                    },
+                ]
+            }
+        }
+    )
+    assert DESCRICAO_SECRETA not in json.dumps(evento)
+    assert [v["type"] for v in evento["exception"]["values"]] == [
+        "InvalidTextRepresentation",
+        "DataError",
+    ]

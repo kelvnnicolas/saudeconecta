@@ -34,7 +34,11 @@ async def _erro_de_banco(request: Request, exc: SQLAlchemyError) -> JSONResponse
     # status_code aren't auto-reported by the Sentry integration, so report explicitly
     # (before_send strips the DB error text).
     sentry_sdk.capture_exception(exc)
-    logger.error("erro de banco em %s %s: %s", request.method, request.url.path, type(exc).__name__)
+    # warning, not error: the logging integration would turn an ERROR record into a
+    # second Sentry event for the same failure.
+    logger.warning(
+        "erro de banco em %s %s: %s", request.method, request.url.path, type(exc).__name__
+    )
     return JSONResponse(status_code=500, content={"detail": "Erro interno do servidor"})
 
 

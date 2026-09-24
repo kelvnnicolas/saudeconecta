@@ -60,10 +60,21 @@ def _contem_dado_sensivel(texto: Any) -> bool:
     )
 
 
+def _erro_de_banco(entrada: dict) -> bool:
+    modulo = str(entrada.get("module") or "")
+    return modulo.startswith(("psycopg", "sqlalchemy")) or _contem_dado_sensivel(
+        entrada.get("value")
+    )
+
+
 def remover_dados_sensiveis(evento: dict, _hint: dict | None = None) -> dict:
-    for valor in (evento.get("exception") or {}).get("values", []):
-        if _contem_dado_sensivel(valor.get("value")):
-            valor["value"] = FILTRADO
+    # Chained exceptions arrive as separate entries: SQLAlchemy's wrapper plus the raw
+    # driver error, whose Postgres text can quote row values — so if any link is a DB
+    # error, every message in the chain is dropped (types and stack traces stay).
+    cadeia = (evento.get("exception") or {}).get("values", [])
+    if any(_erro_de_banco(entrada) for entrada in cadeia):
+        for entrada in cadeia:
+            entrada["value"] = FILTRADO
     logentry = evento.get("logentry")
     if logentry and _contem_dado_sensivel(logentry.get("message")):
         logentry["message"] = FILTRADO

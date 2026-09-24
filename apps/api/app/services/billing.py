@@ -47,8 +47,8 @@ class EventoNaoAplicavel(Exception):
 def _chamada_stripe() -> Iterator[None]:
     try:
         yield
+    # No explicit capture: the Starlette integration already reports 5xx HTTPExceptions.
     except stripe.StripeError as exc:
-        sentry_sdk.capture_exception(exc)
         raise erro_negocio(
             status.HTTP_502_BAD_GATEWAY,
             "stripe_indisponivel",
@@ -101,7 +101,9 @@ def _encerrar_checkout_anterior(sessao_id: str) -> None:
     )
     try:
         sessao = stripe.checkout.Session.retrieve(sessao_id, api_key=_api_key())
-    except stripe.InvalidRequestError:
+    except stripe.InvalidRequestError as exc:
+        if exc.code != "resource_missing":
+            raise
         return  # no longer exists on this Stripe account, so it can't be paid either
     situacao = _campo(sessao, "status")
     if situacao == "complete":
@@ -121,7 +123,11 @@ def criar_checkout(db: Session, user_id: uuid.UUID, plano_codigo: str) -> str:
 
     # Lock the empresa row (it always exists, unlike the assinatura row) so concurrent
     # checkouts for the same company can't each open a payable session.
-    db.execute(select(Empresa.user_id).where(Empresa.user_id == empresa.user_id).with_for_update())
+    db.execute(
+        select(Empresa.user_id)
+        .where(Empresa.user_id == empresa.user_id)
+        .with_for_update(key_share=True)
+    )
     atual = assinatura_vigente(db, empresa.user_id)
     # A row without a subscription is an abandoned checkout (Checkout only creates the
     # subscription on completion, so no webhook will ever close it) — reuse it.

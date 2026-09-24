@@ -302,7 +302,9 @@ def test_sessao_paga_entre_consulta_e_expiracao_bloqueia_novo_checkout(
 
 def test_sessao_anterior_inexistente_no_stripe_nao_bloqueia(client, db_session, stripe_mock):
     _, checkout_create, _, checkout_retrieve, checkout_expire = stripe_mock
-    checkout_retrieve.side_effect = stripe.InvalidRequestError("No such checkout.session", None)
+    checkout_retrieve.side_effect = stripe.InvalidRequestError(
+        "No such checkout.session", None, code="resource_missing"
+    )
     _empresa_com_checkout_anterior(db_session)
 
     response = client.post("/assinaturas/checkout", json={"plano_codigo": "pro"})
@@ -319,12 +321,10 @@ def test_falha_do_stripe_no_checkout_vira_502_com_code_estavel(client, db_sessio
     db_session.commit()
     autenticar(empresa_id)
 
-    with patch("app.services.billing.sentry_sdk.capture_exception") as capture:
-        response = client.post("/assinaturas/checkout", json={"plano_codigo": "pro"})
+    response = client.post("/assinaturas/checkout", json={"plano_codigo": "pro"})
 
     assert response.status_code == 502
     assert response.json()["detail"]["code"] == "stripe_indisponivel"
-    capture.assert_called_once()
     assert db_session.scalar(select(Assinatura).where(Assinatura.empresa_id == empresa_id)) is None
 
 
@@ -336,8 +336,7 @@ def test_falha_do_stripe_no_portal_vira_502(client, db_session, stripe_mock):
     db_session.commit()
     autenticar(empresa_id)
 
-    with patch("app.services.billing.sentry_sdk.capture_exception"):
-        response = client.post("/assinaturas/portal")
+    response = client.post("/assinaturas/portal")
 
     assert response.status_code == 502
     assert response.json()["detail"]["code"] == "stripe_indisponivel"
