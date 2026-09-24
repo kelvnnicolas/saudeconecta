@@ -52,6 +52,7 @@ def upgrade() -> None:
         ),
         sa.Column("stripe_customer_id", sa.Text(), nullable=False),
         sa.Column("stripe_subscription_id", sa.Text(), nullable=True, unique=True),
+        sa.Column("stripe_checkout_session_id", sa.Text(), nullable=True),
         sa.Column("status", status_enum, nullable=False, server_default="incomplete"),
         sa.Column("current_period_end", sa.DateTime(timezone=True), nullable=True),
         sa.Column(

@@ -23,6 +23,8 @@ def stripe_mock():
         patch("app.services.billing.stripe.Customer.create") as customer_create,
         patch("app.services.billing.stripe.checkout.Session.create") as checkout_create,
         patch("app.services.billing.stripe.billing_portal.Session.create") as portal_create,
+        patch("app.services.billing.stripe.checkout.Session.retrieve") as checkout_retrieve,
+        patch("app.services.billing.stripe.checkout.Session.expire") as checkout_expire,
     ):
         customer_create.return_value = stripe.Customer.construct_from({"id": "cus_novo"}, "k")
         checkout_create.return_value = stripe.checkout.Session.construct_from(
@@ -31,7 +33,10 @@ def stripe_mock():
         portal_create.return_value = stripe.billing_portal.Session.construct_from(
             {"id": "bps_1", "url": "https://billing.stripe.test/bps_1"}, "k"
         )
-        yield customer_create, checkout_create, portal_create
+        checkout_retrieve.return_value = stripe.checkout.Session.construct_from(
+            {"id": "cs_antiga", "status": "open"}, "k"
+        )
+        yield customer_create, checkout_create, portal_create, checkout_retrieve, checkout_expire
 
 
 def test_listar_planos_e_publico_e_nao_expoe_price_id(client):
@@ -82,7 +87,7 @@ def test_checkout_plano_inexistente_retorna_404(client, db_session, stripe_mock)
 
 
 def test_checkout_cria_customer_sessao_e_assinatura_incomplete(client, db_session, stripe_mock):
-    customer_create, checkout_create, _ = stripe_mock
+    customer_create, checkout_create, *_ = stripe_mock
     empresa_id = criar_empresa(db_session, email="financeiro@clinica.com")
     db_session.commit()
     autenticar(empresa_id)
@@ -106,6 +111,7 @@ def test_checkout_cria_customer_sessao_e_assinatura_incomplete(client, db_sessio
     assert assinatura.status == StatusAssinatura.incomplete
     assert assinatura.stripe_customer_id == "cus_novo"
     assert assinatura.stripe_subscription_id is None
+    assert assinatura.stripe_checkout_session_id == "cs_1"
     assert assinatura.plano_id == plano(db_session, "pro").id
 
 
@@ -123,7 +129,7 @@ def test_checkout_recusa_segunda_assinatura(client, db_session, stripe_mock):
 
 
 def test_checkout_reutiliza_customer_de_assinatura_cancelada(client, db_session, stripe_mock):
-    customer_create, checkout_create, _ = stripe_mock
+    customer_create, checkout_create, *_ = stripe_mock
     empresa_id = criar_empresa(db_session)
     criar_assinatura(
         db_session,
@@ -150,7 +156,7 @@ def test_checkout_reutiliza_customer_de_assinatura_cancelada(client, db_session,
 
 
 def test_checkout_abandonado_e_reaproveitado_em_vez_de_bloquear(client, db_session, stripe_mock):
-    customer_create, _, _ = stripe_mock
+    customer_create, *_ = stripe_mock
     empresa_id = criar_empresa(db_session)
     abandonada = criar_assinatura(
         db_session, empresa_id, status=StatusAssinatura.incomplete, customer_id="cus_abandono"
@@ -180,7 +186,7 @@ def test_portal_sem_customer_retorna_404(client, db_session, stripe_mock):
 
 
 def test_portal_cria_sessao_com_return_url(client, db_session, stripe_mock):
-    _, _, portal_create = stripe_mock
+    _, _, portal_create, *_ = stripe_mock
     empresa_id = criar_empresa(db_session)
     criar_assinatura(db_session, empresa_id, customer_id="cus_portal")
     db_session.commit()
@@ -238,3 +244,100 @@ def test_minha_assinatura_recusa_profissional(client, db_session):
     autenticar(profissional_id)
 
     assert client.get("/assinaturas/me").status_code == 403
+
+
+def _empresa_com_checkout_anterior(db_session, sessao_id="cs_antiga"):
+    empresa_id = criar_empresa(db_session)
+    anterior = criar_assinatura(
+        db_session, empresa_id, status=StatusAssinatura.incomplete, customer_id="cus_x"
+    )
+    anterior.stripe_checkout_session_id = sessao_id
+    db_session.commit()
+    autenticar(empresa_id)
+    return anterior
+
+
+def test_novo_checkout_expira_a_sessao_anterior_ainda_aberta(client, db_session, stripe_mock):
+    _, checkout_create, _, checkout_retrieve, checkout_expire = stripe_mock
+    anterior = _empresa_com_checkout_anterior(db_session)
+
+    response = client.post("/assinaturas/checkout", json={"plano_codigo": "pro"})
+
+    assert response.status_code == 200
+    checkout_retrieve.assert_called_once_with("cs_antiga", api_key="sk_test_dummy_for_tests")
+    checkout_expire.assert_called_once_with("cs_antiga", api_key="sk_test_dummy_for_tests")
+    checkout_create.assert_called_once()
+    db_session.refresh(anterior)
+    assert anterior.stripe_checkout_session_id == "cs_1"
+
+
+def test_checkout_anterior_ja_pago_bloqueia_novo_checkout(client, db_session, stripe_mock):
+    _, checkout_create, _, checkout_retrieve, checkout_expire = stripe_mock
+    checkout_retrieve.return_value = stripe.checkout.Session.construct_from(
+        {"id": "cs_antiga", "status": "complete"}, "k"
+    )
+    _empresa_com_checkout_anterior(db_session)
+
+    response = client.post("/assinaturas/checkout", json={"plano_codigo": "pro"})
+
+    assert response.status_code == 409
+    assert response.json()["detail"]["code"] == "assinatura_em_processamento"
+    checkout_expire.assert_not_called()
+    checkout_create.assert_not_called()
+
+
+def test_sessao_paga_entre_consulta_e_expiracao_bloqueia_novo_checkout(
+    client, db_session, stripe_mock
+):
+    _, checkout_create, _, _, checkout_expire = stripe_mock
+    checkout_expire.side_effect = stripe.InvalidRequestError("session is not open", None)
+    _empresa_com_checkout_anterior(db_session)
+
+    response = client.post("/assinaturas/checkout", json={"plano_codigo": "pro"})
+
+    assert response.status_code == 409
+    assert response.json()["detail"]["code"] == "assinatura_em_processamento"
+    checkout_create.assert_not_called()
+
+
+def test_sessao_anterior_inexistente_no_stripe_nao_bloqueia(client, db_session, stripe_mock):
+    _, checkout_create, _, checkout_retrieve, checkout_expire = stripe_mock
+    checkout_retrieve.side_effect = stripe.InvalidRequestError("No such checkout.session", None)
+    _empresa_com_checkout_anterior(db_session)
+
+    response = client.post("/assinaturas/checkout", json={"plano_codigo": "pro"})
+
+    assert response.status_code == 200
+    checkout_expire.assert_not_called()
+    checkout_create.assert_called_once()
+
+
+def test_falha_do_stripe_no_checkout_vira_502_com_code_estavel(client, db_session, stripe_mock):
+    _, checkout_create, *_ = stripe_mock
+    checkout_create.side_effect = stripe.APIConnectionError("timeout")
+    empresa_id = criar_empresa(db_session)
+    db_session.commit()
+    autenticar(empresa_id)
+
+    with patch("app.services.billing.sentry_sdk.capture_exception") as capture:
+        response = client.post("/assinaturas/checkout", json={"plano_codigo": "pro"})
+
+    assert response.status_code == 502
+    assert response.json()["detail"]["code"] == "stripe_indisponivel"
+    capture.assert_called_once()
+    assert db_session.scalar(select(Assinatura).where(Assinatura.empresa_id == empresa_id)) is None
+
+
+def test_falha_do_stripe_no_portal_vira_502(client, db_session, stripe_mock):
+    _, _, portal_create, *_ = stripe_mock
+    portal_create.side_effect = stripe.InvalidRequestError("No configuration provided", None)
+    empresa_id = criar_empresa(db_session)
+    criar_assinatura(db_session, empresa_id)
+    db_session.commit()
+    autenticar(empresa_id)
+
+    with patch("app.services.billing.sentry_sdk.capture_exception"):
+        response = client.post("/assinaturas/portal")
+
+    assert response.status_code == 502
+    assert response.json()["detail"]["code"] == "stripe_indisponivel"

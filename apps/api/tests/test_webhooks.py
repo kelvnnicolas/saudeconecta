@@ -304,3 +304,42 @@ def test_webhook_nao_exige_autenticacao_de_usuario(client, db_session, retrieve)
     payload = _evento("customer.created", {"id": "cus_2"})
     assert _enviar(client, payload).status_code == 200
     assert db_session.scalar(select(Assinatura)) is None
+
+
+def test_subscription_duplicada_e_registrada_e_alertada_sem_loop_de_retry(
+    client, db_session, retrieve
+):
+    empresa_id = criar_empresa(db_session)
+    assinatura = criar_assinatura(db_session, empresa_id, subscription_id="sub_1")
+    db_session.commit()
+    retrieve.return_value = _subscription("sub_2", empresa_id=empresa_id)
+    payload = _evento(
+        "checkout.session.completed",
+        {"id": "cs_2", "client_reference_id": str(empresa_id), "subscription": "sub_2"},
+        "evt_duplicada",
+    )
+
+    with patch("app.services.billing.sentry_sdk.capture_message") as capture:
+        response = _enviar(client, payload)
+
+    assert response.status_code == 200
+    evento = db_session.get(EventoStripe, "evt_duplicada")
+    assert "duplicada" in evento.erro
+    assert evento.processado_em is not None
+    capture.assert_called_once()
+    db_session.refresh(assinatura)
+    assert assinatura.stripe_subscription_id == "sub_1"
+
+
+def test_subscription_sem_assinatura_local_e_registrada_com_200(client, db_session, retrieve):
+    retrieve.return_value = _subscription("sub_externa")
+    payload = _evento("customer.subscription.updated", {"id": "sub_externa"}, "evt_externa")
+
+    with patch("app.services.billing.sentry_sdk.capture_message") as capture:
+        response = _enviar(client, payload)
+
+    assert response.status_code == 200
+    evento = db_session.get(EventoStripe, "evt_externa")
+    assert "nenhuma assinatura local" in evento.erro
+    assert evento.processado_em is not None
+    capture.assert_called_once()

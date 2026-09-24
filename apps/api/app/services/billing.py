@@ -1,11 +1,13 @@
 import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from typing import Any
 
 import sentry_sdk
 import stripe
 from fastapi import status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -35,6 +37,23 @@ EVENTOS_ASSINATURA = (
 
 class ErroProcessamentoWebhook(Exception):
     pass
+
+
+class EventoNaoAplicavel(Exception):
+    """Event that can never be applied locally; retrying would only loop."""
+
+
+@contextmanager
+def _chamada_stripe() -> Iterator[None]:
+    try:
+        yield
+    except stripe.StripeError as exc:
+        sentry_sdk.capture_exception(exc)
+        raise erro_negocio(
+            status.HTTP_502_BAD_GATEWAY,
+            "stripe_indisponivel",
+            "Não foi possível concluir a operação com o Stripe. Tente novamente.",
+        ) from exc
 
 
 def _api_key() -> str:
@@ -72,12 +91,37 @@ def _criar_customer(empresa: Empresa) -> str:
     return customer["id"]
 
 
+def _encerrar_checkout_anterior(sessao_id: str) -> None:
+    # A previous Checkout Session stays payable for 24h; leaving it open would let the
+    # company pay twice and end up with two live subscriptions.
+    em_processamento = erro_negocio(
+        status.HTTP_409_CONFLICT,
+        "assinatura_em_processamento",
+        "O pagamento de um checkout anterior já foi concluído e está sendo confirmado.",
+    )
+    try:
+        sessao = stripe.checkout.Session.retrieve(sessao_id, api_key=_api_key())
+    except stripe.InvalidRequestError:
+        return  # no longer exists on this Stripe account, so it can't be paid either
+    situacao = _campo(sessao, "status")
+    if situacao == "complete":
+        raise em_processamento
+    if situacao == "open":
+        try:
+            stripe.checkout.Session.expire(sessao_id, api_key=_api_key())
+        except stripe.InvalidRequestError as exc:
+            raise em_processamento from exc
+
+
 def criar_checkout(db: Session, user_id: uuid.UUID, plano_codigo: str) -> str:
     empresa = obter_empresa_elegivel(db, user_id)
     plano = db.scalar(select(Plano).where(Plano.codigo == plano_codigo, Plano.ativo.is_(True)))
     if plano is None:
         raise erro_negocio(status.HTTP_404_NOT_FOUND, "plano_inexistente", "Plano não encontrado")
 
+    # Lock the empresa row (it always exists, unlike the assinatura row) so concurrent
+    # checkouts for the same company can't each open a payable session.
+    db.execute(select(Empresa.user_id).where(Empresa.user_id == empresa.user_id).with_for_update())
     atual = assinatura_vigente(db, empresa.user_id)
     # A row without a subscription is an abandoned checkout (Checkout only creates the
     # subscription on completion, so no webhook will ever close it) — reuse it.
@@ -88,31 +132,30 @@ def criar_checkout(db: Session, user_id: uuid.UUID, plano_codigo: str) -> str:
             "Esta empresa já tem uma assinatura. Use o portal para trocar de plano ou cancelar.",
         )
 
-    customer_id = _customer_id_existente(db, empresa.user_id) or _criar_customer(empresa)
-    app_url = get_settings().app_url
-    sessao = stripe.checkout.Session.create(
-        api_key=_api_key(),
-        mode="subscription",
-        customer=customer_id,
-        line_items=[{"price": plano.stripe_price_id, "quantity": 1}],
-        client_reference_id=str(empresa.user_id),
-        subscription_data={"metadata": {"empresa_id": str(empresa.user_id)}},
-        success_url=f"{app_url}/empresa/assinatura?status=processando",
-        cancel_url=f"{app_url}/empresa/planos",
-    )
+    with _chamada_stripe():
+        if atual is not None and atual.stripe_checkout_session_id:
+            _encerrar_checkout_anterior(atual.stripe_checkout_session_id)
+        customer_id = _customer_id_existente(db, empresa.user_id) or _criar_customer(empresa)
+        app_url = get_settings().app_url
+        sessao = stripe.checkout.Session.create(
+            api_key=_api_key(),
+            mode="subscription",
+            customer=customer_id,
+            line_items=[{"price": plano.stripe_price_id, "quantity": 1}],
+            client_reference_id=str(empresa.user_id),
+            subscription_data={"metadata": {"empresa_id": str(empresa.user_id)}},
+            success_url=f"{app_url}/empresa/assinatura?status=processando",
+            cancel_url=f"{app_url}/empresa/planos",
+        )
 
     if atual is None:
-        db.add(
-            Assinatura(
-                empresa_id=empresa.user_id,
-                plano_id=plano.id,
-                stripe_customer_id=customer_id,
-                status=StatusAssinatura.incomplete,
-            )
+        atual = Assinatura(
+            empresa_id=empresa.user_id, plano_id=plano.id, status=StatusAssinatura.incomplete
         )
-    else:
-        atual.plano_id = plano.id
-        atual.stripe_customer_id = customer_id
+        db.add(atual)
+    atual.plano_id = plano.id
+    atual.stripe_customer_id = customer_id
+    atual.stripe_checkout_session_id = sessao["id"]
     try:
         db.commit()
     except IntegrityError as exc:
@@ -134,11 +177,12 @@ def criar_portal(db: Session, user_id: uuid.UUID) -> str:
             "assinatura_inexistente",
             "Esta empresa ainda não tem assinatura.",
         )
-    sessao = stripe.billing_portal.Session.create(
-        api_key=_api_key(),
-        customer=customer_id,
-        return_url=f"{get_settings().app_url}/empresa/assinatura",
-    )
+    with _chamada_stripe():
+        sessao = stripe.billing_portal.Session.create(
+            api_key=_api_key(),
+            customer=customer_id,
+            return_url=f"{get_settings().app_url}/empresa/assinatura",
+        )
     return sessao["url"]
 
 
@@ -181,16 +225,29 @@ def _localizar_assinatura(db: Session, subscription: Any) -> Assinatura:
     if empresa_id is not None:
         assinatura = assinatura_vigente(db, uuid.UUID(empresa_id))
     if assinatura is None:
-        raise ValueError(f"nenhuma assinatura local para a subscription {subscription['id']}")
+        raise EventoNaoAplicavel(
+            f"nenhuma assinatura local para a subscription {subscription['id']}"
+        )
     if assinatura.stripe_subscription_id not in (None, subscription["id"]):
-        raise ValueError(f"empresa {empresa_id} já tem outra subscription vigente vinculada")
+        raise EventoNaoAplicavel(
+            f"subscription {subscription['id']} duplicada: empresa {empresa_id} já tem "
+            f"{assinatura.stripe_subscription_id} vinculada — verificar cobrança em dobro"
+        )
     assinatura.stripe_subscription_id = subscription["id"]
     return assinatura
+
+
+def _travar_subscription(db: Session, subscription_id: str) -> None:
+    # Serializes every handler touching this subscription (checkout.session.completed and
+    # subscription.created/updated arrive almost together), so a handler that fetched an
+    # older state can't commit after one that fetched a newer state.
+    db.execute(select(func.pg_advisory_xact_lock(func.hashtext(subscription_id))))
 
 
 def _sincronizar_subscription(db: Session, subscription_id: str) -> str | None:
     # Always re-fetch: events can arrive out of order, so only the current object
     # (not the event payload) reflects the real state.
+    _travar_subscription(db, subscription_id)
     subscription = stripe.Subscription.retrieve(subscription_id, api_key=_api_key())
     assinatura = _localizar_assinatura(db, subscription)
 
@@ -219,6 +276,7 @@ def _checkout_concluido(db: Session, sessao: Any) -> str | None:
     subscription_id = _campo(sessao, "subscription")
     if subscription_id is None:
         return None
+    _travar_subscription(db, subscription_id)
     empresa_id = _campo(sessao, "client_reference_id")
     assinatura = db.scalar(
         select(Assinatura).where(Assinatura.stripe_subscription_id == subscription_id)
@@ -226,7 +284,9 @@ def _checkout_concluido(db: Session, sessao: Any) -> str | None:
     if assinatura is None and empresa_id is not None:
         assinatura = assinatura_vigente(db, uuid.UUID(empresa_id))
     if assinatura is None:
-        raise ValueError(f"nenhuma assinatura local para o checkout da empresa {empresa_id}")
+        raise EventoNaoAplicavel(
+            f"nenhuma assinatura local para o checkout da empresa {empresa_id}"
+        )
     if assinatura.stripe_subscription_id is None:
         assinatura.stripe_subscription_id = subscription_id
     return _sincronizar_subscription(db, subscription_id)
@@ -274,6 +334,9 @@ def processar_evento(db: Session, evento: Any) -> None:
     try:
         with db.begin_nested():
             aviso = _despachar(db, evento["type"], evento["data"]["object"])
+    except EventoNaoAplicavel as exc:
+        aviso = str(exc)
+        sentry_sdk.capture_message(aviso, level="error")
     except Exception as exc:
         registro.erro = f"{type(exc).__name__}: {exc}"[:1000]
         db.commit()

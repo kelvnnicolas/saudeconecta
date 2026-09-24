@@ -51,6 +51,7 @@ class Assinatura(Base):
     )
     stripe_customer_id: Mapped[str] = mapped_column(Text, nullable=False)
     stripe_subscription_id: Mapped[str | None] = mapped_column(Text, unique=True)
+    stripe_checkout_session_id: Mapped[str | None] = mapped_column(Text)
     status: Mapped[StatusAssinatura] = mapped_column(
         SQLEnum(StatusAssinatura, name="status_assinatura_enum"),
         nullable=False,
