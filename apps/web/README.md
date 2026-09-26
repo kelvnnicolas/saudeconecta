@@ -30,21 +30,27 @@ demanda, checkout) mostra o erro de rede na tela em vez de travar.
 
 ### Deploy (Vercel)
 
-Projeto Vercel conectado ao repositório, com **root directory** apontando
-para `apps/web` (obrigatório — é um monorepo, o `package.json` do Next.js não
-está na raiz). Variáveis de ambiente a configurar no painel do Vercel
+Em produção: [`saudeconecta-pi.vercel.app`](https://saudeconecta-pi.vercel.app).
+Projeto Vercel conectado ao repositório, com **root directory** = `apps/web`
+(obrigatório — é um monorepo, o `package.json` do Next.js não está na raiz) e
+framework Next.js. Variáveis de ambiente configuradas no painel do Vercel
 (Settings → Environment Variables), iguais às do `.env.local`:
 
 | Variável | Valor |
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | mesmo projeto Supabase do backend |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | idem (pública por design) |
-| `NEXT_PUBLIC_API_URL` | URL do `apps/api` publicado — **ainda sem host definido**, ver `STATUS.md` |
-| `NEXT_PUBLIC_SENTRY_DSN` | opcional |
+| `NEXT_PUBLIC_API_URL` | `https://saudeconecta-api.onrender.com` (backend no Render, ver `README.md` da raiz) |
+| `NEXT_PUBLIC_SENTRY_DSN` | ainda não configurado |
 
 `next.config.mjs` já libera `*.supabase.co` em `images.remotePatterns` (avatar
 via Supabase Storage) e `lh3.googleusercontent.com` (avatar do Google) — sem
 isso `next/image` derruba a página com "Invalid src prop" em produção.
+
+Pendente (só dá pra fazer pelo painel do Supabase, sem endpoint de API): em
+**Authentication → URL Configuration**, adicionar a URL da Vercel acima em
+*Site URL* e *Redirect URLs* — sem isso, confirmação de e-mail e login com
+Google redirecionam pra um lugar errado em produção.
 
 ## Estrutura
 

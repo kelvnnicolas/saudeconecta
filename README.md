@@ -24,7 +24,7 @@ descartável. Escopo e orçamento já aprovados pelo cliente.
 | CI (lint + testes a cada PR) | ✅ GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) — só o backend, frontend ainda não entrou no CI |
 | Link de pagamento por contato (Stripe/Pagar.me) | ⏳ Não iniciado |
 | Frontend (Next.js) | ✅ 19 telas, integrado ao backend real e testado ponta a ponta (auth, busca, contato, avaliação, upload de avatar) — [`apps/web/README.md`](apps/web/README.md) |
-| Deploy | 🟡 Em andamento — projeto Vercel conectado ao repo (frontend); backend ainda sem host definido |
+| Deploy | ✅ Frontend na Vercel ([`saudeconecta-pi.vercel.app`](https://saudeconecta-pi.vercel.app)) + backend no Render ([`saudeconecta-api.onrender.com`](https://saudeconecta-api.onrender.com)), ambos apontando pro Supabase/Stripe test mode reais — falta configurar o Supabase (Site URL/Redirect URLs), ver seção abaixo |
 
 O trabalho é dividido em planos de implementação por fase (cada um validável
 e testável sozinho antes de avançar para o próximo), disponíveis em
@@ -203,19 +203,30 @@ Os testes passam sem nenhuma credencial real. Para subir a API localmente,
 as variáveis marcadas como **Sim** precisam estar preenchidas (a aplicação
 falha rápido, listando só os nomes do que falta — nunca os valores).
 
-### Prontidão para deploy e QA de produção
+### Deploy
 
-O backend funciona localmente, mas **ainda não está pronto para um deploy de
-produção**. Já resolvido: autenticação real via Supabase Auth, configuração
-validada na inicialização (falha rápido se faltar variável obrigatória),
-segredos fora do controle de versão, migrations com rollback testado de
-ponta a ponta, e todo acesso a dado hoje passa pelo ORM (sem SQL cru fora da
-migration). Ainda faltando, antes de qualquer teste real de segurança/
-estabilidade em produção: CORS, rate limiting, health check consciente do
-banco, verificação de vulnerabilidades de dependências, separação de
-dependências de produção/desenvolvimento, e a própria infraestrutura de
-produção (Postgres gerenciado, hospedagem do backend, estratégia de
-segredos). Checklist completo, item a item, em [`STATUS.md`](STATUS.md).
+- **Frontend**: Vercel, projeto `saudeconecta`, root directory `apps/web`,
+  framework Next.js detectado automaticamente. Produção em
+  [`saudeconecta-pi.vercel.app`](https://saudeconecta-pi.vercel.app) (mais dois
+  alias — time e branch `main`). Variáveis de ambiente configuradas no painel
+  do Vercel: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+  `NEXT_PUBLIC_API_URL` (apontando pro Render abaixo).
+- **Backend**: Render, serviço web `saudeconecta-api` (Python, plano free —
+  sobe do zero após período sem tráfego, então a primeira requisição depois
+  de um tempo demora mais), branch `main`, deploy automático a cada push.
+  Produção em [`saudeconecta-api.onrender.com`](https://saudeconecta-api.onrender.com).
+  Usa o **mesmo** Supabase real e Stripe test mode do desenvolvimento — não
+  um banco/projeto separado. `APP_URL` (usada pelo CORS) aponta pro domínio
+  Vercel acima; `STRIPE_WEBHOOK_SECRET` é de um webhook endpoint criado à
+  parte no Stripe (não o segredo do `stripe listen` local).
+- **Pendente, só configurável pelo painel do Supabase** (sem endpoint de API
+  pra isso): **Authentication → URL Configuration** — adicionar a URL da
+  Vercel em *Site URL* e *Redirect URLs*. Sem isso, o link de confirmação de
+  e-mail e o login com Google redirecionam pra um lugar errado em produção.
+- Ainda faltando antes de QA de segurança/estabilidade real: rate limiting,
+  health check consciente do banco, verificação de vulnerabilidades de
+  dependências, separação de dependências de produção/desenvolvimento, CI
+  cobrindo o frontend. Checklist completo em [`STATUS.md`](STATUS.md).
 
 ## Stack tecnológico
 
