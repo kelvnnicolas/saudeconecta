@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Header } from "@/components/ui/Header";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
@@ -8,19 +8,19 @@ import { assinaturaStatusLabel } from "@/components/ui/StatusBadge";
 import { api, ApiError } from "@/lib/api";
 import type { MinhaAssinaturaResponse } from "@/lib/types";
 
-// TODO(integração): api.minhaAssinatura() — GET /assinaturas/me.
-const MOCK_ASSINATURA: MinhaAssinaturaResponse = {
-  plano: { codigo: "pro", nome: "Pro Enterprise", limite_demandas_ativas: null },
-  status: "active",
-  current_period_end: "2026-10-24T00:00:00Z",
-  cancel_at_period_end: false,
-  uso: { demandas_ativas: 7, limite: null },
-};
-
 export default function MinhaAssinaturaPage() {
-  const [assinatura] = useState<MinhaAssinaturaResponse | null>(MOCK_ASSINATURA);
+  const [assinatura, setAssinatura] = useState<MinhaAssinaturaResponse | null>(null);
+  const [carregandoAssinatura, setCarregandoAssinatura] = useState(true);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .minhaAssinatura()
+      .then(setAssinatura)
+      .catch((e) => setErro(e instanceof Error ? e.message : "Não foi possível carregar a assinatura."))
+      .finally(() => setCarregandoAssinatura(false));
+  }, []);
 
   async function gerenciar() {
     setCarregando(true);
@@ -37,6 +37,29 @@ export default function MinhaAssinaturaPage() {
     } finally {
       setCarregando(false);
     }
+  }
+
+  if (carregandoAssinatura) {
+    return (
+      <>
+        <Header title="Minha Assinatura" backHref="/perfil" />
+        <main className="flex-1 pt-16 flex items-center justify-center bg-surface min-h-screen">
+          <MaterialIcon name="progress_activity" className="text-[32px] text-primary animate-spin" />
+        </main>
+      </>
+    );
+  }
+
+  if (erro && !assinatura) {
+    return (
+      <>
+        <Header title="Minha Assinatura" backHref="/perfil" />
+        <main className="flex-1 pt-16 px-gutter bg-surface min-h-screen flex flex-col items-center justify-center gap-space-sm text-center">
+          <MaterialIcon name="error" className="text-[32px] text-error" />
+          <p className="font-body-md text-body-md text-on-surface-variant">{erro}</p>
+        </main>
+      </>
+    );
   }
 
   if (!assinatura || !assinatura.plano) {

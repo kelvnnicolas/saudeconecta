@@ -1,15 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
 import { DemandaStatusBadge } from "@/components/ui/StatusBadge";
-import { MOCK_MINHAS_DEMANDAS } from "@/lib/mock-data";
 import { api, ApiError } from "@/lib/api";
-import type { MinhaDemandaRead, StatusDemanda } from "@/lib/types";
+import type { DemandaDetalheEmpresa, InteressadoRead, MinhaDemandaRead, StatusDemanda } from "@/lib/types";
 
 const ABAS: { value: "todas" | StatusDemanda; label: string }[] = [
   { value: "todas", label: "Todas" },
@@ -18,33 +17,53 @@ const ABAS: { value: "todas" | StatusDemanda; label: string }[] = [
   { value: "expirada", label: "Expiradas" },
 ];
 
-// Interessados de exemplo só pra ilustrar o accordion (DemandaDetalheEmpresa.interessados
-// vem de GET /demandas/{id}, não da listagem /demandas/minhas). Ver TODO abaixo.
-const INTERESSADOS_MOCK = [
-  { contato_id: 201, profissional_id: "aaaaaaaa-0000-0000-0000-000000000001", nome: "Ana Silva", avatar_url: null, diasAtras: 2 },
-  { contato_id: 202, profissional_id: "aaaaaaaa-0000-0000-0000-000000000010", nome: "Rafael Lima", avatar_url: null, diasAtras: 1 },
-];
-
 export default function MinhasDemandasPage() {
-  // TODO(integração): api.minhasDemandas() — GET /demandas/minhas.
-  const [demandas, setDemandas] = useState<MinhaDemandaRead[]>(MOCK_MINHAS_DEMANDAS);
+  const [demandas, setDemandas] = useState<MinhaDemandaRead[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
   const [aba, setAba] = useState<(typeof ABAS)[number]["value"]>("todas");
   const [expandida, setExpandida] = useState<string | null>(null);
+  const [interessadosPorDemanda, setInteressadosPorDemanda] = useState<Record<string, InteressadoRead[]>>({});
+  const [carregandoInteressados, setCarregandoInteressados] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .minhasDemandas()
+      .then(setDemandas)
+      .catch((e) => setErro(e instanceof Error ? e.message : "Não foi possível carregar as demandas."))
+      .finally(() => setCarregando(false));
+  }, []);
 
   const filtradas = useMemo(
     () => demandas.filter((d) => aba === "todas" || d.status === aba),
     [demandas, aba],
   );
 
+  async function alternarExpandida(id: string) {
+    const proxima = expandida === id ? null : id;
+    setExpandida(proxima);
+    if (proxima && !interessadosPorDemanda[proxima]) {
+      setCarregandoInteressados(proxima);
+      try {
+        const detalhe = (await api.detalheDemanda(proxima)) as DemandaDetalheEmpresa;
+        setInteressadosPorDemanda((atual) => ({ ...atual, [proxima]: detalhe.interessados }));
+      } catch {
+        setInteressadosPorDemanda((atual) => ({ ...atual, [proxima]: [] }));
+      } finally {
+        setCarregandoInteressados(null);
+      }
+    }
+  }
+
   async function mudarStatus(id: string, status: StatusDemanda) {
+    const anterior = demandas;
     setDemandas((atual) => atual.map((d) => (d.id === id ? { ...d, status } : d)));
     try {
-      // TODO(integração): quando a API estiver no ar, o optimistic update acima
-      // já cobre a UI; aqui só propaga o erro se o backend recusar a transição.
       await api.atualizarStatusDemanda(id, status);
     } catch (e) {
-      if (e instanceof ApiError && e.code === "transicao_invalida") {
-        setDemandas(MOCK_MINHAS_DEMANDAS); // reverte
+      setDemandas(anterior); // reverte o optimistic update
+      if (!(e instanceof ApiError && e.code === "transicao_invalida")) {
+        setErro(e instanceof Error ? e.message : "Não foi possível atualizar o status.");
       }
     }
   }
@@ -84,9 +103,17 @@ export default function MinhasDemandasPage() {
           })}
         </div>
 
+        {carregando && (
+          <div className="flex justify-center py-space-lg">
+            <MaterialIcon name="progress_activity" className="text-[28px] text-primary animate-spin" />
+          </div>
+        )}
+        {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">{erro}</p>}
+
         <div className="flex flex-col gap-space-sm">
           {filtradas.map((d) => {
             const aberta = expandida === d.id;
+            const interessados = interessadosPorDemanda[d.id];
             return (
               <article key={d.id} className="bg-surface-container-lowest rounded-2xl neu-surface overflow-hidden">
                 <div className="p-space-md flex flex-col gap-space-sm">
@@ -103,7 +130,7 @@ export default function MinhasDemandasPage() {
                   <p className="font-body-md text-body-md text-on-surface-variant line-clamp-2">{d.descricao}</p>
                 </div>
                 <button
-                  onClick={() => setExpandida(aberta ? null : d.id)}
+                  onClick={() => alternarExpandida(d.id)}
                   className="w-full flex items-center justify-between px-space-md py-space-sm border-t border-outline-variant/30 bg-surface-container-low"
                 >
                   <span className="inline-flex items-center gap-1 font-label-md text-label-md text-on-surface">
@@ -114,8 +141,12 @@ export default function MinhasDemandasPage() {
                 </button>
                 {aberta && (
                   <div className="flex flex-col divide-y divide-outline-variant/20">
-                    {/* TODO(integração): api.detalheDemanda(d.id) -> interessados */}
-                    {INTERESSADOS_MOCK.slice(0, d.interessados_count).map((p) => (
+                    {carregandoInteressados === d.id && (
+                      <div className="flex justify-center py-space-sm">
+                        <MaterialIcon name="progress_activity" className="text-[20px] text-primary animate-spin" />
+                      </div>
+                    )}
+                    {interessados?.map((p) => (
                       <div key={p.contato_id} className="flex items-center gap-space-sm px-space-md py-space-sm">
                         {p.avatar_url ? (
                           <Image src={p.avatar_url} alt={p.nome} width={40} height={40} className="w-10 h-10 rounded-full object-cover" />
@@ -126,7 +157,9 @@ export default function MinhasDemandasPage() {
                         )}
                         <div className="flex-1 flex flex-col">
                           <span className="font-label-md text-label-md text-on-surface">{p.nome}</span>
-                          <span className="font-caption text-caption text-on-surface-variant">Interessado(a) há {p.diasAtras} dia(s)</span>
+                          <span className="font-caption text-caption text-on-surface-variant">
+                            Interessado(a) em {new Date(p.criado_em).toLocaleDateString("pt-BR")}
+                          </span>
                         </div>
                         <Link href="/contatos" className="px-space-sm h-9 rounded-lg bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm flex items-center">
                           Ver conversa
@@ -148,7 +181,7 @@ export default function MinhasDemandasPage() {
               </article>
             );
           })}
-          {filtradas.length === 0 && (
+          {!carregando && filtradas.length === 0 && (
             <p className="font-body-md text-body-md text-on-surface-variant text-center py-space-lg">
               Nenhuma demanda nesta categoria.
             </p>

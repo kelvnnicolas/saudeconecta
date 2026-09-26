@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { Header } from "@/components/ui/Header";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { type CadastroEmpresaInput, cadastroEmpresaSchema } from "@/lib/validations/auth";
-import { signUpWithPassword } from "@/lib/supabase-client";
+import { signUpAndEnsureSession } from "@/lib/supabase-client";
 import { api } from "@/lib/api";
 import type { TipoEmpresa } from "@/lib/types";
 
@@ -39,7 +39,7 @@ export default function CadastroEmpresaPage() {
     setErro(null);
     setEnviando(true);
     try {
-      await signUpWithPassword(data.email, data.password);
+      await signUpAndEnsureSession(data.email, data.password, "empresa");
       await api.syncProfile({
         papel: "empresa",
         nome: data.nome,

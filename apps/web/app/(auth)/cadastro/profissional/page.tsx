@@ -9,7 +9,7 @@ import { Header } from "@/components/ui/Header";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { type CadastroProfissionalInput, cadastroProfissionalSchema } from "@/lib/validations/auth";
 import { MOCK_ESPECIALIDADES } from "@/lib/mock-data";
-import { signUpWithPassword } from "@/lib/supabase-client";
+import { signUpAndEnsureSession } from "@/lib/supabase-client";
 import { api } from "@/lib/api";
 
 export default function CadastroProfissionalPage() {
@@ -39,7 +39,7 @@ export default function CadastroProfissionalPage() {
       // Fluxo real são 3 chamadas: Supabase Auth -> POST /auth/sync (cria o
       // profile) -> PUT /profissionais/me (especialidades, registro, preço).
       // Ver docs/design/telas/MANIFEST.md.
-      await signUpWithPassword(data.email, data.password);
+      await signUpAndEnsureSession(data.email, data.password, "profissional");
       await api.syncProfile({
         papel: "profissional",
         nome: data.nome,

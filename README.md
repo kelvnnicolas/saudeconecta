@@ -20,11 +20,11 @@ descartável. Escopo e orçamento já aprovados pelo cliente.
 | Plano 3 — Busca de profissionais, avaliações e contatos (+ e-mail via Resend) | ✅ Integrado à `main` |
 | Plano 4 — Upload de avatar/logo (Supabase Storage) | ✅ Integrado à `main` |
 | Plano 5 — Relatório de analytics (pandas) | ✅ Integrado à `main` |
-| Assinatura B2B (Stripe Checkout + Customer Portal) e demandas | ✅ Backend implementado e testado — teste manual com o Stripe real ⛔ bloqueado (ver [`STATUS.md`](STATUS.md)) |
-| CI (lint + testes a cada PR) | ✅ GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) |
+| Assinatura B2B (Stripe Checkout + Customer Portal) e demandas | ✅ Backend implementado e testado — checkout/webhook com Stripe real ⛔ ainda não testado ponta a ponta (ver [`STATUS.md`](STATUS.md)) |
+| CI (lint + testes a cada PR) | ✅ GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) — só o backend, frontend ainda não entrou no CI |
 | Link de pagamento por contato (Stripe/Pagar.me) | ⏳ Não iniciado |
-| Frontend (Next.js) | ⏳ Não iniciado |
-| Deploy | ⏳ Não iniciado |
+| Frontend (Next.js) | ✅ 19 telas, integrado ao backend real e testado ponta a ponta (auth, busca, contato, avaliação, upload de avatar) — [`apps/web/README.md`](apps/web/README.md) |
+| Deploy | 🟡 Em andamento — projeto Vercel conectado ao repo (frontend); backend ainda sem host definido |
 
 O trabalho é dividido em planos de implementação por fase (cada um validável
 e testável sozinho antes de avançar para o próximo), disponíveis em
@@ -76,7 +76,31 @@ rodando contra Postgres real via Docker (não SQLite/mocks):
   inicializado, `GET /health`, CI no GitHub Actions.
 
 Ainda **fora de escopo** nesta etapa (ver o design spec para a lista
-completa): link de pagamento por contato, frontend, deploy.
+completa): link de pagamento por contato, deploy do backend.
+
+### O que já funciona (frontend, `apps/web`)
+
+Next.js 14 (App Router) + TypeScript + Tailwind, 19 telas geradas a partir de
+[`docs/design/telas/`](docs/design/telas/), com todo formulário e listagem
+chamando o backend real (`lib/api.ts`) — sem mock no caminho principal:
+
+- **Autenticação**: cadastro/login via Supabase Auth real, com sessão
+  restaurada de forma consistente entre reloads (`lib/use-current-user.ts`,
+  um único store por aba) e guard de rota no grupo `(painel)`.
+- **Busca e perfil público**: `GET /profissionais` com filtro, e
+  `GET /profissionais/{id}` + avaliações no perfil público.
+- **Contato e avaliação**: novo contato, lista de contatos (com nome da outra
+  parte resolvido), avaliação após contato.
+- **Upload de avatar**: `POST /perfis/me/avatar` pro Supabase Storage.
+- **B2B**: planos, checkout (Stripe Checkout hospedado), portal de
+  assinatura, demandas e oportunidades.
+
+Testado manualmente de ponta a ponta contra o backend real (Supabase +
+Stripe test mode): cadastro profissional/empresa, login/logout (inclusive
+sobrevivendo a reload completo da página), contato entre as partes,
+avaliação (gravada e conferida direto na API) e upload de avatar. Detalhes,
+gaps conhecidos e o que ainda falta testar em
+[`apps/web/INTEGRATION_CHECKLIST.md`](apps/web/INTEGRATION_CHECKLIST.md).
 
 ### Rodando o backend localmente
 
@@ -109,6 +133,18 @@ fica em `http://localhost:8000/docs`.
 
 Os testes **não** dependem do `.env`: `tests/conftest.py` força valores
 fictícios para Stripe/Sentry/Resend, então nenhum teste chama um serviço real.
+
+### Rodando o frontend localmente
+
+```bash
+cd apps/web
+npm install
+cp .env.example .env.local   # NEXT_PUBLIC_API_URL + chaves do mesmo projeto Supabase do backend
+npm run dev
+```
+
+Abre em `http://localhost:3000`. Detalhes em
+[`apps/web/README.md`](apps/web/README.md).
 
 #### Stripe (modo de teste)
 
@@ -206,9 +242,11 @@ Detalhes completos da stack, modelo de dados e critérios de aceite estão no
 saudeconecta/
 ├── .github/workflows/ci.yml # lint + testes do backend a cada PR
 ├── docker-compose.dev.yml   # Postgres local (dev + test) para desenvolvimento
-├── docs/superpowers/
-│   ├── specs/     # design specs aprovados
-│   └── plans/     # planos de implementação por fase (um por branch/feature)
+├── docs/
+│   ├── design/telas/        # mockups estáticos por tela (referência visual, não tocar)
+│   └── superpowers/
+│       ├── specs/     # design specs aprovados
+│       └── plans/     # planos de implementação por fase (um por branch/feature)
 └── apps/
     ├── api/                 # backend FastAPI (na main)
     │   ├── app/
@@ -221,7 +259,10 @@ saudeconecta/
     │   │   ├── services/    # regras de negócio, autorização, billing (único ponto que usa o Stripe)
     │   │   └── storage/     # helper do Supabase Storage
     │   ├── alembic/         # migrations
-    │   ├── tests/           # 189 testes, rodando contra Postgres real
+    │   ├── tests/           # 192 testes, rodando contra Postgres real
     │   └── .env.example
-    └── web/       # frontend Next.js (ainda não iniciado)
+    └── web/                 # frontend Next.js (App Router), integrado ao backend real
+        ├── app/             # (public), (auth), (painel) — ver apps/web/README.md
+        ├── components/
+        └── lib/             # api.ts, supabase-client.ts, use-current-user.ts, validations/
 ```

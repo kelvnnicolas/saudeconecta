@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "@/components/ui/Header";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
-import { MOCK_PLANOS } from "@/lib/mock-data";
 import { api, ApiError } from "@/lib/api";
+import type { PlanoRead } from "@/lib/types";
 
 // Corrigido em relação ao mockup original do Stitch (checkout_corporativo_b2b):
 // removido formulário próprio de cartão/CVV/boleto/pix, "múltiplos logins" e
 // "contrato gerado" — sem suporte no backend. O fluxo real é: escolher o plano,
 // chamar POST /assinaturas/checkout e redirecionar para o checkout_url (Stripe
-// Checkout hospedado). Preço e benefícios abaixo são texto fixo do frontend —
-// PlanoRead não devolve isso hoje (ver MANIFEST).
+// Checkout hospedado). Lista de planos (codigo/nome/limite) vem de GET /planos;
+// preço e benefícios abaixo continuam texto fixo — PlanoRead não devolve isso
+// hoje (ver MANIFEST).
 const BENEFICIOS: Record<string, { preco: string; itens: string[]; destaque?: boolean }> = {
   essencial: {
     preco: "R$ 249/mês",
@@ -33,9 +34,22 @@ const BENEFICIOS: Record<string, { preco: string; itens: string[]; destaque?: bo
 };
 
 export default function PlanosEmpresaPage() {
-  const [selecionado, setSelecionado] = useState(MOCK_PLANOS[1]?.codigo ?? MOCK_PLANOS[0]?.codigo);
+  const [planos, setPlanos] = useState<PlanoRead[]>([]);
+  const [carregandoPlanos, setCarregandoPlanos] = useState(true);
+  const [selecionado, setSelecionado] = useState<string | undefined>();
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .listPlanos()
+      .then((lista) => {
+        setPlanos(lista);
+        setSelecionado((atual) => atual ?? lista[lista.length - 1]?.codigo ?? lista[0]?.codigo);
+      })
+      .catch((e) => setErro(e instanceof Error ? e.message : "Não foi possível carregar os planos."))
+      .finally(() => setCarregandoPlanos(false));
+  }, []);
 
   async function assinar() {
     if (!selecionado) return;
@@ -66,8 +80,14 @@ export default function PlanosEmpresaPage() {
           </p>
         </section>
 
+        {carregandoPlanos && (
+          <div className="flex justify-center py-space-lg">
+            <MaterialIcon name="progress_activity" className="text-[28px] text-primary animate-spin" />
+          </div>
+        )}
+
         <div className="flex flex-col gap-space-sm">
-          {MOCK_PLANOS.map((plano) => {
+          {planos.map((plano) => {
             const info = BENEFICIOS[plano.codigo];
             const ativo = selecionado === plano.codigo;
             return (
@@ -118,7 +138,7 @@ export default function PlanosEmpresaPage() {
 
         <button
           onClick={assinar}
-          disabled={!selecionado || carregando}
+          disabled={!selecionado || carregando || carregandoPlanos}
           className="w-full h-12 rounded-xl neu-surface neu-pressable bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center gap-space-xs neu-surface disabled:opacity-60"
         >
           <MaterialIcon name="assignment_turned_in" className="text-[20px]" />

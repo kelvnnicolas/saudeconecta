@@ -1,23 +1,57 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Header } from "@/components/ui/Header";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { StarRating } from "@/components/ui/StarRating";
-import { MOCK_AVALIACOES, MOCK_PROFISSIONAL_DETAIL } from "@/lib/mock-data";
+import { api } from "@/lib/api";
+import type { AvaliacaoRead, ProfissionalRead } from "@/lib/types";
 
-// TODO(integração): api.getProfissional(params.id) + api.listAvaliacoes(params.id)
-// em paralelo (Promise.all), com loading.tsx cobrindo o Suspense. Por ora sempre
-// mostra o profissional de exemplo, independente do :id na URL.
 export default function PerfilPublicoProfissionalPage({ params }: { params: { id: string } }) {
-  const profissional = MOCK_PROFISSIONAL_DETAIL;
-  const avaliacoes = MOCK_AVALIACOES;
+  const [profissional, setProfissional] = useState<ProfissionalRead | null>(null);
+  const [avaliacoes, setAvaliacoes] = useState<AvaliacaoRead[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
+  const [favorito, setFavorito] = useState(false);
+
+  useEffect(() => {
+    Promise.all([api.getProfissional(params.id), api.listAvaliacoes(params.id)])
+      .then(([p, a]) => {
+        setProfissional(p);
+        setAvaliacoes(a);
+      })
+      .catch((e) => setErro(e instanceof Error ? e.message : "Não foi possível carregar o perfil."))
+      .finally(() => setCarregando(false));
+  }, [params.id]);
+
   const notaMedia = avaliacoes.length
     ? avaliacoes.reduce((soma, a) => soma + a.nota, 0) / avaliacoes.length
     : null;
-  const [favorito, setFavorito] = useState(false);
+
+  if (carregando) {
+    return (
+      <>
+        <Header title="Perfil do Profissional" backHref="/buscar" />
+        <main className="flex-1 pt-16 flex items-center justify-center bg-surface min-h-screen">
+          <MaterialIcon name="progress_activity" className="text-[32px] text-primary animate-spin" />
+        </main>
+      </>
+    );
+  }
+
+  if (erro || !profissional) {
+    return (
+      <>
+        <Header title="Perfil do Profissional" backHref="/buscar" />
+        <main className="flex-1 pt-16 px-gutter bg-surface min-h-screen flex flex-col items-center justify-center gap-space-sm text-center">
+          <MaterialIcon name="error" className="text-[32px] text-error" />
+          <p className="font-body-md text-body-md text-on-surface-variant">{erro ?? "Profissional não encontrado."}</p>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>

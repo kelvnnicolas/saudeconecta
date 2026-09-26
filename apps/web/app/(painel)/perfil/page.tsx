@@ -13,18 +13,29 @@ import { api } from "@/lib/api";
 
 export default function MeuPerfilPage() {
   const router = useRouter();
-  const { papel, setPapel, profile, profissional, empresa } = useCurrentUser();
+  const { session, profissional, empresa, refresh } = useCurrentUser();
   const fileRef = useRef<HTMLInputElement>(null);
   const [enviandoAvatar, setEnviandoAvatar] = useState(false);
+  const [erroAvatar, setErroAvatar] = useState<string | null>(null);
+
+  // Nome/avatar/localização vêm de profissional ou empresa (o que estiver
+  // carregado) — não existe um "GET /profiles/me" genérico, ver
+  // lib/use-current-user.ts.
+  const nome = profissional?.nome ?? empresa?.nome ?? session?.user.email ?? "";
+  const avatarUrl = profissional?.avatar_url ?? empresa?.avatar_url ?? null;
+  const cidade = profissional?.cidade ?? empresa?.cidade ?? null;
+  const estado = profissional?.estado ?? empresa?.estado ?? null;
 
   async function onAvatarSelecionado(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setEnviandoAvatar(true);
+    setErroAvatar(null);
     try {
-      await api.uploadAvatar(file); // TODO(integração): recarregar profile depois
-    } catch {
-      // modo de exemplo sem backend — silencioso de propósito aqui
+      await api.uploadAvatar(file);
+      await refresh();
+    } catch (err) {
+      setErroAvatar(err instanceof Error ? err.message : "Não foi possível enviar a foto.");
     } finally {
       setEnviandoAvatar(false);
     }
@@ -50,8 +61,8 @@ export default function MeuPerfilPage() {
 
         <section className="flex flex-col items-center gap-space-sm bg-surface-container-lowest rounded-2xl p-space-md neu-surface">
           <button onClick={() => fileRef.current?.click()} className="relative" aria-label="Trocar foto">
-            {profile.avatar_url ? (
-              <Image src={profile.avatar_url} alt={profile.nome} width={88} height={88} className="w-24 h-24 rounded-full object-cover" />
+            {avatarUrl ? (
+              <Image src={avatarUrl} alt={nome} width={88} height={88} className="w-24 h-24 rounded-full object-cover" />
             ) : (
               <div className="w-24 h-24 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
                 <MaterialIcon name="person" className="text-[36px]" />
@@ -63,9 +74,10 @@ export default function MeuPerfilPage() {
           </button>
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onAvatarSelecionado} />
           <div className="text-center">
-            <p className="font-title-md text-title-md text-on-surface">{profile.nome}</p>
-            <p className="font-caption text-caption text-on-surface-variant">{profile.email}</p>
+            <p className="font-title-md text-title-md text-on-surface">{nome}</p>
+            <p className="font-caption text-caption text-on-surface-variant">{session?.user.email}</p>
           </div>
+          {erroAvatar && <p className="font-caption text-caption text-error">{erroAvatar}</p>}
         </section>
 
         {profissional && (
@@ -95,31 +107,22 @@ export default function MeuPerfilPage() {
           </section>
         )}
 
+        {!profissional && !empresa && (
+          <section className="rounded-2xl p-space-md bg-secondary-container/40 border border-secondary-container flex items-start gap-space-xs">
+            <MaterialIcon name="info" className="text-[18px] text-on-secondary-container mt-0.5" />
+            <p className="font-caption text-caption text-on-secondary-container">
+              Seu perfil ainda não foi sincronizado com a API (falta um{" "}
+              <code>PUT /profissionais/me</code> ou <code>PUT /empresas/me</code> — normalmente
+              feito no cadastro).
+            </p>
+          </section>
+        )}
+
         <section className="bg-surface-container-lowest rounded-2xl p-space-md neu-surface flex flex-col gap-space-xs">
           <h2 className="font-title-md text-title-md text-on-surface">Localização</h2>
           <p className="font-body-md text-body-md text-on-surface-variant">
-            {[profile.cidade, profile.estado].filter(Boolean).join(", ") || "Não informado"}
+            {[cidade, estado].filter(Boolean).join(", ") || "Não informado"}
           </p>
-        </section>
-
-        <section className="bg-surface-container-low rounded-2xl p-space-md flex flex-col gap-space-xs">
-          <p className="font-caption text-caption text-on-surface-variant">
-            Modo de exemplo (sem backend): alternar papel para navegar as duas visões do app.
-          </p>
-          <div className="flex gap-space-xs">
-            <button
-              onClick={() => setPapel("profissional")}
-              className={`flex-1 h-10 rounded-xl font-label-sm text-label-sm neu-pressable ${papel === "profissional" ? "bg-primary text-on-primary neu-surface-sm" : "bg-surface-container text-on-surface-variant neu-inset-sm"}`}
-            >
-              Ver como profissional
-            </button>
-            <button
-              onClick={() => setPapel("empresa")}
-              className={`flex-1 h-10 rounded-xl font-label-sm text-label-sm neu-pressable ${papel === "empresa" ? "bg-primary text-on-primary neu-surface-sm" : "bg-surface-container text-on-surface-variant neu-inset-sm"}`}
-            >
-              Ver como empresa
-            </button>
-          </div>
         </section>
       </main>
       <BottomNav />

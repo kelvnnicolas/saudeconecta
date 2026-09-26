@@ -1,26 +1,50 @@
 # SaúdeConecta — Frontend (`apps/web`)
 
 Next.js 14 (App Router) + TypeScript + Tailwind, gerado a partir das 19 telas em
-[`docs/design/telas/`](../../docs/design/telas/). Todas as rotas navegam de
-verdade entre si; os dados vêm de `lib/mock-data.ts` até o backend
-(`apps/api`) ser conectado — ver "Como integrar" abaixo e o
-[`INTEGRATION_CHECKLIST.md`](./INTEGRATION_CHECKLIST.md) pra riscar item por
-item durante a integração.
+[`docs/design/telas/`](../../docs/design/telas/). Integrado ao backend real
+(`apps/api`): toda página chama `lib/api.ts`, a sessão vem do Supabase Auth de
+verdade (`lib/use-current-user.ts`, um único store por aba — sem isso, cada
+componente que lê a sessão corria separadamente contra a restauração
+assíncrona do Supabase e podia divergir num reload) e o grupo `(painel)`
+exige login.
+
+Testado manualmente de ponta a ponta contra Supabase + Stripe test mode reais:
+cadastro profissional/empresa, login/logout (inclusive sobrevivendo a reload
+completo), contato entre as partes, avaliação (gravada e conferida direto na
+API) e upload de avatar (Supabase Storage). Detalhes, gaps conhecidos e o que
+ainda falta testar (checkout/webhook do Stripe, fluxo de demandas, e-mail via
+Resend) em [`INTEGRATION_CHECKLIST.md`](./INTEGRATION_CHECKLIST.md).
 
 ## Rodando localmente
 
 ```bash
 cd apps/web
 npm install
-cp .env.example .env.local   # preencher quando for integrar de verdade
+cp .env.example .env.local   # preencher NEXT_PUBLIC_API_URL e as chaves do Supabase
 npm run dev
 ```
 
-Abre em `http://localhost:3000`. Sem nenhuma variável de ambiente preenchida o
-app roda inteiro (navegação, formulários, validação) com os dados de exemplo;
-qualquer ação que bate na API real (login, cadastro, busca, contato, demanda,
-checkout) tenta `fetch` em `NEXT_PUBLIC_API_URL` de verdade e mostra o erro de
-rede se o backend não estiver no ar — isso é esperado, não é bug.
+Abre em `http://localhost:3000`. Sem `apps/api` rodando (ou sem CORS/credenciais
+configuradas nele), toda ação que bate na API real (login, busca, contato,
+demanda, checkout) mostra o erro de rede na tela em vez de travar.
+
+### Deploy (Vercel)
+
+Projeto Vercel conectado ao repositório, com **root directory** apontando
+para `apps/web` (obrigatório — é um monorepo, o `package.json` do Next.js não
+está na raiz). Variáveis de ambiente a configurar no painel do Vercel
+(Settings → Environment Variables), iguais às do `.env.local`:
+
+| Variável | Valor |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | mesmo projeto Supabase do backend |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | idem (pública por design) |
+| `NEXT_PUBLIC_API_URL` | URL do `apps/api` publicado — **ainda sem host definido**, ver `STATUS.md` |
+| `NEXT_PUBLIC_SENTRY_DSN` | opcional |
+
+`next.config.mjs` já libera `*.supabase.co` em `images.remotePatterns` (avatar
+via Supabase Storage) e `lh3.googleusercontent.com` (avatar do Google) — sem
+isso `next/image` derruba a página com "Invalid src prop" em produção.
 
 ## Estrutura
 
@@ -28,52 +52,40 @@ rede se o backend não estiver no ar — isso é esperado, não é bug.
 app/
 ├── (public)/      # landing, busca, perfil público, planos B2B
 ├── (auth)/        # entrar, cadastro/profissional, cadastro/empresa
-└── (painel)/      # perfil, avaliações, contatos, demandas, oportunidades, assinatura
-components/ui/      # Header, BottomNav, badges de status, estrelas
+└── (painel)/      # layout com guard de sessão + perfil, avaliações, contatos, demandas, oportunidades, assinatura
+components/ui/      # Header, BottomNav, Logo, badges de status, estrelas, ThemeToggle
 components/busca/   # card de profissional
 components/demandas/ # card de demanda
 lib/
-├── types.ts         # espelha os schemas Pydantic de apps/api 1:1
-├── api.ts            # cliente HTTP tipado, uma função por endpoint
-├── supabase-client.ts # Supabase Auth (signIn/signUp/signOut)
-├── mock-data.ts       # dados de exemplo, no mesmo formato da API real
-├── use-current-user.ts # troca de papel (profissional/empresa) via localStorage
-└── validations/        # schemas Zod dos formulários
+├── types.ts            # espelha os schemas Pydantic de apps/api 1:1
+├── api.ts               # cliente HTTP tipado, uma função por endpoint
+├── supabase-client.ts    # Supabase Auth (signIn/signUp/signOut/onAuthStateChange)
+├── use-current-user.ts   # sessão real + GET /profissionais|empresas/{id}
+├── mock-data.ts           # só a lista parcial de especialidades (prioridade adiada)
+└── validations/           # schemas Zod dos formulários
 ```
 
-## Como integrar com o backend (o que falta)
+## O que ainda falta
 
-O código já está pronto para isso — trocar a fonte do dado, não a forma dele:
+Ver [`INTEGRATION_CHECKLIST.md`](./INTEGRATION_CHECKLIST.md) para a lista
+completa. Resumo:
 
-1. **CORS no backend**: `apps/api` ainda não tem CORS configurado (ver
-   `STATUS.md` do repo) — nenhuma chamada real vai funcionar até isso existir.
-2. Preencher `apps/web/.env.local` com `NEXT_PUBLIC_API_URL`,
-   `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` (mesmo projeto
-   Supabase do backend).
-3. Trocar os imports de `lib/mock-data.ts` por chamadas de `lib/api.ts` nas
-   páginas — cada ponto está marcado com `// TODO(integração): ...` no código.
-4. Pontos que precisam de decisão de produto/backend antes de integrar (todos
-   documentados com comentário no código-fonte, resumo em
-   `docs/design/telas/MANIFEST.md`):
-   - `GET /avaliacoes` não devolve nome de quem avaliou (só `autor_id`).
-   - `GET /demandas/oportunidades` não devolve `ja_demonstrei_interesse` por
-     item — hoje rastreado em memória no cliente depois de um interesse bem-sucedido.
-   - `GET /contatos` não devolve nome/avatar da outra parte — hoje resolvido
-     contra os dados de exemplo.
-   - `GET /planos` não devolve preço nem lista de benefícios — hoje é texto
-     fixo em `app/(public)/empresa/planos/page.tsx`.
-   - `POST /contatos/{id}/pagamento` (link de pagamento por contato) ainda não
-     existe no backend — a seção já está na tela, sem ação.
-5. **Lista de especialidades** (prioridade combinada como posterior):
-   `lib/mock-data.ts` tem só 6 das 10 especialidades reais semeadas no banco.
-   Quando for a hora, trocar por `api.listEspecialidades()`.
+1. **Backend sem host de produção definido** — `apps/api` roda local (Supabase
+   real + Stripe test mode); falta decidir e configurar onde publicá-lo
+   (Render/Railway) antes de `NEXT_PUBLIC_API_URL` apontar pra algo real.
+2. Checkout/webhook do Stripe e o fluxo de demandas/oportunidades ainda não
+   foram testados ponta a ponta nesta rodada de integração.
+3. Gaps de dados que dependem do backend (nome de quem avaliou, preço dos
+   planos, link de pagamento por contato) — documentados por página no
+   checklist, nenhum bloqueia o resto de funcionar.
+4. Lista de especialidades em `lib/mock-data.ts` incompleta (6 das 10 reais,
+   prioridade adiada).
 
 ## Testado manualmente
 
-Fluxos navegados de ponta a ponta no browser durante a implementação: landing
-→ busca → perfil público → novo contato (chamada real, erro de rede
-esperado); troca de papel profissional/empresa; minhas demandas (expandir
-interessados, mudar status); criar nova demanda (validação Zod, chamada
-real); oportunidades (demonstrar interesse); planos B2B; cadastro de
-profissional (seleção de especialidades); página 404. `npx tsc --noEmit`
-limpo.
+Ponta a ponta contra o backend real (Supabase + Stripe test mode): cadastro
+profissional/empresa, login/logout (inclusive sobrevivendo a reload completo
+da página — ver fix do `use-current-user.ts`), guard de sessão, contato entre
+as partes, avaliação (gravada e conferida direto na API) e upload de avatar
+pro Supabase Storage. Backend: `pytest` (192 testes, incluindo CORS), `ruff` e
+`black` limpos. Frontend: `npx tsc --noEmit` limpo.

@@ -1,22 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
 import { DemandCard } from "@/components/demandas/DemandCard";
-import { MOCK_OPORTUNIDADES } from "@/lib/mock-data";
 import { api, ApiError } from "@/lib/api";
+import type { DemandaRead } from "@/lib/types";
 
 export default function OportunidadesPage() {
-  // TODO(integração): api.oportunidades({ especialidade_id, cidade }) — GET
-  // /demandas/oportunidades.
-  const [oportunidades] = useState(MOCK_OPORTUNIDADES.items);
+  const [oportunidades, setOportunidades] = useState<DemandaRead[]>([]);
+  const [carregando, setCarregando] = useState(true);
   // GET /demandas/oportunidades não devolve ja_demonstrei_interesse por item —
   // rastreando localmente na sessão depois de um POST /interesse bem-sucedido.
   const [interessesEnviados, setInteressesEnviados] = useState<Set<string>>(new Set());
   const [enviando, setEnviando] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .oportunidades()
+      .then((resposta) => setOportunidades(resposta.items))
+      .catch((e) => setErro(e instanceof Error ? e.message : "Não foi possível carregar as oportunidades."))
+      .finally(() => setCarregando(false));
+  }, []);
 
   async function demonstrarInteresse(id: string) {
     setEnviando(id);
@@ -27,11 +34,8 @@ export default function OportunidadesPage() {
     } catch (e) {
       if (e instanceof ApiError && e.code === "interesse_existente") {
         setInteressesEnviados((atual) => new Set(atual).add(id));
-      } else if (e instanceof ApiError) {
-        setErro(`Não foi possível enviar (${e.code ?? e.message}).`);
       } else {
-        // backend fora do ar em modo de exemplo — segue o fluxo visual mesmo assim
-        setInteressesEnviados((atual) => new Set(atual).add(id));
+        setErro(e instanceof ApiError ? `Não foi possível enviar (${e.code ?? e.message}).` : "Não foi possível enviar. Tente de novo.");
       }
     } finally {
       setEnviando(null);
@@ -51,6 +55,11 @@ export default function OportunidadesPage() {
           </p>
         </div>
 
+        {carregando && (
+          <div className="flex justify-center py-space-lg">
+            <MaterialIcon name="progress_activity" className="text-[28px] text-primary animate-spin" />
+          </div>
+        )}
         {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">{erro}</p>}
 
         <div className="flex flex-col gap-space-sm">
@@ -76,7 +85,7 @@ export default function OportunidadesPage() {
               />
             );
           })}
-          {oportunidades.length === 0 && (
+          {!carregando && oportunidades.length === 0 && (
             <p className="font-body-md text-body-md text-on-surface-variant text-center py-space-lg">
               Nenhuma oportunidade compatível no momento.
             </p>

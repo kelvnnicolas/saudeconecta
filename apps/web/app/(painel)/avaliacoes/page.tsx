@@ -1,15 +1,33 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { StarRating } from "@/components/ui/StarRating";
+import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
-import { MOCK_AVALIACOES } from "@/lib/mock-data";
 import { useCurrentUser } from "@/lib/use-current-user";
+import { api } from "@/lib/api";
+import type { AvaliacaoRead } from "@/lib/types";
 
 export default function MinhasAvaliacoesPage() {
-  const { profile } = useCurrentUser();
-  // TODO(integração): api.listAvaliacoes(profile.id) — GET /avaliacoes?alvo_id=
-  const avaliacoes = MOCK_AVALIACOES.filter((a) => a.alvo_id === profile.id);
+  const { session } = useCurrentUser();
+  const [avaliacoes, setAvaliacoes] = useState<AvaliacaoRead[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!session) return;
+    let ativo = true;
+    api
+      .listAvaliacoes(session.user.id)
+      .then((lista) => ativo && setAvaliacoes(lista))
+      .catch((e) => ativo && setErro(e instanceof Error ? e.message : "Não foi possível carregar."))
+      .finally(() => ativo && setCarregando(false));
+    return () => {
+      ativo = false;
+    };
+  }, [session]);
+
   const media = avaliacoes.length
     ? avaliacoes.reduce((s, a) => s + a.nota, 0) / avaliacoes.length
     : null;
@@ -29,7 +47,15 @@ export default function MinhasAvaliacoesPage() {
           )}
         </div>
 
-        {avaliacoes.length === 0 && (
+        {carregando && (
+          <div className="flex justify-center py-space-lg">
+            <MaterialIcon name="progress_activity" className="text-[28px] text-primary animate-spin" />
+          </div>
+        )}
+
+        {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">{erro}</p>}
+
+        {!carregando && avaliacoes.length === 0 && !erro && (
           <p className="font-body-md text-body-md text-on-surface-variant text-center py-space-lg">
             Você ainda não recebeu avaliações.
           </p>

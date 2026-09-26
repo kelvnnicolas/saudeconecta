@@ -1,22 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
 import { ContatoStatusBadge } from "@/components/ui/StatusBadge";
-import { MOCK_CONTATOS, MOCK_SEARCH_RESULTS, MOCK_PROFISSIONAL_PROFILE } from "@/lib/mock-data";
 import { useCurrentUser } from "@/lib/use-current-user";
-import type { StatusContato } from "@/lib/types";
-
-// ContatoRead só devolve solicitante_id/profissional_id (UUID), não nome nem
-// avatar da outra parte — resolvendo aqui pelos dados de exemplo. Numa integração
-// real isso precisa vir enriquecido do backend ou de uma busca em lote de perfis.
-function nomeDaOutraParte(profissionalId: string) {
-  if (profissionalId === MOCK_PROFISSIONAL_PROFILE.id) return MOCK_PROFISSIONAL_PROFILE.nome;
-  return MOCK_SEARCH_RESULTS.find((p) => p.user_id === profissionalId)?.nome ?? "Profissional";
-}
+import { api } from "@/lib/api";
+import type { ContatoRead, StatusContato } from "@/lib/types";
 
 const FILTROS: { value: "todos" | StatusContato; label: string }[] = [
   { value: "todos", label: "Todos" },
@@ -26,21 +18,61 @@ const FILTROS: { value: "todos" | StatusContato; label: string }[] = [
 ];
 
 export default function MeusContatosPage() {
-  useCurrentUser();
+  const { papel } = useCurrentUser();
+  const [contatos, setContatos] = useState<ContatoRead[]>([]);
+  // ContatoRead só devolve solicitante_id/profissional_id (UUID) — sem
+  // endpoint em lote, resolve nome por perfil único conforme a lista chega.
+  const [nomes, setNomes] = useState<Record<string, string>>({});
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
   const [filtro, setFiltro] = useState<(typeof FILTROS)[number]["value"]>("todos");
   const [busca, setBusca] = useState("");
 
-  // TODO(integração): api.listContatos() — GET /contatos (só as partes envolvidas).
-  const contatos = MOCK_CONTATOS;
+  useEffect(() => {
+    let ativo = true;
+    api
+      .listContatos()
+      .then(async (lista) => {
+        if (!ativo) return;
+        setContatos(lista);
+        // Eu sou profissional -> a outra parte é sempre a empresa (solicitante_id).
+        // Eu sou empresa -> a outra parte é sempre o profissional (profissional_id).
+        const outroIdDe = (c: ContatoRead) => (papel === "profissional" ? c.solicitante_id : c.profissional_id);
+        const idsUnicos = Array.from(new Set(lista.map(outroIdDe)));
+        const buscarNome = papel === "profissional" ? api.getEmpresa : api.getProfissional;
+        const entradas = await Promise.all(
+          idsUnicos.map(async (id) => {
+            try {
+              const perfil = await buscarNome(id);
+              return [id, perfil.nome] as const;
+            } catch {
+              return [id, papel === "profissional" ? "Empresa" : "Profissional"] as const;
+            }
+          }),
+        );
+        if (ativo) setNomes(Object.fromEntries(entradas));
+      })
+      .catch((e) => ativo && setErro(e instanceof Error ? e.message : "Não foi possível carregar."))
+      .finally(() => ativo && setCarregando(false));
+    return () => {
+      ativo = false;
+    };
+  }, [papel]);
+
+  function nomeDaOutraParte(c: ContatoRead) {
+    const id = papel === "profissional" ? c.solicitante_id : c.profissional_id;
+    return nomes[id] ?? "...";
+  }
 
   const filtrados = useMemo(() => {
     return contatos.filter((c) => {
-      const nome = nomeDaOutraParte(c.profissional_id).toLowerCase();
+      const nome = nomeDaOutraParte(c).toLowerCase();
       const bateFiltro = filtro === "todos" || c.status === filtro;
       const bateBusca = !busca || nome.includes(busca.toLowerCase()) || c.mensagem.toLowerCase().includes(busca.toLowerCase());
       return bateFiltro && bateBusca;
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     });
-  }, [contatos, filtro, busca]);
+  }, [contatos, filtro, busca, nomes, papel]);
 
   return (
     <>
@@ -85,6 +117,13 @@ export default function MeusContatosPage() {
           })}
         </div>
 
+        {carregando && (
+          <div className="flex justify-center py-space-lg">
+            <MaterialIcon name="progress_activity" className="text-[28px] text-primary animate-spin" />
+          </div>
+        )}
+        {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">{erro}</p>}
+
         <div className="flex flex-col gap-space-sm">
           {filtrados.map((c) => (
             <Link
@@ -93,7 +132,7 @@ export default function MeusContatosPage() {
               className="bg-surface-container-lowest rounded-2xl p-space-md neu-surface neu-pressable transition-all active:scale-[0.99] flex flex-col gap-1"
             >
               <div className="flex items-center justify-between gap-space-xs">
-                <h2 className="font-title-md text-title-md text-on-surface truncate">{nomeDaOutraParte(c.profissional_id)}</h2>
+                <h2 className="font-title-md text-title-md text-on-surface truncate">{nomeDaOutraParte(c)}</h2>
                 <span className="font-caption text-caption text-on-surface-variant flex-shrink-0">
                   {new Date(c.criado_em).toLocaleDateString("pt-BR")}
                 </span>
@@ -107,7 +146,7 @@ export default function MeusContatosPage() {
               </div>
             </Link>
           ))}
-          {filtrados.length === 0 && (
+          {!carregando && filtrados.length === 0 && (
             <p className="font-body-md text-body-md text-on-surface-variant text-center py-space-lg">
               Nenhum contato encontrado.
             </p>

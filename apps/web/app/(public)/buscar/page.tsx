@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { BottomNav } from "@/components/ui/BottomNav";
@@ -8,7 +8,8 @@ import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Logo } from "@/components/ui/Logo";
 import { ProfessionalCard } from "@/components/busca/ProfessionalCard";
-import { MOCK_SEARCH_RESULTS } from "@/lib/mock-data";
+import { api } from "@/lib/api";
+import type { ProfissionalSearchResult } from "@/lib/types";
 
 // Agrupamento de UX só do frontend — GET /profissionais não tem conceito de
 // "categoria", cada tile aqui manda uma busca de texto (q) com o nome da
@@ -25,15 +26,24 @@ const CATEGORIAS = [
 export default function BuscarPage() {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
+  const [resultados, setResultados] = useState<ProfissionalSearchResult[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
 
-  // TODO(integração): trocar por api.searchProfissionais({ q: query, cidade, ... })
-  // com debounce; hoje filtra os 3 profissionais de exemplo no cliente.
-  const resultados = useMemo(() => {
-    const termo = query.trim().toLowerCase();
-    if (!termo) return MOCK_SEARCH_RESULTS;
-    return MOCK_SEARCH_RESULTS.filter(
-      (p) => p.nome.toLowerCase().includes(termo) || p.bio?.toLowerCase().includes(termo),
-    );
+  useEffect(() => {
+    const termo = query.trim();
+    setCarregando(true);
+    const id = setTimeout(() => {
+      api
+        .searchProfissionais(termo ? { q: termo } : {})
+        .then((resposta) => {
+          setResultados(resposta.items);
+          setErro(null);
+        })
+        .catch((e) => setErro(e instanceof Error ? e.message : "Não foi possível buscar."))
+        .finally(() => setCarregando(false));
+    }, 300);
+    return () => clearTimeout(id);
   }, [query]);
 
   return (
@@ -101,11 +111,17 @@ export default function BuscarPage() {
           <p className="font-caption text-caption text-on-surface-variant mb-space-sm">
             Prontos para atendimento e verificados &middot; {resultados.length} resultado(s)
           </p>
+          {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm mb-space-sm">{erro}</p>}
           <div className="flex flex-col gap-space-sm">
-            {resultados.map((p) => (
+            {carregando && (
+              <div className="flex justify-center py-space-lg">
+                <MaterialIcon name="progress_activity" className="text-[28px] text-primary animate-spin" />
+              </div>
+            )}
+            {!carregando && resultados.map((p) => (
               <ProfessionalCard key={p.user_id} profissional={p} />
             ))}
-            {resultados.length === 0 && (
+            {!carregando && resultados.length === 0 && !erro && (
               <p className="font-body-md text-body-md text-on-surface-variant text-center py-space-lg">
                 Nenhum profissional encontrado para &quot;{query}&quot;.
               </p>

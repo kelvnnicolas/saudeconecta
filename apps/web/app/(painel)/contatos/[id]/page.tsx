@@ -1,19 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Header } from "@/components/ui/Header";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
-import { MOCK_CONTATOS, MOCK_PROFISSIONAL_PROFILE } from "@/lib/mock-data";
+import { useCurrentUser } from "@/lib/use-current-user";
 import { type AvaliacaoInput, avaliacaoSchema } from "@/lib/validations/contato";
 import { api } from "@/lib/api";
+import type { ContatoRead } from "@/lib/types";
 
 export default function DetalheContatoPage({ params }: { params: { id: string } }) {
-  // TODO(integração): buscar o contato específico — GET /contatos hoje devolve a
-  // lista toda (das partes envolvidas); filtrar pelo id ou pedir endpoint dedicado.
-  const contato = MOCK_CONTATOS.find((c) => String(c.id) === params.id) ?? MOCK_CONTATOS[0];
-  const nomeOutraParte = MOCK_PROFISSIONAL_PROFILE.nome;
+  const { papel } = useCurrentUser();
+  const [contato, setContato] = useState<ContatoRead | null>(null);
+  const [nomeOutraParte, setNomeOutraParte] = useState("...");
+  const [carregando, setCarregando] = useState(true);
+  const [erroCarregar, setErroCarregar] = useState<string | null>(null);
   const [avaliacaoEnviada, setAvaliacaoEnviada] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const {
@@ -25,20 +27,63 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
   } = useForm<AvaliacaoInput>({ resolver: zodResolver(avaliacaoSchema), defaultValues: { nota: 0 } });
   const nota = watch("nota");
 
+  useEffect(() => {
+    // GET /contatos não tem endpoint de detalhe único — traz a lista toda
+    // (só as partes envolvidas veem) e filtra pelo id da rota.
+    api
+      .listContatos()
+      .then(async (lista) => {
+        const encontrado = lista.find((c) => String(c.id) === params.id) ?? null;
+        setContato(encontrado);
+        if (!encontrado) return;
+        const outroId = papel === "profissional" ? encontrado.solicitante_id : encontrado.profissional_id;
+        const buscar = papel === "profissional" ? api.getEmpresa : api.getProfissional;
+        try {
+          const perfil = await buscar(outroId);
+          setNomeOutraParte(perfil.nome);
+        } catch {
+          setNomeOutraParte(papel === "profissional" ? "Empresa" : "Profissional");
+        }
+      })
+      .catch((e) => setErroCarregar(e instanceof Error ? e.message : "Não foi possível carregar o contato."))
+      .finally(() => setCarregando(false));
+  }, [params.id, papel]);
+
   async function onSubmit(data: AvaliacaoInput) {
+    if (!contato) return;
     setErro(null);
     try {
-      await api.createAvaliacao({
-        alvo_id: contato?.profissional_id ?? MOCK_PROFISSIONAL_PROFILE.id,
-        nota: data.nota,
-        comentario: data.comentario,
-      });
+      const alvoId = papel === "profissional" ? contato.solicitante_id : contato.profissional_id;
+      await api.createAvaliacao({ alvo_id: alvoId, nota: data.nota, comentario: data.comentario });
       setAvaliacaoEnviada(true);
-    } catch {
-      // sem backend disponível ainda — mostra sucesso local mesmo assim para
-      // validar o fluxo visual (mesmo padrão dos outros formulários mockados).
-      setAvaliacaoEnviada(true);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível enviar a avaliação.");
     }
+  }
+
+  if (carregando) {
+    return (
+      <>
+        <Header title="Detalhes do Contato" backHref="/contatos" />
+        <main className="flex-1 pt-16 flex items-center justify-center bg-surface min-h-screen">
+          <MaterialIcon name="progress_activity" className="text-[32px] text-primary animate-spin" />
+        </main>
+      </>
+    );
+  }
+
+  if (erroCarregar || !contato) {
+    return (
+      <>
+        <Header title="Detalhes do Contato" backHref="/contatos" />
+        <main className="flex-1 pt-16 px-gutter bg-surface min-h-screen flex flex-col items-center justify-center gap-space-sm text-center">
+          <MaterialIcon name="error" className="text-[32px] text-error" />
+          <p className="font-body-md text-body-md text-on-surface-variant">
+            {erroCarregar ?? "Contato não encontrado."}
+          </p>
+        </main>
+      </>
+    );
   }
 
   return (
@@ -47,9 +92,9 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
       <main className="flex-1 pt-16 pb-space-xl px-gutter bg-surface min-h-screen flex flex-col gap-space-md">
         <section className="bg-surface-container-lowest rounded-2xl neu-surface p-space-md flex flex-col gap-space-xs mt-space-sm">
           <h1 className="font-title-md text-title-md text-on-surface">{nomeOutraParte}</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant">{contato?.mensagem}</p>
+          <p className="font-body-md text-body-md text-on-surface-variant">{contato.mensagem}</p>
           <span className="font-caption text-caption text-outline">
-            {contato && new Date(contato.criado_em).toLocaleString("pt-BR")}
+            {new Date(contato.criado_em).toLocaleString("pt-BR")}
           </span>
         </section>
 
