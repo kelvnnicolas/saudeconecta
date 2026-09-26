@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "inverse-on-surface": "#edf0ff", "inverse-primary": "#d3bbff", "surface-container": "#e9edff", "secondary-container": "#6df5e1", "on-error-container": "#93000a", "on-tertiary-fixed-variant": "#004395", "on-tertiary-container": "#98b8ff", "tertiary": "#00306f", "on-surface-variant": "#4a4453", "primary-fixed-dim": "#d3bbff", "on-error": "#ffffff", "surface-container-low": "#f1f3ff", "outline": "#7b7485", "surface-bright": "#f9f9ff", "on-secondary-fixed-variant": "#005048", "on-background": "#141b2b", "on-secondary-container": "#006f64", "error": "#ba1a1a", "surface-container-high": "#e1e8fd", "primary-fixed": "#ebddff", "background": "#f9f9ff", "on-primary-fixed-variant": "#581db3", "surface-container-lowest": "#ffffff", "secondary-fixed-dim": "#4fdbc8", "on-tertiary": "#ffffff", "primary-container": "#5b21b6", "secondary-fixed": "#71f8e4", "secondary": "#006b5f", "primary": "#420093", "on-surface": "#141b2b", "surface-dim": "#d3daef", "on-tertiary-fixed": "#001a42", "surface-tint": "#713dcc", "inverse-surface": "#293040", "on-primary-fixed": "#250059", "surface-variant": "#dce2f7", "tertiary-container": "#00469a", "on-primary": "#ffffff", "surface": "#f9f9ff", "tertiary-fixed-dim": "#adc6ff", "error-container": "#ffdad6", "tertiary-fixed": "#d8e2ff", "on-secondary": "#ffffff", "surface-container-highest": "#dce2f7", "on-secondary-fixed": "#00201c", "outline-variant": "#ccc3d6", "on-primary-container": "#c7aaff" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "gutter": "1rem", "gutter-sm": "0.75rem", "space-xs": "0.25rem", "space-lg": "1.5rem", "gutter-lg": "1.5rem", "margin": "1rem", "space-xl": "2rem", "margin-lg": "2rem", "margin-sm": "0.75rem", "space-sm": "0.5rem", "space-md": "1rem" }, "fontFamily": { "body-lg": ["Inter"], "caption": ["Inter"], "body-md": ["Inter"], "label-md": ["Inter"], "title-md": ["Inter"], "headline-xl": ["Inter"], "headline-md": ["Inter"], "headline-lg": ["Inter"], "label-sm": ["Inter"] }, "fontSize": { "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "caption": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "label-md": ["14px", { "lineHeight": "20px", "fontWeight": "500" }], "title-md": ["18px", { "lineHeight": "26px", "fontWeight": "600" }], "headline-xl": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head><body class="bg-surface font-body-md text-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-gutter flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm"><button aria-label="Voltar" class="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-on-surface hover:text-primary transition-colors" onclick="history.back()"><span class="material-symbols-outlined">arrow_back_ios_new</span></button><h1 class="text-title-md font-title-md text-on-surface line-clamp-1">Detalhes Do Contato</h1></div><div class="flex items-center gap-space-xs"><div class="flex items-center justify-center p-0.5 rounded-full bg-surface-container"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDY-0QQJFauOg-csMgStCHTZ3ltmbCikQIArnd8jT_XekLftKfqy7mGBkqY8e-5Q_3EVvsczDJJaqg1LzV6stzpx9FCeoJiYCqUrK9HqsPSKv5yEJB-HCh58KUnsuTpLsjbjeHtUnrF-ebu7vrj9N8ZEhwN0sn9zcvF8n17VkM9UvfYRVomR1Jp5OfX1or2BabgVDZj06T--AFxJq5Om30YIucX1Gc0api2xjGxUqd7IgaR_e0mNyjKTQ"/></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-safe bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Status Badge Container -->
+<div class="px-gutter pt-space-md pb-space-sm flex items-center justify-between">
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container shadow-sm">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-label-sm text-label-sm font-semibold tracking-wide">Atendimento Concluído</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">schedule</span>
+      ID #SC-89241
+    </span>
+</div>
+<div class="px-gutter space-y-space-md pb-space-xl">
+<!-- Resumo do Profissional -->
+<div class="bg-surface-container-lowest rounded-2xl p-space-md shadow-sm space-y-space-md">
+<div class="flex items-start gap-3.5">
+<div class="relative flex-shrink-0">
+<img alt="Dra. Sara Mendes" class="w-16 h-16 rounded-2xl object-cover shadow-sm" src="https://lh3.googleusercontent.com/aida/AEtjO1VemAmcCibEa9TNoZNvhtQhkVLW1ifbboUPYmDrLs1396U4-OXS62LS4j2ShEemq2I_1AZ0pGF66WnSQBfPW76EPeeyYp03u6VIqQYmgMVBF4QK9X9LlRwSA_X2kKxR2TG5m37ts7GBaSANnSa6wrhjrXBzyZZ--_Ery2ObJLkYDE6ejXxLu3ubRs66bxkhPWBseR4KxlWK7hCWAPT9xT_29_geC8hmf433C_9RHsdtjexvQuM0z2BU4d8n"/>
+<span class="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1">
+<h2 class="font-title-md text-title-md text-on-surface truncate">Dra. Sara Mendes</h2>
+<div class="flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface">
+<span class="material-symbols-outlined text-xs text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-sm text-label-sm font-medium">5.0</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant truncate">Plantão Domiciliar • CRM 45210</p>
+<div class="flex items-center gap-1 mt-1 text-primary">
+<span class="material-symbols-outlined text-sm">location_on</span>
+<span class="font-caption text-caption text-on-surface-variant">Atendimento em Domicílio</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-1">
+<div class="bg-surface-container-low rounded-xl p-3 flex flex-col justify-between">
+<span class="font-caption text-caption text-on-surface-variant">Valor Acertado</span>
+<span class="font-title-md text-title-md text-on-surface font-semibold mt-0.5">R$ 280,00</span>
+</div>
+<div class="bg-surface-container-low rounded-xl p-3 flex flex-col justify-between">
+<span class="font-caption text-caption text-on-surface-variant">Turno</span>
+<span class="font-label-md text-label-md text-on-surface font-medium mt-0.5">Diurno (12h)</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-xl p-3 flex items-center gap-2.5">
+<span class="material-symbols-outlined text-primary text-xl">event_available</span>
+<div class="min-w-0 flex-1">
+<p class="font-label-sm text-label-sm text-on-surface font-medium">Hoje, 24 de Outubro</p>
+<p class="font-caption text-caption text-on-surface-variant">08:00 às 20:00 • Turno Diurno</p>
+</div>
+</div>
+<button class="w-full h-12 rounded-xl bg-surface-container-high text-primary font-label-md text-label-md font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform" type="button">
+<span class="material-symbols-outlined text-xl">forum</span>
+        Abrir Chat Completo
+      </button>
+</div>
+<!-- Histórico da Conversa / Proposta Acordada -->
+<div class="bg-surface-container-lowest rounded-2xl p-space-md shadow-sm space-y-3">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md font-semibold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">contract</span>
+          Proposta Acordada
+        </span>
+<span class="font-caption text-caption text-on-surface-variant">23 Out, 19:42</span>
+</div>
+<div class="space-y-3">
+<!-- Balão Paciente -->
+<div class="bg-surface-container-low rounded-2xl rounded-tl-sm p-3.5 space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption font-semibold text-primary">Sua Solicitação Inicial</span>
+<span class="font-caption text-caption text-on-surface-variant">19:30</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface">
+            "Acompanhamento pós-alta para monitoramento de pressão arterial e medicação EV."
+          </p>
+</div>
+<!-- Balão Profissional -->
+<div class="bg-primary-fixed/40 rounded-2xl rounded-tr-sm p-3.5 space-y-1 ml-4">
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption font-semibold text-on-primary-fixed-variant">Resposta de Dra. Sara</span>
+<span class="font-caption text-caption text-on-surface-variant">19:42</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface">
+            "Aceito a escala. Chegarei pontualmente no endereço informado com estetoscópio e kit de triagem."
+          </p>
+</div>
+</div>
+</div>
+<!-- Bloco de Pagamento do Serviço -->
+<div class="bg-surface-container-lowest rounded-2xl p-space-md shadow-sm space-y-3.5">
+<div class="flex items-start justify-between gap-3">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div>
+<h3 class="font-label-md text-label-md font-semibold text-on-surface">Pagamento Realizado com Sucesso</h3>
+<p class="font-caption text-caption text-on-surface-variant">Transação Pix SaúdeConecta Protegida</p>
+</div>
+</div>
+<span class="font-title-md text-title-md text-on-surface font-semibold">R$ 280,00</span>
+</div>
+<div class="bg-surface-container-low rounded-xl p-3.5 flex items-start gap-2.5">
+<span class="material-symbols-outlined text-secondary text-lg mt-0.5">verified_user</span>
+<div class="flex-1 min-w-0">
+<p class="font-label-sm text-label-sm font-semibold text-on-surface">Custódia Segura SaúdeConecta</p>
+<p class="font-caption text-caption text-on-surface-variant mt-0.5 leading-relaxed">
+            O valor permaneceu protegido durante todo o atendimento. A liberação para a profissional foi concluída com a confirmação do término do plantão.
+          </p>
+</div>
+</div>
+<div class="flex items-center justify-between pt-1 text-on-surface-variant">
+<span class="font-caption text-caption flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">receipt_long</span>
+          Comprovante #PAY-774921
+        </span>
+<button class="font-label-sm text-label-sm text-primary font-medium hover:underline" type="button">
+          Ver recibo
+        </button>
+</div>
+</div>
+<!-- SEÇÃO EM DESTAQUE - Avaliar Profissional -->
+<section class="bg-surface-container-lowest rounded-2xl p-space-md shadow-md space-y-4">
+<div class="text-center space-y-1 pt-1">
+<div class="w-12 h-12 mx-auto rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">hotel_class</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Como foi sua experiência com Dra. Sara?</h3>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-xs mx-auto">
+          Sua avaliação ajuda a manter a comunidade segura e destaca os melhores especialistas.
+        </p>
+</div>
+<!-- Seletor Interativo de Estrelas -->
+<div class="flex items-center justify-center gap-2 py-2" id="starContainer">
+<button aria-label="1 estrela" class="star-btn p-1 text-amber-400 active:scale-90 transition-transform" data-rating="1" type="button">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">star</span>
+</button>
+<button aria-label="2 estrelas" class="star-btn p-1 text-amber-400 active:scale-90 transition-transform" data-rating="2" type="button">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">star</span>
+</button>
+<button aria-label="3 estrelas" class="star-btn p-1 text-amber-400 active:scale-90 transition-transform" data-rating="3" type="button">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">star</span>
+</button>
+<button aria-label="4 estrelas" class="star-btn p-1 text-amber-400 active:scale-90 transition-transform" data-rating="4" type="button">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">star</span>
+</button>
+<button aria-label="5 estrelas" class="star-btn p-1 text-amber-400 active:scale-90 transition-transform" data-rating="5" type="button">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">star</span>
+</button>
+</div>
+<p class="text-center font-label-md text-label-md font-semibold text-primary" id="ratingText">Excelente! (5 estrelas)</p>
+<!-- Tags Rápidas de Feedback -->
+<div class="space-y-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Pontos fortes observados:</span>
+<div class="flex flex-wrap gap-2" id="tagGroup">
+<button class="feedback-tag px-3 py-1.5 rounded-full bg-primary text-on-primary font-label-sm text-label-sm transition-colors flex items-center gap-1.5 active:scale-95" type="button">
+<span class="material-symbols-outlined text-sm">check</span>
+            Pontual
+          </button>
+<button class="feedback-tag px-3 py-1.5 rounded-full bg-primary text-on-primary font-label-sm text-label-sm transition-colors flex items-center gap-1.5 active:scale-95" type="button">
+<span class="material-symbols-outlined text-sm">check</span>
+            Atenciosa
+          </button>
+<button class="feedback-tag px-3 py-1.5 rounded-full bg-primary text-on-primary font-label-sm text-label-sm transition-colors flex items-center gap-1.5 active:scale-95" type="button">
+<span class="material-symbols-outlined text-sm">check</span>
+            Excelente técnica
+          </button>
+<button class="feedback-tag px-3 py-1.5 rounded-full bg-primary text-on-primary font-label-sm text-label-sm transition-colors flex items-center gap-1.5 active:scale-95" type="button">
+<span class="material-symbols-outlined text-sm">check</span>
+            Muito cuidadosa
+          </button>
+</div>
+</div>
+<!-- Textarea Comentário -->
+<div class="space-y-1.5">
+<label class="font-label-sm text-label-sm font-medium text-on-surface" for="reviewComment">
+          Escreva seu comentário sobre o atendimento:
+        </label>
+<textarea class="w-full p-3.5 bg-surface-container-low rounded-xl text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-outline resize-none shadow-inner" id="reviewComment" rows="4">Profissional extremamente capacitada e paciente. Cuidou muito bem do meu pai no pós-operatório. Recomendo de olhos fechados!</textarea>
+</div>
+<!-- Botão Primário de Ação -->
+<button class="w-full h-12 rounded-xl bg-primary-container text-on-primary font-label-md text-label-md font-semibold flex items-center justify-center gap-2 shadow-md hover:bg-primary active:scale-[0.98] transition-all" id="submitReviewBtn" type="button">
+<span class="material-symbols-outlined text-xl">send</span>
+        Enviar Avaliação
+      </button>
+<!-- Card Informativo -->
+<div class="bg-surface-container-low rounded-xl p-3 flex items-start gap-2.5">
+<span class="material-symbols-outlined text-primary text-lg mt-0.5">info</span>
+<p class="font-caption text-caption text-on-surface-variant flex-1 leading-relaxed">
+          Avaliações são públicas no perfil do profissional para ajudar outros pacientes a tomarem decisões seguras e humanizadas.
+        </p>
+</div>
+</section>
+</div>
+<!-- Toast Notification Modal / Feedback -->
+<div class="fixed bottom-6 left-4 right-4 bg-inverse-surface text-inverse-on-surface p-4 rounded-xl shadow-xl transform translate-y-32 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-3 z-50" id="toastSuccess">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="flex-1">
+<p class="font-label-sm text-label-sm font-semibold text-inverse-on-surface">Avaliação enviada com sucesso!</p>
+<p class="font-caption text-caption opacity-80">Muito obrigado por apoiar nossa comunidade de saúde.</p>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    // Star Rating Interaction
+    const starButtons = document.querySelectorAll('.star-btn');
+    const ratingText = document.getElementById('ratingText');
+    const ratingLabels = {
+      1: 'Ruim (1 estrela)',
+      2: 'Regular (2 estrelas)',
+      3: 'Bom (3 estrelas)',
+      4: 'Muito Bom (4 estrelas)',
+      5: 'Excelente! (5 estrelas)'
+    };
+    let currentRating = 5;
+
+    starButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const rating = parseInt(btn.dataset.rating, 10);
+        currentRating = rating;
+        updateStars(currentRating);
+      });
+    });
+
+    function updateStars(rating) {
+      starButtons.forEach(btn => {
+        const val = parseInt(btn.dataset.rating, 10);
+        const icon = btn.querySelector('.material-symbols-outlined');
+        if (val <= rating) {
+          btn.classList.add('text-amber-400');
+          btn.classList.remove('text-surface-dim');
+          icon.style.fontVariationSettings = "'FILL' 1";
+        } else {
+          btn.classList.remove('text-amber-400');
+          btn.classList.add('text-surface-dim');
+          icon.style.fontVariationSettings = "'FILL' 0";
+        }
+      });
+      if (ratingText) {
+        ratingText.textContent = ratingLabels[rating] || (rating + ' estrelas');
+      }
+    }
+
+    // Toggle Feedback Tags
+    const feedbackTags = document.querySelectorAll('.feedback-tag');
+    feedbackTags.forEach(tag => {
+      tag.addEventListener('click', () => {
+        const isSelected = tag.classList.contains('bg-primary');
+        const icon = tag.querySelector('.material-symbols-outlined');
+        if (isSelected) {
+          tag.classList.remove('bg-primary', 'text-on-primary');
+          tag.classList.add('bg-surface-container-low', 'text-on-surface');
+          if (icon) icon.textContent = 'add';
+        } else {
+          tag.classList.remove('bg-surface-container-low', 'text-on-surface');
+          tag.classList.add('bg-primary', 'text-on-primary');
+          if (icon) icon.textContent = 'check';
+        }
+      });
+    });
+
+    // Submit Review Interaction
+    const submitBtn = document.getElementById('submitReviewBtn');
+    const toast = document.getElementById('toastSuccess');
+
+    if (submitBtn && toast) {
+      submitBtn.addEventListener('click', () => {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin text-xl">progress_activity</span> Gravando...';
+
+        setTimeout(() => {
+          submitBtn.innerHTML = '<span class="material-symbols-outlined text-xl" style="font-variation-settings: \'FILL\' 1;">check_circle</span> Avaliação Enviada';
+          submitBtn.classList.remove('bg-primary-container', 'hover:bg-primary');
+          submitBtn.classList.add('bg-secondary-container', 'text-on-secondary-container');
+
+          toast.classList.remove('translate-y-32', 'opacity-0');
+          toast.classList.add('translate-y-0', 'opacity-100');
+
+          setTimeout(() => {
+            toast.classList.remove('translate-y-0', 'opacity-100');
+            toast.classList.add('translate-y-32', 'opacity-0');
+          }, 3500);
+        }, 900);
+      });
+    }
+  })();
+</script></main></body></html>

@@ -18,6 +18,16 @@ os.environ["DATABASE_URL"] = _TEST_DATABASE_URL
 # configured for local dev, and test runs leak events into production Sentry.
 os.environ["SENTRY_DSN"] = ""
 
+# Dummy Stripe/app values so Settings' fail-fast validation passes, and forced
+# (not setdefault) so a developer's real keys in .env can never be used by a
+# test — an unmocked Stripe call fails auth instead of hitting a real account.
+os.environ["STRIPE_SECRET_KEY"] = "sk_test_dummy_for_tests"
+os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_dummy_for_tests"
+os.environ["STRIPE_PRICE_ESSENCIAL"] = "price_test_essencial"
+os.environ["STRIPE_PRICE_PRO"] = "price_test_pro"
+os.environ["APP_URL"] = "http://localhost:3000"
+os.environ["RESEND_API_KEY"] = ""
+
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 

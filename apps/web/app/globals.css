@@ -1,0 +1,154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tokens do Soft UI Kit (docs/design/telas/, demo publicada como Artifact) —
+   claro é a definição em :root; escuro redefine as mesmas variáveis, nunca
+   cores soltas nos componentes. Ver app/(painel)/perfil para o botão que
+   grava a preferência em [data-theme]. */
+:root {
+  --bg: #e8e5f3;
+  --ink: #332f4a;
+  --ink-soft: #726d8c;
+  --line: #cac5de;
+
+  --accent: #6d3fd1;
+  --accent-2: #5527b8;
+  --accent-soft: #ded4f7;
+  --accent-ink: #ffffff;
+
+  --secondary: #2f9e6e;
+  --secondary-soft: #d9f2e6;
+  --on-secondary-soft: #1f6b4c;
+
+  --tertiary: #f5a623;
+  --tertiary-soft: #fdecc8;
+
+  --error: #d64550;
+  --error-soft: #fbdfe1;
+  --on-error-soft: #7a2430;
+
+  --shadow-light: #ffffff;
+  --shadow-dark: #c4c0da;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #2b2a38;
+    --ink: #f1effa;
+    --ink-soft: #a9a5c4;
+    --line: #423f56;
+
+    --accent: #a586f5;
+    --accent-2: #8a68e0;
+    --accent-soft: #423a5c;
+    --accent-ink: #211a3a;
+
+    --secondary: #6bcf9f;
+    --secondary-soft: #1f3a30;
+    --on-secondary-soft: #a9e8c8;
+
+    --tertiary: #f7bb5c;
+    --tertiary-soft: #4a3a1f;
+
+    --error: #ef6b76;
+    --error-soft: #4a2229;
+    --on-error-soft: #f4b4bb;
+
+    --shadow-light: #38374a;
+    --shadow-dark: #1a1922;
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #2b2a38;
+  --ink: #f1effa;
+  --ink-soft: #a9a5c4;
+  --line: #423f56;
+
+  --accent: #a586f5;
+  --accent-2: #8a68e0;
+  --accent-soft: #423a5c;
+  --accent-ink: #211a3a;
+
+  --secondary: #6bcf9f;
+  --secondary-soft: #1f3a30;
+  --on-secondary-soft: #a9e8c8;
+
+  --tertiary: #f7bb5c;
+  --tertiary-soft: #4a3a1f;
+
+  --error: #ef6b76;
+  --error-soft: #4a2229;
+  --on-error-soft: #f4b4bb;
+
+  --shadow-light: #38374a;
+  --shadow-dark: #1a1922;
+
+  color-scheme: dark;
+}
+
+@layer base {
+  html,
+  body {
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    overscroll-behavior: none;
+    min-height: max(884px, 100dvh);
+    background: var(--bg);
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---------- componentes soft-UI reutilizáveis ---------- */
+@layer components {
+  /* cartão "levantado" — troca o antigo neu-surface + bg-surface-container-lowest */
+  .neu-surface {
+    box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+  }
+  .neu-surface-sm {
+    box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+  }
+  /* estado "afundado" — inputs, trilhas de slider/switch, chips selecionados */
+  .neu-inset {
+    box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+  }
+  .neu-inset-sm {
+    box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+  }
+  .neu-pressable {
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+  }
+  .neu-pressable:active {
+    box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+    transform: translateY(1px);
+  }
+  .btn-accent-neu {
+    background: linear-gradient(145deg, var(--accent), var(--accent-2));
+    color: var(--accent-ink);
+    box-shadow: 6px 6px 14px var(--shadow-dark), -3px -3px 10px var(--shadow-light);
+  }
+  .btn-accent-neu:active {
+    box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.35);
+  }
+}

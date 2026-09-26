@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "inverse-on-surface": "#edf0ff", "inverse-primary": "#d3bbff", "surface-container": "#e9edff", "secondary-container": "#6df5e1", "on-error-container": "#93000a", "on-tertiary-fixed-variant": "#004395", "on-tertiary-container": "#98b8ff", "tertiary": "#00306f", "on-surface-variant": "#4a4453", "primary-fixed-dim": "#d3bbff", "on-error": "#ffffff", "surface-container-low": "#f1f3ff", "outline": "#7b7485", "surface-bright": "#f9f9ff", "on-secondary-fixed-variant": "#005048", "on-background": "#141b2b", "on-secondary-container": "#006f64", "error": "#ba1a1a", "surface-container-high": "#e1e8fd", "primary-fixed": "#ebddff", "background": "#f9f9ff", "on-primary-fixed-variant": "#581db3", "surface-container-lowest": "#ffffff", "secondary-fixed-dim": "#4fdbc8", "on-tertiary": "#ffffff", "primary-container": "#5b21b6", "secondary-fixed": "#71f8e4", "secondary": "#006b5f", "primary": "#420093", "on-surface": "#141b2b", "surface-dim": "#d3daef", "on-tertiary-fixed": "#001a42", "surface-tint": "#713dcc", "inverse-surface": "#293040", "on-primary-fixed": "#250059", "surface-variant": "#dce2f7", "tertiary-container": "#00469a", "on-primary": "#ffffff", "surface": "#f9f9ff", "tertiary-fixed-dim": "#adc6ff", "error-container": "#ffdad6", "tertiary-fixed": "#d8e2ff", "on-secondary": "#ffffff", "surface-container-highest": "#dce2f7", "on-secondary-fixed": "#00201c", "outline-variant": "#ccc3d6", "on-primary-container": "#c7aaff" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "gutter": "1rem", "gutter-sm": "0.75rem", "space-xs": "0.25rem", "space-lg": "1.5rem", "gutter-lg": "1.5rem", "margin": "1rem", "space-xl": "2rem", "margin-lg": "2rem", "margin-sm": "0.75rem", "space-sm": "0.5rem", "space-md": "1rem" }, "fontFamily": { "body-lg": ["Inter"], "caption": ["Inter"], "body-md": ["Inter"], "label-md": ["Inter"], "title-md": ["Inter"], "headline-xl": ["Inter"], "headline-md": ["Inter"], "headline-lg": ["Inter"], "label-sm": ["Inter"] }, "fontSize": { "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "caption": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "label-md": ["14px", { "lineHeight": "20px", "fontWeight": "500" }], "title-md": ["18px", { "lineHeight": "26px", "fontWeight": "600" }], "headline-xl": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head><body class="bg-surface font-body-md text-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-gutter flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm"><button aria-label="Voltar" class="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-on-surface hover:text-primary transition-colors" onclick="history.back()"><span class="material-symbols-outlined">arrow_back_ios_new</span></button><h1 class="text-title-md font-title-md text-on-surface line-clamp-1">Avaliações</h1></div><div class="flex items-center gap-space-xs"><div class="flex items-center justify-center p-0.5 rounded-full bg-surface-container"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDY-0QQJFauOg-csMgStCHTZ3ltmbCikQIArnd8jT_XekLftKfqy7mGBkqY8e-5Q_3EVvsczDJJaqg1LzV6stzpx9FCeoJiYCqUrK9HqsPSKv5yEJB-HCh58KUnsuTpLsjbjeHtUnrF-ebu7vrj9N8ZEhwN0sn9zcvF8n17VkM9UvfYRVomR1Jp5OfX1or2BabgVDZj06T--AFxJq5Om30YIucX1Gc0api2xjGxUqd7IgaR_e0mNyjKTQ"/></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-safe bg-surface min-h-screen"><div class="flex flex-col w-full pb-10">
+<!-- Top Bar Auxiliar de Ações (Filtros Avançados e Status) -->
+<div class="flex items-center justify-between px-gutter py-space-sm bg-surface-container-low">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[20px]" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Perfil Auditado e Verificado</span>
+</div>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary font-label-sm text-label-sm transition-colors active:scale-95 shadow-sm" id="open-filter-modal">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+<span>Filtrar</span>
+</button>
+</div>
+<div class="px-gutter space-y-space-lg pt-space-md">
+<!-- 1. Resumo Geral de Reputação no Topo (Card Bento de Destaque) -->
+<section class="bg-surface-container-lowest rounded-2xl p-space-md shadow-sm space-y-space-md relative overflow-hidden">
+<!-- Glow Decorativo Sutil de Fundo -->
+<div class="absolute -top-12 -right-12 w-36 h-36 bg-primary-fixed rounded-full blur-2xl opacity-60 pointer-events-none"></div>
+<!-- Badge de Reconhecimento Superior -->
+<div class="flex items-center justify-between">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+          Profissional 5 Estrelas
+        </span>
+<span class="inline-flex items-center gap-1 font-caption text-caption text-secondary font-medium">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+          100% de Recomendação
+        </span>
+</div>
+<!-- Bloco Principal de Nota e Métricas -->
+<div class="flex items-center gap-space-lg">
+<div class="flex flex-col items-center justify-center p-space-md bg-surface-container-low rounded-xl min-w-[110px]">
+<div class="flex items-baseline gap-1 text-primary">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-headline-xl text-headline-xl font-bold tracking-tight">4.9</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant mt-0.5">de 5.0 pontos</span>
+<span class="font-caption text-caption text-outline mt-1 font-medium">37 avaliações</span>
+</div>
+<!-- Distribuição Percentual de Notas -->
+<div class="flex-1 flex flex-col justify-center space-y-1.5">
+<!-- 5 Estrelas -->
+<div class="flex items-center gap-2">
+<span class="font-caption text-caption text-on-surface-variant w-3 text-right">5</span>
+<span class="material-symbols-outlined text-[12px] text-primary" style="font-variation-settings: 'FILL' 1;">star</span>
+<div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full transition-all duration-700" style="width: 92%"></div>
+</div>
+<span class="font-caption text-caption text-on-surface-variant w-8 text-right font-medium">92%</span>
+</div>
+<!-- 4 Estrelas -->
+<div class="flex items-center gap-2">
+<span class="font-caption text-caption text-on-surface-variant w-3 text-right">4</span>
+<span class="material-symbols-outlined text-[12px] text-outline-variant">star</span>
+<div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary-container rounded-full transition-all duration-700" style="width: 8%"></div>
+</div>
+<span class="font-caption text-caption text-on-surface-variant w-8 text-right font-medium">8%</span>
+</div>
+<!-- 3 Estrelas -->
+<div class="flex items-center gap-2">
+<span class="font-caption text-caption text-on-surface-variant w-3 text-right">3</span>
+<span class="material-symbols-outlined text-[12px] text-outline-variant">star</span>
+<div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-outline-variant rounded-full" style="width: 0%"></div>
+</div>
+<span class="font-caption text-caption text-on-surface-variant w-8 text-right font-medium">0%</span>
+</div>
+<!-- 2 Estrelas -->
+<div class="flex items-center gap-2">
+<span class="font-caption text-caption text-on-surface-variant w-3 text-right">2</span>
+<span class="material-symbols-outlined text-[12px] text-outline-variant">star</span>
+<div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-outline-variant rounded-full" style="width: 0%"></div>
+</div>
+<span class="font-caption text-caption text-on-surface-variant w-8 text-right font-medium">0%</span>
+</div>
+<!-- 1 Estrela -->
+<div class="flex items-center gap-2">
+<span class="font-caption text-caption text-on-surface-variant w-3 text-right">1</span>
+<span class="material-symbols-outlined text-[12px] text-outline-variant">star</span>
+<div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-outline-variant rounded-full" style="width: 0%"></div>
+</div>
+<span class="font-caption text-caption text-on-surface-variant w-8 text-right font-medium">0%</span>
+</div>
+</div>
+</div>
+<!-- Elogios Mais Frequentes (Pills com contador) -->
+<div class="pt-space-xs">
+<span class="block font-label-sm text-label-sm text-on-surface-variant mb-2">Pontos fortes mais citados:</span>
+<div class="flex flex-wrap gap-2">
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">alarm_on</span>
+<span>Pontualidade</span>
+<span class="px-1.5 py-0.2 bg-surface-container-lowest rounded-full font-caption text-caption font-semibold text-primary">35</span>
+</div>
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px] text-secondary" style="font-variation-settings: 'FILL' 1;">volunteer_activism</span>
+<span>Acolhimento</span>
+<span class="px-1.5 py-0.2 bg-surface-container-lowest rounded-full font-caption text-caption font-semibold text-secondary">31</span>
+</div>
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px] text-primary-container" style="font-variation-settings: 'FILL' 1;">health_and_safety</span>
+<span>Cuidado Técnico</span>
+<span class="px-1.5 py-0.2 bg-surface-container-lowest rounded-full font-caption text-caption font-semibold text-primary-container">29</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 2. Filtros de Visualização em Pílulas Roláveis -->
+<div class="flex items-center gap-2 overflow-x-auto pb-1 -mx-gutter px-gutter no-scrollbar" id="filter-pill-container">
+<button class="filter-pill whitespace-nowrap px-4 py-2 rounded-xl font-label-md text-label-md bg-primary text-on-primary shadow-sm transition-transform active:scale-95" data-filter="all">
+        Todas (37)
+      </button>
+<button class="filter-pill whitespace-nowrap px-4 py-2 rounded-xl font-label-md text-label-md bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors active:scale-95" data-filter="5stars">
+        5 estrelas (34)
+      </button>
+<button class="filter-pill whitespace-nowrap px-4 py-2 rounded-xl font-label-md text-label-md bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors active:scale-95" data-filter="4stars">
+        4 estrelas (3)
+      </button>
+<button class="filter-pill whitespace-nowrap px-4 py-2 rounded-xl font-label-md text-label-md bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors active:scale-95" data-filter="comments">
+        Com comentários (28)
+      </button>
+</div>
+<!-- 3. Lista de Avaliações Detalhadas -->
+<section class="space-y-space-md" id="reviews-list">
+<!-- Card 1: Mariana Silveira (com réplica da profissional) -->
+<article class="bg-surface-container-lowest rounded-2xl p-space-md shadow-sm space-y-space-sm review-card" data-has-comment="true" data-rating="5">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="relative w-12 h-12 rounded-full overflow-hidden bg-surface-container flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Foto de perfil em close-up de Mariana Silveira, mulher sorridente com cabelos castanhos amarrados, fundo suave e iluminação natural calorosa em tons pastéis" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDV1knikcLGsz5fU63niaVLNSpQ5fnhvh6vmJsp1Qx8q8U1DthRcTpmbeltuMUeST7Asedk1f-ej85dOL67933sD6vx8xgGhCbGNpygoz4q9uk3rc6WRlXa0hM14LbyhcHq7ZhYusGvTN7mjPvrctQvuWWIb2-PhFQfeIb6nZTn1bN1-efp0aEG1sHb5pDbLow1VZbXmD0TOlc0_bjCbyrsygRbNa92Js9DM_s_IHEt_vpBisatXeeK0w"/>
+</div>
+<div>
+<h3 class="font-title-md text-title-md font-semibold text-on-surface leading-tight">Mariana Silveira</h3>
+<p class="font-caption text-caption text-on-surface-variant">Filha do paciente • Há 3 dias</p>
+</div>
+</div>
+<!-- Badge de Estrelas -->
+<div class="flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-surface-container-low text-primary font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>5.0</span>
+</div>
+</div>
+<!-- Tipo de Serviço -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container font-caption text-caption text-on-surface-variant">
+<span class="material-symbols-outlined text-[15px] text-secondary">home_health</span>
+<span>Home Care - Cuidados Pós-Operatório</span>
+</div>
+<!-- Depoimento -->
+<p class="font-body-md text-body-md text-on-surface leading-relaxed">
+          “A Dra. Camila foi um anjo durante a recuperação do meu pai. Extremamente atenciosa, medicou no horário exato e nos deixou super tranquilos. Contrataremos novamente com certeza!”
+        </p>
+<!-- Reação e Feedback da Plataforma -->
+<div class="flex items-center gap-4 pt-1 font-caption text-caption text-outline">
+<button class="flex items-center gap-1 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">thumb_up</span>
+<span>Útil (4)</span>
+</button>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">verified</span>
+<span>Atendimento concluído via SaúdeConecta</span>
+</span>
+</div>
+<!-- Resposta do Profissional (Thread Interno) -->
+<div class="mt-space-sm pl-space-md py-space-sm bg-surface-container-low rounded-xl flex items-start gap-space-sm">
+<div class="w-8 h-8 rounded-full overflow-hidden bg-primary-container flex items-center justify-center text-on-primary font-bold text-caption flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">medical_services</span>
+</div>
+<div class="space-y-0.5 flex-1 pr-2">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm font-semibold text-primary">Sua Resposta</span>
+<span class="font-caption text-caption text-on-surface-variant">Há 2 dias</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              “Muito obrigado pelo carinho, Mariana! Foi um prazer cuidar do Sr. Antônio. Desejo uma recuperação plena e estou sempre à disposição!”
+            </p>
+</div>
+</div>
+</article>
+<!-- Card 2: Hospital São Lucas -->
+<article class="bg-surface-container-lowest rounded-2xl p-space-md shadow-sm space-y-space-sm review-card" data-has-comment="true" data-rating="5">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="relative w-12 h-12 rounded-full overflow-hidden bg-surface-container flex-shrink-0 flex items-center justify-center text-primary">
+<img class="w-full h-full object-cover" data-alt="Logotipo arquitetônico elegante do Hospital São Lucas em tom azul profundo e detalhes geométricos modernos em fundo branco limpo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXQ4PuyNDKOcyxGtva3qO6yEDuSPT_ZweIsX4RSNqBv36aw5QXTkY48NAaeQi92EzfoTP96WKvpUFVjrhg91duLlVSaeKgyDChchRjSsaajC7jBwqwOwkRpI3O47GKDdkdlhwooOPOsalTgx_-rtj2EK7Yll7ErT64mjjf5NVp0-XWla5A3pThFShiC992H5JyhQ72DrV2EqqZ2bFotfSWitFFwtlRYNr3FPrRGQzGcpESTApIHTC7Cg"/>
+</div>
+<div>
+<div class="flex items-center gap-1">
+<h3 class="font-title-md text-title-md font-semibold text-on-surface leading-tight">Hospital São Lucas</h3>
+<span class="material-symbols-outlined text-[16px] text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<p class="font-caption text-caption text-on-surface-variant">Plantão Avulso • Há 1 semana</p>
+</div>
+</div>
+<!-- Badge de Estrelas -->
+<div class="flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-surface-container-low text-primary font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>5.0</span>
+</div>
+</div>
+<!-- Tipo de Serviço -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container font-caption text-caption text-on-surface-variant">
+<span class="material-symbols-outlined text-[15px] text-primary">local_hospital</span>
+<span>Cobertura de Plantão Noturno</span>
+</div>
+<!-- Depoimento -->
+<p class="font-body-md text-body-md text-on-surface leading-relaxed">
+          “Excelente postura clínica, assumiu o plantão de UTI com total domínio e pontualidade exemplar.”
+        </p>
+<!-- Ação de Resposta Rápida -->
+<div class="pt-1 flex items-center justify-between">
+<button class="flex items-center gap-1 font-caption text-caption text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">thumb_up</span>
+<span>Útil (7)</span>
+</button>
+<button class="inline-flex items-center gap-1 font-label-sm text-label-sm font-medium text-primary hover:text-primary-container transition-colors py-1 px-2 rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-[16px]">reply</span>
+<span>Responder Contratante</span>
+</button>
+</div>
+</article>
+<!-- Card 3: Roberto F. -->
+<article class="bg-surface-container-lowest rounded-2xl p-space-md shadow-sm space-y-space-sm review-card" data-has-comment="true" data-rating="4">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="relative w-12 h-12 rounded-full overflow-hidden bg-surface-container flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Foto de perfil em iluminação clara de Roberto F., homem maduro com óculos de armação fina e expressão gentil e amigável em ambiente residencial moderno" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmFnBVbwPLqrPM1adRs10h54-ue5cI8tAprez8zVqZwis0dighfGlD3RoJAmNKJLm-b9ZbGSuZOabE_bm061WOar8WRJ2fvCOMi3hy8MPAkaIYAKP8KVGrRDysw7nsSoWQnjTxTiSbmOiYopGTWIOFjtGc-L9TSSS_3svUuqqIYfCafnTG5S8uDreKGtcLNxrqKSAjSBJ-lq0kzgth0lODgLypjc-uPeqUANRE6VU3i6CV-KXQLWJdgg"/>
+</div>
+<div>
+<h3 class="font-title-md text-title-md font-semibold text-on-surface leading-tight">Roberto F.</h3>
+<p class="font-caption text-caption text-on-surface-variant">Contratante • Há 2 semanas</p>
+</div>
+</div>
+<!-- Badge de Estrelas (4.0) -->
+<div class="flex items-center gap-0.5 px-2.5 py-1 rounded-full bg-surface-container-low text-primary font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4.0</span>
+</div>
+</div>
+<!-- Tipo de Serviço -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container font-caption text-caption text-on-surface-variant">
+<span class="material-symbols-outlined text-[15px] text-tertiary">healing</span>
+<span>Curativo de alta complexidade</span>
+</div>
+<!-- Depoimento -->
+<p class="font-body-md text-body-md text-on-surface leading-relaxed">
+          “Procedimento muito bem executado, profissional muito educada e técnica impecável.”
+        </p>
+<!-- Ação de Resposta Rápida -->
+<div class="pt-1 flex items-center justify-between">
+<button class="flex items-center gap-1 font-caption text-caption text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">thumb_up</span>
+<span>Útil (2)</span>
+</button>
+<button class="inline-flex items-center gap-1 font-label-sm text-label-sm font-medium text-primary hover:text-primary-container transition-colors py-1 px-2 rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-[16px]">reply</span>
+<span>Responder Contratante</span>
+</button>
+</div>
+</article>
+</section>
+<!-- Card Informativo no Rodapé (Destaque Gamificado de Carreira) -->
+<div class="bg-surface-container-high rounded-2xl p-space-md flex items-start gap-space-md relative overflow-hidden shadow-sm">
+<div class="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center flex-shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[24px]">trending_up</span>
+</div>
+<div class="space-y-1">
+<h4 class="font-label-md text-label-md font-semibold text-on-surface">Potencialize suas oportunidades</h4>
+<p class="font-body-md text-body-md text-on-surface-variant leading-snug">
+          As avaliações aumentam sua visibilidade nas buscas da plataforma e liberam melhores propostas e plantões premium.
+        </p>
+</div>
+</div>
+</div>
+<!-- Micro-Interação: Filtro Simples via Vanilla JS -->
+<script>
+    (function() {
+      const filterPills = document.querySelectorAll('.filter-pill');
+      const cards = document.querySelectorAll('.review-card');
+
+      filterPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          // Atualiza classes ativas das pills
+          filterPills.forEach(p => {
+            p.classList.remove('bg-primary', 'text-on-primary');
+            p.classList.add('bg-surface-container-lowest', 'text-on-surface');
+          });
+          pill.classList.remove('bg-surface-container-lowest', 'text-on-surface');
+          pill.classList.add('bg-primary', 'text-on-primary');
+
+          const filterType = pill.getAttribute('data-filter');
+
+          cards.forEach(card => {
+            const rating = card.getAttribute('data-rating');
+            const hasComment = card.getAttribute('data-has-comment') === 'true';
+
+            if (filterType === 'all') {
+              card.style.display = 'block';
+            } else if (filterType === '5stars') {
+              card.style.display = rating === '5' ? 'block' : 'none';
+            } else if (filterType === '4stars') {
+              card.style.display = rating === '4' ? 'block' : 'none';
+            } else if (filterType === 'comments') {
+              card.style.display = hasComment ? 'block' : 'none';
+            }
+          });
+        });
+      });
+    })();
+  </script>
+</div></main></body></html>

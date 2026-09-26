@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "inverse-on-surface": "#edf0ff", "inverse-primary": "#d3bbff", "surface-container": "#e9edff", "secondary-container": "#6df5e1", "on-error-container": "#93000a", "on-tertiary-fixed-variant": "#004395", "on-tertiary-container": "#98b8ff", "tertiary": "#00306f", "on-surface-variant": "#4a4453", "primary-fixed-dim": "#d3bbff", "on-error": "#ffffff", "surface-container-low": "#f1f3ff", "outline": "#7b7485", "surface-bright": "#f9f9ff", "on-secondary-fixed-variant": "#005048", "on-background": "#141b2b", "on-secondary-container": "#006f64", "error": "#ba1a1a", "surface-container-high": "#e1e8fd", "primary-fixed": "#ebddff", "background": "#f9f9ff", "on-primary-fixed-variant": "#581db3", "surface-container-lowest": "#ffffff", "secondary-fixed-dim": "#4fdbc8", "on-tertiary": "#ffffff", "primary-container": "#5b21b6", "secondary-fixed": "#71f8e4", "secondary": "#006b5f", "primary": "#420093", "on-surface": "#141b2b", "surface-dim": "#d3daef", "on-tertiary-fixed": "#001a42", "surface-tint": "#713dcc", "inverse-surface": "#293040", "on-primary-fixed": "#250059", "surface-variant": "#dce2f7", "tertiary-container": "#00469a", "on-primary": "#ffffff", "surface": "#f9f9ff", "tertiary-fixed-dim": "#adc6ff", "error-container": "#ffdad6", "tertiary-fixed": "#d8e2ff", "on-secondary": "#ffffff", "surface-container-highest": "#dce2f7", "on-secondary-fixed": "#00201c", "outline-variant": "#ccc3d6", "on-primary-container": "#c7aaff" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "gutter": "1rem", "gutter-sm": "0.75rem", "space-xs": "0.25rem", "space-lg": "1.5rem", "gutter-lg": "1.5rem", "margin": "1rem", "space-xl": "2rem", "margin-lg": "2rem", "margin-sm": "0.75rem", "space-sm": "0.5rem", "space-md": "1rem" }, "fontFamily": { "body-lg": ["Inter"], "caption": ["Inter"], "body-md": ["Inter"], "label-md": ["Inter"], "title-md": ["Inter"], "headline-xl": ["Inter"], "headline-md": ["Inter"], "headline-lg": ["Inter"], "label-sm": ["Inter"] }, "fontSize": { "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "caption": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "label-md": ["14px", { "lineHeight": "20px", "fontWeight": "500" }], "title-md": ["18px", { "lineHeight": "26px", "fontWeight": "600" }], "headline-xl": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-gutter flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm"><button aria-label="Voltar" class="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-on-surface hover:text-primary transition-colors" onclick="history.back()"><span class="material-symbols-outlined">arrow_back_ios_new</span></button><h1 class="text-title-md font-title-md text-on-surface line-clamp-1">Cadastro De Empresa</h1></div><div class="flex items-center gap-space-xs"><div class="flex items-center justify-center p-0.5 rounded-full bg-surface-container"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDY-0QQJFauOg-csMgStCHTZ3ltmbCikQIArnd8jT_XekLftKfqy7mGBkqY8e-5Q_3EVvsczDJJaqg1LzV6stzpx9FCeoJiYCqUrK9HqsPSKv5yEJB-HCh58KUnsuTpLsjbjeHtUnrF-ebu7vrj9N8ZEhwN0sn9zcvF8n17VkM9UvfYRVomR1Jp5OfX1or2BabgVDZj06T--AFxJq5Om30YIucX1Gc0api2xjGxUqd7IgaR_e0mNyjKTQ"/></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-safe bg-surface min-h-screen"><div class="flex flex-col w-full px-gutter pb-space-xl">
+<div class="mt-space-md mb-space-lg flex flex-col gap-space-xs">
+<div class="inline-flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-secondary-container/30 text-on-secondary-container w-fit self-start">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span class="font-label-sm text-label-sm font-semibold tracking-wide">Ambiente Seguro &amp; Conforme LGPD</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">Cadastre sua Instituição ou Família</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Encontre e contrate profissionais de saúde verificados sob demanda com segurança jurídica e clínica.</p>
+</div>
+<div class="mb-space-lg">
+<label class="block font-label-md text-label-md text-on-surface mb-space-sm font-semibold">Tipo de Contratante</label>
+<div class="grid grid-cols-3 gap-space-xs p-1 rounded-2xl bg-surface-container" id="contractor-type-group" role="radiogroup">
+<button class="contractor-tab flex flex-col items-center justify-center p-space-sm rounded-xl text-center transition-all bg-transparent text-on-surface-variant" data-type="hospital" onclick="selectType(this)" type="button">
+<span class="material-symbols-outlined text-[22px] mb-1">local_hospital</span>
+<span class="font-label-sm text-label-sm font-medium leading-tight">Clínica / Hospital</span>
+</button>
+<button class="contractor-tab flex flex-col items-center justify-center p-space-sm rounded-xl text-center transition-all bg-transparent text-on-surface-variant" data-type="homecare" onclick="selectType(this)" type="button">
+<span class="material-symbols-outlined text-[22px] mb-1">health_and_safety</span>
+<span class="font-label-sm text-label-sm font-medium leading-tight">Home Care / Residencial</span>
+</button>
+<button class="contractor-tab active-tab flex flex-col items-center justify-center p-space-sm rounded-xl text-center shadow-sm transition-all bg-surface-container-lowest text-primary font-semibold" data-type="individual" onclick="selectType(this)" type="button">
+<span class="material-symbols-outlined text-[22px] mb-1 text-primary" style="font-variation-settings: 'FILL' 1;">family_restroom</span>
+<span class="font-label-sm text-label-sm leading-tight">Pessoa Física / Família</span>
+</button>
+</div>
+</div>
+<div class="rounded-2xl bg-surface-container-lowest p-space-md shadow-sm mb-space-lg flex flex-col gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-md text-label-md text-on-surface font-semibold flex items-center justify-between" for="input-name" id="name-label">
+<span>Nome Completo</span>
+<span class="text-caption font-caption text-on-surface-variant opacity-70">Obrigatório</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-space-md text-outline pointer-events-none text-[20px]" id="name-icon">person</span>
+<input class="w-full h-12 pl-12 pr-space-md rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md placeholder:text-outline/70 focus:outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all" id="input-name" placeholder="ex: Mariana Silveira" type="text"/>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-md text-label-md text-on-surface font-semibold flex items-center justify-between" for="input-doc" id="doc-label">
+<span>CPF</span>
+<span class="text-caption font-caption text-on-surface-variant opacity-70">Comprovado via Receita</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-space-md text-outline pointer-events-none text-[20px]">badge</span>
+<input class="w-full h-12 pl-12 pr-space-md rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md placeholder:text-outline/70 focus:outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all" id="input-doc" inputmode="numeric" maxlength="18" oninput="handleDocMask(this)" placeholder="000.000.000-00" type="text"/>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-md text-label-md text-on-surface font-semibold flex items-center justify-between" for="input-email">
+<span>E-mail Corporativo ou Pessoal</span>
+<span class="text-caption font-caption text-on-surface-variant opacity-70">Para notificações de plantão</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-space-md text-outline pointer-events-none text-[20px]">mail</span>
+<input class="w-full h-12 pl-12 pr-space-md rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md placeholder:text-outline/70 focus:outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all" id="input-email" placeholder="mariana@exemplo.com.br" type="email"/>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-md text-label-md text-on-surface font-semibold flex items-center justify-between" for="input-phone">
+<span>Telefone / WhatsApp</span>
+<span class="text-caption font-caption text-on-surface-variant opacity-70">Contato ágil</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-space-md text-outline pointer-events-none text-[20px]">call</span>
+<input class="w-full h-12 pl-12 pr-space-md rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md placeholder:text-outline/70 focus:outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all" id="input-phone" maxlength="15" oninput="handlePhoneMask(this)" placeholder="(00) 00000-0000" type="tel"/>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-md text-label-md text-on-surface font-semibold flex items-center justify-between" for="input-city">
+<span>Cidade / Estado de Atuação</span>
+<span class="text-caption font-caption text-on-surface-variant opacity-70">Para alocação de equipe</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-space-md text-outline pointer-events-none text-[20px]">location_on</span>
+<input class="w-full h-12 pl-12 pr-space-md rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md placeholder:text-outline/70 focus:outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all" id="input-city" placeholder="ex: Florianópolis, SC" type="text"/>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-md text-label-md text-on-surface font-semibold flex items-center justify-between" for="input-password">
+<span>Senha de Acesso</span>
+<span class="text-caption font-caption text-on-surface-variant opacity-70">Mínimo 8 dígitos</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-space-md text-outline pointer-events-none text-[20px]">lock</span>
+<input class="w-full h-12 pl-12 pr-12 rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md placeholder:text-outline/70 focus:outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all" id="input-password" placeholder="••••••••" type="password"/>
+<button aria-label="Alternar exibição da senha" class="absolute right-space-sm p-space-xs text-outline hover:text-primary transition-colors flex items-center justify-center" onclick="togglePasswordVisibility()" type="button">
+<span class="material-symbols-outlined text-[20px]" id="pw-toggle-icon">visibility</span>
+</button>
+</div>
+</div>
+</div>
+<div class="p-space-md rounded-2xl bg-secondary-container/20 flex items-start gap-space-md mb-space-lg">
+<div class="w-10 h-10 rounded-xl bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">payments</span>
+</div>
+<div class="flex flex-col">
+<h3 class="font-label-md text-label-md font-semibold text-on-secondary-container">Sem taxa de adesão inicial</h3>
+<p class="font-body-md text-body-md text-on-secondary-container/90 mt-0.5">Pague apenas quando contratar profissionais ou optar por pacotes corporativos de gestão de escala.</p>
+</div>
+</div>
+<div class="mb-space-lg">
+<label class="flex items-start gap-space-sm cursor-pointer select-none">
+<input class="mt-1 w-5 h-5 rounded-lg accent-primary cursor-pointer" id="terms-checkbox" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+        Li e concordo com os <a class="text-primary font-semibold hover:underline" href="#">Termos de Uso</a> e a <a class="text-primary font-semibold hover:underline" href="#">Política de Privacidade</a> da SaúdeConecta.
+      </span>
+</label>
+</div>
+<button class="w-full h-14 rounded-2xl bg-primary-container text-on-primary font-label-md text-title-md flex items-center justify-center gap-space-sm shadow-md active:scale-[0.98] transition-transform" onclick="handleSubmit()" type="button">
+<span>Concluir Cadastro de Contratante</span>
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+<div class="mt-space-lg flex flex-col items-center gap-space-sm pt-space-sm text-center">
+<p class="font-body-md text-body-md text-on-surface-variant">
+      Já tem uma conta de contratante?
+      <a class="text-primary font-semibold hover:underline ml-1" href="/entrar">Entrar</a>
+</p>
+<div class="w-12 h-0.5 bg-surface-container rounded-full my-space-xs"></div>
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[18px]">stethoscope</span>
+<p class="font-body-md text-body-md text-on-surface-variant">
+        É profissional de saúde?
+        <a class="text-secondary font-semibold hover:underline ml-1" href="/cadastro/profissional">Cadastre-se aqui</a>
+</p>
+</div>
+</div>
+</div>
+<script>
+  let currentContractorType = 'individual';
+
+  function selectType(buttonEl) {
+    const tabs = document.querySelectorAll('.contractor-tab');
+    tabs.forEach(tab => {
+      tab.classList.remove('bg-surface-container-lowest', 'text-primary', 'shadow-sm', 'font-semibold');
+      tab.classList.add('bg-transparent', 'text-on-surface-variant');
+      const icon = tab.querySelector('.material-symbols-outlined');
+      if (icon) icon.style.fontVariationSettings = "'FILL' 0";
+    });
+
+    buttonEl.classList.remove('bg-transparent', 'text-on-surface-variant');
+    buttonEl.classList.add('bg-surface-container-lowest', 'text-primary', 'shadow-sm', 'font-semibold');
+    const activeIcon = buttonEl.querySelector('.material-symbols-outlined');
+    if (activeIcon) activeIcon.style.fontVariationSettings = "'FILL' 1";
+
+    currentContractorType = buttonEl.getAttribute('data-type');
+    updateFormContext(currentContractorType);
+  }
+
+  function updateFormContext(type) {
+    const nameLabel = document.getElementById('name-label').firstElementChild;
+    const nameInput = document.getElementById('input-name');
+    const nameIcon = document.getElementById('name-icon');
+    const docLabel = document.getElementById('doc-label').firstElementChild;
+    const docInput = document.getElementById('input-doc');
+
+    if (type === 'hospital' || type === 'homecare') {
+      nameLabel.textContent = 'Razão Social / Nome Fantasia';
+      nameInput.placeholder = type === 'hospital' ? 'ex: Hospital Central São Lucas' : 'ex: Resgate &amp; Cuidado Home Care';
+      nameIcon.textContent = 'corporate_fare';
+      docLabel.textContent = 'CNPJ';
+      docInput.placeholder = '00.000.000/0000-00';
+    } else {
+      nameLabel.textContent = 'Nome Completo';
+      nameInput.placeholder = 'ex: Mariana Silveira';
+      nameIcon.textContent = 'person';
+      docLabel.textContent = 'CPF';
+      docInput.placeholder = '000.000.000-00';
+    }
+    docInput.value = '';
+  }
+
+  function handleDocMask(input) {
+    let v = input.value.replace(/\D/g, '');
+    if (currentContractorType === 'individual') {
+      if (v.length > 11) v = v.slice(0, 11);
+      v = v.replace(/(\d{3})(\d)/, '$1.$2');
+      v = v.replace(/(\d{3})(\d)/, '$1.$2');
+      v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    } else {
+      if (v.length > 14) v = v.slice(0, 14);
+      v = v.replace(/^(\d{2})(\d)/, '$1.$2');
+      v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+      v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
+      v = v.replace(/(\d{4})(\d)/, '$1-$2');
+    }
+    input.value = v;
+  }
+
+  function handlePhoneMask(input) {
+    let v = input.value.replace(/\D/g, '');
+    if (v.length > 11) v = v.slice(0, 11);
+    if (v.length > 10) {
+      v = v.replace(/^(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    } else if (v.length > 5) {
+      v = v.replace(/^(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+    } else if (v.length > 2) {
+      v = v.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
+    } else if (v.length > 0) {
+      v = v.replace(/^(\d*)/, '($1');
+    }
+    input.value = v;
+  }
+
+  function togglePasswordVisibility() {
+    const pwInput = document.getElementById('input-password');
+    const icon = document.getElementById('pw-toggle-icon');
+    if (pwInput.type === 'password') {
+      pwInput.type = 'text';
+      icon.textContent = 'visibility_off';
+    } else {
+      pwInput.type = 'password';
+      icon.textContent = 'visibility';
+    }
+  }
+
+  function handleSubmit() {
+    const terms = document.getElementById('terms-checkbox');
+    if (!terms.checked) {
+      alert('Por favor, confirme que concorda com os Termos de Uso e Política de Privacidade para prosseguir.');
+      return;
+    }
+    alert('Cadastro realizado com sucesso! Redirecionando para a sua central de escalas SaúdeConecta.');
+  }
+</script></main></body></html>
