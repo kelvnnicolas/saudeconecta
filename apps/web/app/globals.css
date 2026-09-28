@@ -10,6 +10,12 @@
   --bg: #e8e5f3;
   --ink: #332f4a;
   --ink-soft: #726d8c;
+  /* Terceiro degrau de texto — mais claro que --ink-soft, só pra metadado
+     verdadeiramente secundário (timestamp, contagem). Antes disso, `outline`
+     e `on-surface-variant` apontavam pra mesma variável e renderizavam
+     idênticos — nenhuma hierarquia real entre "texto secundário" e "metadado
+     apagado". Inspirado no tier ink/body/muted do DESIGN.md da Airbnb. */
+  --ink-mute: #837e9c;
   --line: #cac5de;
 
   --accent: #6d3fd1;
@@ -39,6 +45,7 @@
     --bg: #2b2a38;
     --ink: #f1effa;
     --ink-soft: #a9a5c4;
+    --ink-mute: #8b87a8;
     --line: #423f56;
 
     --accent: #a586f5;
@@ -68,6 +75,7 @@
   --bg: #2b2a38;
   --ink: #f1effa;
   --ink-soft: #a9a5c4;
+  --ink-mute: #8b87a8;
   --line: #423f56;
 
   --accent: #a586f5;
