@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { MaterialIcon } from "./MaterialIcon";
-import { ThemeToggle } from "./ThemeToggle";
 import { Logo } from "./Logo";
 
 export function Header({
@@ -59,7 +58,6 @@ export function Header({
               <MaterialIcon name={action.icon} />
             </button>
           ))}
-        <ThemeToggle />
       </div>
     </header>
   );
