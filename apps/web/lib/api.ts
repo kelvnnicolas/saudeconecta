@@ -35,11 +35,20 @@ export class ApiError extends Error {
   detail: unknown;
 
   constructor(status: number, detail: unknown) {
-    const code =
-      typeof detail === "object" && detail !== null && "code" in detail
-        ? String((detail as Record<string, unknown>).code)
-        : null;
-    super(code ?? `Erro HTTP ${status}`);
+    // Duas formas de detail no backend: string simples (rotas mais antigas,
+    // já é a mensagem pronta) ou {code, mensagem} (erro_negocio(), regra de
+    // negócio). Sem isso, `message` virava o `code` cru ("nao_elegivel"),
+    // que telas sem tratamento especial (ex.: criar demanda) mostravam
+    // direto pro usuário em vez da frase explicativa que o backend já manda.
+    const isObjectDetail = typeof detail === "object" && detail !== null;
+    const code = isObjectDetail && "code" in detail ? String((detail as Record<string, unknown>).code) : null;
+    const mensagem =
+      typeof detail === "string"
+        ? detail
+        : isObjectDetail && "mensagem" in detail
+          ? String((detail as Record<string, unknown>).mensagem)
+          : null;
+    super(mensagem ?? code ?? `Erro HTTP ${status}`);
     this.status = status;
     this.code = code;
     this.detail = detail;
