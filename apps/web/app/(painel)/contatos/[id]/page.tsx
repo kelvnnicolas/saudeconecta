@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Header } from "@/components/ui/Header";
@@ -22,6 +22,8 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
   const [corpoMensagem, setCorpoMensagem] = useState("");
   const [enviandoMensagem, setEnviandoMensagem] = useState(false);
   const [aceitando, setAceitando] = useState(false);
+  const [erroConversa, setErroConversa] = useState<string | null>(null);
+  const listaMensagensRef = useRef<HTMLDivElement>(null);
   const {
     register,
     handleSubmit,
@@ -72,6 +74,11 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
     };
   }, [contato?.id]);
 
+  useEffect(() => {
+    const el = listaMensagensRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [mensagens.length]);
+
   async function onSubmit(data: AvaliacaoInput) {
     if (!contato) return;
     setErro(null);
@@ -85,14 +92,15 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
   }
 
   async function enviarMensagem() {
-    if (!contato || !corpoMensagem.trim()) return;
+    if (!contato || !corpoMensagem.trim() || enviandoMensagem) return;
+    setErroConversa(null);
     setEnviandoMensagem(true);
     try {
       const nova = await api.enviarMensagemContato(contato.id, corpoMensagem.trim());
       setMensagens((atual) => [...atual, nova]);
       setCorpoMensagem("");
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não foi possível enviar a mensagem.");
+      setErroConversa(e instanceof Error ? e.message : "Não foi possível enviar a mensagem.");
     } finally {
       setEnviandoMensagem(false);
     }
@@ -100,12 +108,13 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
 
   async function aceitarDemanda() {
     if (!contato) return;
+    setErroConversa(null);
     setAceitando(true);
     try {
       const atualizado = await api.aceitarDemandaDireta(contato.id);
       setContato(atualizado);
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não foi possível aceitar a demanda.");
+      setErroConversa(e instanceof Error ? e.message : "Não foi possível aceitar a demanda.");
     } finally {
       setAceitando(false);
     }
@@ -150,7 +159,7 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
 
         <section className="bg-surface-container-lowest rounded-2xl neu-surface p-space-md flex flex-col gap-space-sm">
           <h2 className="font-title-md text-title-md text-on-surface">Conversa</h2>
-          <div className="flex flex-col gap-space-xs max-h-80 overflow-y-auto">
+          <div ref={listaMensagensRef} className="flex flex-col gap-space-xs max-h-80 overflow-y-auto">
             {mensagens.length === 0 && (
               <p className="font-caption text-caption text-on-surface-variant text-center py-space-sm">
                 Nenhuma mensagem ainda. Comece a conversa.
@@ -179,14 +188,16 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
               );
             })}
           </div>
+          {erroConversa && <p className="font-caption text-caption text-error">{erroConversa}</p>}
           <div className="flex items-center gap-space-xs">
             <input
               type="text"
               value={corpoMensagem}
               onChange={(e) => setCorpoMensagem(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") enviarMensagem();
+                if (e.key === "Enter" && !e.nativeEvent.isComposing) enviarMensagem();
               }}
+              maxLength={2000}
               placeholder="Escreva uma mensagem..."
               className="flex-1 h-11 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
             />
