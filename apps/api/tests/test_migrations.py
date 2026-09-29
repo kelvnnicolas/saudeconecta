@@ -74,3 +74,8 @@ def test_migration_adds_origem_and_demanda_id_to_contatos():
     colunas = {c["name"]: c for c in inspect(engine).get_columns("contatos")}
     assert colunas["origem"]["nullable"] is False
     assert colunas["demanda_id"]["nullable"] is True
+
+
+def test_migration_adds_aceito_em_to_contatos():
+    colunas = {c["name"]: c for c in inspect(engine).get_columns("contatos")}
+    assert colunas["aceito_em"]["nullable"] is True
