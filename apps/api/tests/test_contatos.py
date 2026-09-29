@@ -268,3 +268,16 @@ def test_aceitar_terceiro_recebe_403(client, db_session):
     resposta = client.post(f"/contatos/{contato.id}/aceitar")
     assert resposta.status_code == 403
     assert resposta.json()["detail"]["code"] == "nao_participante"
+
+
+def test_criar_mensagem_corpo_muito_longo_e_rejeitado(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(solicitante_id)
+    resposta = client.post(
+        f"/contatos/{contato.id}/mensagens", json={"corpo": "a" * 2001}
+    )
+    assert resposta.status_code == 422

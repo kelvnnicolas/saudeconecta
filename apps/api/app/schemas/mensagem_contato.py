@@ -1,11 +1,13 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+CORPO_MAX = 2000
 
 
 class MensagemContatoCreateRequest(BaseModel):
-    corpo: str
+    corpo: str = Field(max_length=CORPO_MAX)
 
     @field_validator("corpo")
     @classmethod
