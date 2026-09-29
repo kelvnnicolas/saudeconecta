@@ -6,8 +6,13 @@ from app.core.database import get_db
 from app.core.errors import ErroNegocio
 from app.models.contato import Contato
 from app.schemas.contato import ContatoCreateRequest, ContatoRead
-from app.schemas.mensagem_contato import MensagemContatoRead
-from app.services.contato_service import create_contato, list_own_contatos, listar_mensagens
+from app.schemas.mensagem_contato import MensagemContatoCreateRequest, MensagemContatoRead
+from app.services.contato_service import (
+    create_contato,
+    criar_mensagem,
+    list_own_contatos,
+    listar_mensagens,
+)
 
 router = APIRouter(prefix="/contatos", tags=["contatos"])
 
@@ -43,3 +48,18 @@ def listar_mensagens_route(
     db: Session = Depends(get_db),
 ) -> list[MensagemContatoRead]:
     return listar_mensagens(db, current_user.id, contato_id)
+
+
+@router.post(
+    "/{contato_id}/mensagens",
+    response_model=MensagemContatoRead,
+    status_code=201,
+    responses=ERRO_403_404,
+)
+def criar_mensagem_route(
+    contato_id: int,
+    data: MensagemContatoCreateRequest,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> MensagemContatoRead:
+    return criar_mensagem(db, current_user.id, contato_id, data.corpo)

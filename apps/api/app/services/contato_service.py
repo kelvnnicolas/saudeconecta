@@ -74,3 +74,14 @@ def listar_mensagens(db: Session, user_id: uuid.UUID, contato_id: int) -> list[M
             .order_by(MensagemContato.criado_em)
         )
     )
+
+
+def criar_mensagem(
+    db: Session, user_id: uuid.UUID, contato_id: int, corpo: str
+) -> MensagemContato:
+    _contato_das_partes(db, contato_id, user_id)
+    mensagem = MensagemContato(contato_id=contato_id, autor_id=user_id, corpo=corpo)
+    db.add(mensagem)
+    db.commit()
+    db.refresh(mensagem)
+    return mensagem
