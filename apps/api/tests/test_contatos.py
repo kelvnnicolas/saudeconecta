@@ -187,7 +187,9 @@ def test_criar_mensagem_corpo_vazio_e_rejeitado(client, db_session):
 
     autenticar(solicitante_id)
     assert client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": ""}).status_code == 422
-    assert client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": "   "}).status_code == 422
+    assert (
+        client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": "   "}).status_code == 422
+    )
 
 
 def test_criar_mensagem_ignora_autor_id_do_body(client, db_session):
@@ -277,7 +279,5 @@ def test_criar_mensagem_corpo_muito_longo_e_rejeitado(client, db_session):
     db_session.commit()
 
     autenticar(solicitante_id)
-    resposta = client.post(
-        f"/contatos/{contato.id}/mensagens", json={"corpo": "a" * 2001}
-    )
+    resposta = client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": "a" * 2001})
     assert resposta.status_code == 422
