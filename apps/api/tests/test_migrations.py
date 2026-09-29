@@ -13,6 +13,7 @@ EXPECTED_TABLES = {
     "empresas",
     "avaliacoes",
     "contatos",
+    "mensagens_contato",
     "links_pagamento",
     "planos",
     "assinaturas",
