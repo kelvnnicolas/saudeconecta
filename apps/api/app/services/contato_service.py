@@ -4,7 +4,9 @@ from fastapi import HTTPException, status
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
+from app.core.errors import erro_negocio
 from app.models.contato import Contato
+from app.models.mensagem_contato import MensagemContato
 from app.models.profile import Profile
 from app.models.profissional import Profissional
 from app.schemas.contato import ContatoCreateRequest
@@ -46,5 +48,29 @@ def list_own_contatos(db: Session, user_id: uuid.UUID) -> list[Contato]:
             select(Contato)
             .where(or_(Contato.solicitante_id == user_id, Contato.profissional_id == user_id))
             .order_by(Contato.criado_em.desc())
+        )
+    )
+
+
+def _contato_das_partes(db: Session, contato_id: int, user_id: uuid.UUID) -> Contato:
+    contato = db.get(Contato, contato_id)
+    if contato is None:
+        raise erro_negocio(
+            status.HTTP_404_NOT_FOUND, "contato_inexistente", "Contato não encontrado"
+        )
+    if user_id not in (contato.solicitante_id, contato.profissional_id):
+        raise erro_negocio(
+            status.HTTP_403_FORBIDDEN, "nao_participante", "Você não faz parte deste contato"
+        )
+    return contato
+
+
+def listar_mensagens(db: Session, user_id: uuid.UUID, contato_id: int) -> list[MensagemContato]:
+    _contato_das_partes(db, contato_id, user_id)
+    return list(
+        db.scalars(
+            select(MensagemContato)
+            .where(MensagemContato.contato_id == contato_id)
+            .order_by(MensagemContato.criado_em)
         )
     )

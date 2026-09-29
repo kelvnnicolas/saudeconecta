@@ -6,6 +6,7 @@ from app.main import app
 from app.models.contato import Contato
 from app.models.profile import Papel, Profile
 from app.models.profissional import Profissional
+from tests.fabrica import autenticar, criar_contato, criar_empresa, criar_profissional
 
 
 def test_create_contato_requires_authentication(client):
@@ -118,3 +119,42 @@ def test_list_own_contatos_returns_only_own(client, db_session):
     body = response.json()
     assert len(body) == 1
     assert body[0]["mensagem"] == "A para B"
+
+
+def test_listar_mensagens_ambas_partes_conseguem_ler(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(solicitante_id)
+    resposta = client.get(f"/contatos/{contato.id}/mensagens")
+    assert resposta.status_code == 200
+    assert resposta.json() == []
+
+    autenticar(profissional_id)
+    resposta = client.get(f"/contatos/{contato.id}/mensagens")
+    assert resposta.status_code == 200
+
+
+def test_listar_mensagens_terceiro_recebe_403(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    outro_usuario = criar_empresa(db_session, nome="Outra Empresa", email="outra@example.com")
+    db_session.commit()
+
+    autenticar(outro_usuario)
+    resposta = client.get(f"/contatos/{contato.id}/mensagens")
+    assert resposta.status_code == 403
+    assert resposta.json()["detail"]["code"] == "nao_participante"
+
+
+def test_listar_mensagens_contato_inexistente_404(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    db_session.commit()
+
+    autenticar(solicitante_id)
+    resposta = client.get("/contatos/999999/mensagens")
+    assert resposta.status_code == 404
+    assert resposta.json()["detail"]["code"] == "contato_inexistente"
