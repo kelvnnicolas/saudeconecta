@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
+import { ThemeSettings } from "@/components/ui/ThemeSettings";
 import { useCurrentUser } from "@/lib/use-current-user";
 import { signOut } from "@/lib/supabase-client";
 import { api } from "@/lib/api";
@@ -124,6 +125,8 @@ export default function MeuPerfilPage() {
             {[cidade, estado].filter(Boolean).join(", ") || "Não informado"}
           </p>
         </section>
+
+        <ThemeSettings />
       </main>
       <BottomNav />
     </>

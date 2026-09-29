@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Logo } from "@/components/ui/Logo";
 import { type LoginInput, loginSchema } from "@/lib/validations/auth";
 import { signInWithFacebook, signInWithGoogle, signInWithPassword } from "@/lib/supabase-client";
@@ -64,9 +63,6 @@ export default function EntrarPage() {
 
   return (
     <main className="relative flex-1 flex flex-col justify-center px-gutter py-space-xl bg-surface min-h-screen gap-space-lg">
-      <div className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))]">
-        <ThemeToggle />
-      </div>
       <div className="flex flex-col items-center gap-space-xs">
         <Logo />
         <h1 className="font-headline-lg text-headline-lg text-on-surface">Acesse sua conta</h1>

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Logo } from "@/components/ui/Logo";
 import { ProfessionalCard } from "@/components/busca/ProfessionalCard";
 import { api } from "@/lib/api";
@@ -55,7 +54,6 @@ export default function BuscarPage() {
             <button aria-label="Notificações" className="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant neu-surface-sm neu-pressable">
               <MaterialIcon name="notifications" />
             </button>
-            <ThemeToggle />
           </div>
         </div>
         <p className="font-caption text-caption text-on-surface-variant">+1.400 profissionais ativos</p>

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Logo } from "@/components/ui/Logo";
 
 const ESPECIALIDADES_LANDING = [
@@ -28,7 +27,6 @@ export default function LandingPage() {
           >
             Cadastrar
           </Link>
-          <ThemeToggle />
         </div>
       </header>
 
