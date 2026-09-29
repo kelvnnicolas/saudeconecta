@@ -28,6 +28,11 @@ os.environ["STRIPE_PRICE_PRO"] = "price_test_pro"
 os.environ["APP_URL"] = "http://localhost:3000"
 os.environ["RESEND_API_KEY"] = ""
 
+# Off by default so the shared TestClient "IP" doesn't trip limits across
+# unrelated tests that happen to hit the same rate-limited route many times
+# in one session. tests/test_rate_limiting.py flips it on for its own cases.
+os.environ["RATE_LIMIT_ENABLED"] = "false"
+
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 

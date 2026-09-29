@@ -108,10 +108,12 @@ gaps conhecidos e o que ainda falta testar em
 # 1. Subir o Postgres local (dev + test) via Docker
 docker compose -f docker-compose.dev.yml up -d
 
-# 2. Criar o virtualenv e instalar dependências
+# 2. Criar o virtualenv e instalar dependências (requirements-dev.txt inclui
+#    requirements.txt via -r, mais pytest/ruff/black; em produção só o
+#    segundo é instalado)
 cd apps/api
 python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
+.venv/bin/pip install -r requirements-dev.txt
 
 # 3. Copiar o .env de exemplo e preencher as variáveis obrigatórias do Stripe
 #    e APP_URL (ver "Stripe (modo de teste)" abaixo) — sem elas a API se

@@ -1,11 +1,12 @@
 import uuid
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 from app.core.auth import CurrentUser, get_current_user
 from app.core.database import get_db
 from app.core.errors import ErroNegocio
+from app.core.rate_limit import limiter
 from app.schemas.demanda import (
     DemandaCreate,
     DemandaDetalheEmpresa,
@@ -119,7 +120,9 @@ def atualizar_demanda(
         410: {"model": ErroNegocio, "description": "code=demanda_indisponivel"},
     },
 )
+@limiter.limit("10/minute")
 def demonstrar_interesse(
+    request: Request,
     demanda_id: uuid.UUID,
     data: InteresseCreate | None = None,
     current_user: CurrentUser = Depends(get_current_user),

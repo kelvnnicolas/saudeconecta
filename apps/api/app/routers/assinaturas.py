@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.core.auth import CurrentUser, get_current_user
 from app.core.database import get_db
 from app.core.errors import ErroNegocio
+from app.core.rate_limit import limiter
 from app.schemas.assinatura import (
     CheckoutRequest,
     CheckoutResponse,
@@ -26,7 +27,9 @@ router = APIRouter(prefix="/assinaturas", tags=["assinaturas"])
         409: {"model": ErroNegocio, "description": "code=assinatura_existente"},
     },
 )
+@limiter.limit("5/minute")
 def iniciar_checkout(
+    request: Request,
     data: CheckoutRequest,
     current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),

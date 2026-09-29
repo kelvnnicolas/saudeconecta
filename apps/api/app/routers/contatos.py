@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.core.auth import CurrentUser, get_current_user
 from app.core.database import get_db
+from app.core.rate_limit import limiter
 from app.models.contato import Contato
 from app.schemas.contato import ContatoCreateRequest, ContatoRead
 from app.services.contato_service import create_contato, list_own_contatos
@@ -11,7 +12,9 @@ router = APIRouter(prefix="/contatos", tags=["contatos"])
 
 
 @router.post("", response_model=ContatoRead)
+@limiter.limit("10/minute")
 def create_contato_route(
+    request: Request,
     data: ContatoCreateRequest,
     current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),

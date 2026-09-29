@@ -1,10 +1,11 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.auth import CurrentUser, get_current_user
 from app.core.database import get_db
+from app.core.rate_limit import limiter
 from app.schemas.busca import ProfissionalSearchResponse, ProfissionalSearchResult
 from app.schemas.profissional import ProfissionalRead, ProfissionalUpdateRequest
 from app.services.profissional_service import (
@@ -18,7 +19,9 @@ router = APIRouter(prefix="/profissionais", tags=["profissionais"])
 
 
 @router.get("", response_model=ProfissionalSearchResponse)
+@limiter.limit("30/minute")
 def search_profissionais_route(
+    request: Request,
     q: str | None = None,
     cidade: str | None = None,
     estado: str | None = None,
