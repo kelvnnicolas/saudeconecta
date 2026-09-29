@@ -35,6 +35,11 @@ def upgrade() -> None:
         ),
     )
     op.create_index("ix_mensagens_contato_contato_id", "mensagens_contato", ["contato_id"])
+    # A API dona a tabela e ignora RLS — isso só nega acesso direto via
+    # PostgREST (anon/authenticated), que teria a chave anon pública do
+    # bundle do frontend, para uma tabela nova que guarda texto livre de
+    # conversas privadas. Mesmo padrão de afbbf49c8fb1_create_planos.py.
+    op.execute("ALTER TABLE mensagens_contato ENABLE ROW LEVEL SECURITY")
 
 
 def downgrade() -> None:

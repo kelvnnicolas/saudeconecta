@@ -21,7 +21,7 @@ EXPECTED_TABLES = {
     "demandas",
 }
 
-TABELAS_COM_RLS = {"planos", "assinaturas", "eventos_stripe", "demandas"}
+TABELAS_COM_RLS = {"planos", "assinaturas", "eventos_stripe", "demandas", "mensagens_contato"}
 
 
 def test_migration_creates_all_tables_and_seeds_especialidades():
