@@ -29,9 +29,10 @@ export default function MinhaAssinaturaPage() {
       const { portal_url } = await api.abrirPortal();
       window.location.href = portal_url;
     } catch (e) {
+      // e.message já é a frase amigável do backend quando existe (ver ApiError em lib/api.ts).
       setErro(
         e instanceof ApiError
-          ? `Não foi possível abrir o portal (${e.code ?? e.message}).`
+          ? e.message
           : "Backend indisponível — em modo de exemplo, o Portal do Stripe abriria aqui.",
       );
     } finally {
