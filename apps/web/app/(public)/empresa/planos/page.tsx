@@ -59,9 +59,12 @@ export default function PlanosEmpresaPage() {
       const { checkout_url } = await api.iniciarCheckout(selecionado);
       window.location.href = checkout_url;
     } catch (e) {
+      // e.message já é a frase amigável do backend quando existe (ver
+      // ApiError em lib/api.ts) — usar e.code aqui mostrava o código cru
+      // ("nao_elegivel") pro usuário em vez da explicação.
       setErro(
         e instanceof ApiError
-          ? `Não foi possível iniciar o checkout (${e.code ?? e.message}).`
+          ? e.message
           : "Backend indisponível — em modo de exemplo, o redirecionamento para o Stripe aconteceria aqui.",
       );
     } finally {

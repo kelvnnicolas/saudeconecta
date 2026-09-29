@@ -35,7 +35,8 @@ export default function OportunidadesPage() {
       if (e instanceof ApiError && e.code === "interesse_existente") {
         setInteressesEnviados((atual) => new Set(atual).add(id));
       } else {
-        setErro(e instanceof ApiError ? `Não foi possível enviar (${e.code ?? e.message}).` : "Não foi possível enviar. Tente de novo.");
+        // e.message já é a frase amigável do backend quando existe (ver ApiError em lib/api.ts).
+        setErro(e instanceof ApiError ? e.message : "Não foi possível enviar. Tente de novo.");
       }
     } finally {
       setEnviando(null);
