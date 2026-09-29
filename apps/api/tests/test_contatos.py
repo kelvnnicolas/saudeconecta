@@ -216,3 +216,55 @@ def test_criar_mensagem_terceiro_recebe_403(client, db_session):
     resposta = client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": "Oi"})
     assert resposta.status_code == 403
     assert resposta.json()["detail"]["code"] == "nao_participante"
+
+
+def test_aceitar_profissional_com_sucesso(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(profissional_id)
+    resposta = client.post(f"/contatos/{contato.id}/aceitar")
+    assert resposta.status_code == 200
+    assert resposta.json()["aceito_em"] is not None
+
+
+def test_aceitar_empresa_recebe_403(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(solicitante_id)
+    resposta = client.post(f"/contatos/{contato.id}/aceitar")
+    assert resposta.status_code == 403
+    assert resposta.json()["detail"]["code"] == "apenas_profissional_aceita"
+
+
+def test_aceitar_duas_vezes_e_idempotente(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(profissional_id)
+    primeira = client.post(f"/contatos/{contato.id}/aceitar")
+    timestamp_original = primeira.json()["aceito_em"]
+
+    segunda = client.post(f"/contatos/{contato.id}/aceitar")
+    assert segunda.status_code == 200
+    assert segunda.json()["aceito_em"] == timestamp_original
+
+
+def test_aceitar_terceiro_recebe_403(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    outro_usuario = criar_empresa(db_session, nome="Outra Empresa", email="outra3@example.com")
+    db_session.commit()
+
+    autenticar(outro_usuario)
+    resposta = client.post(f"/contatos/{contato.id}/aceitar")
+    assert resposta.status_code == 403
+    assert resposta.json()["detail"]["code"] == "nao_participante"

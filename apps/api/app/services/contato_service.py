@@ -1,4 +1,5 @@
 import uuid
+from datetime import UTC, datetime
 
 from fastapi import HTTPException, status
 from sqlalchemy import or_, select
@@ -85,3 +86,18 @@ def criar_mensagem(
     db.commit()
     db.refresh(mensagem)
     return mensagem
+
+
+def aceitar_demanda_direta(db: Session, user_id: uuid.UUID, contato_id: int) -> Contato:
+    contato = _contato_das_partes(db, contato_id, user_id)
+    if user_id != contato.profissional_id:
+        raise erro_negocio(
+            status.HTTP_403_FORBIDDEN,
+            "apenas_profissional_aceita",
+            "Só o profissional pode aceitar a demanda direta",
+        )
+    if contato.aceito_em is None:
+        contato.aceito_em = datetime.now(UTC)
+        db.commit()
+        db.refresh(contato)
+    return contato

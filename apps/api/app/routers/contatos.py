@@ -8,6 +8,7 @@ from app.models.contato import Contato
 from app.schemas.contato import ContatoCreateRequest, ContatoRead
 from app.schemas.mensagem_contato import MensagemContatoCreateRequest, MensagemContatoRead
 from app.services.contato_service import (
+    aceitar_demanda_direta,
     create_contato,
     criar_mensagem,
     list_own_contatos,
@@ -63,3 +64,22 @@ def criar_mensagem_route(
     db: Session = Depends(get_db),
 ) -> MensagemContatoRead:
     return criar_mensagem(db, current_user.id, contato_id, data.corpo)
+
+
+@router.post(
+    "/{contato_id}/aceitar",
+    response_model=ContatoRead,
+    responses={
+        **ERRO_403_404,
+        403: {
+            "model": ErroNegocio,
+            "description": "code=nao_participante | apenas_profissional_aceita",
+        },
+    },
+)
+def aceitar_route(
+    contato_id: int,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Contato:
+    return aceitar_demanda_direta(db, current_user.id, contato_id)
