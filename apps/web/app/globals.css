@@ -113,6 +113,11 @@
     background: var(--bg);
     transition: background-color 0.25s ease, color 0.25s ease;
   }
+  button,
+  a,
+  [role="button"] {
+    touch-action: manipulation;
+  }
 }
 
 .pb-safe {
