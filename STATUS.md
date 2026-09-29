@@ -1,38 +1,62 @@
 # Status do projeto
 
-Última atualização: 2026-09-24 — branch `feature/b2b-assinatura-demandas`
-(assinatura B2B + demandas + CI). Tudo o que está marcado como concluído abaixo
-foi verificado rodando comandos, não por suposição.
+Última atualização: 2026-09-29 — `main` (74 commits), em produção real com
+cliente. Tudo o que está marcado como concluído abaixo foi verificado rodando
+comandos ou testando ao vivo, não por suposição. Este arquivo ficou parado
+entre 2026-09-24 e 2026-09-29 enquanto o frontend inteiro foi construído —
+a seção [O que mudou desde 2026-09-24](#o-que-mudou-desde-2026-09-24) resume
+essa lacuna.
 
 ## Resumo
 
-- **Backend**: Planos 1–5 integrados à `main` (fundação, auth, perfis, busca,
-  avaliações, contatos, avatar, analytics). Esta branch adiciona assinatura
-  B2B recorrente (Stripe), demandas, proteção de LGPD no Sentry e CI.
-- **Testes**: 189 passando (`pytest`), `black --check` e `ruff check` limpos,
-  inclusive em Python 3.11 (versão alvo). Nenhum teste chama serviço real.
-- **Frontend**: não iniciado.
-- **Bloqueado**: teste manual ponta a ponta com o Stripe real — depende de
-  configurações que só você pode fazer (seção
-  [⛔ Bloqueado](#-bloqueado--o-que-precisa-de-você)).
+- **Backend**: todos os endpoints do spec original do MVP implementados e
+  testados, exceto o link de pagamento por contato (item 9 abaixo — adiado
+  de propósito, não esquecido). Em produção no Render:
+  `https://saudeconecta-api.onrender.com` (free tier — "esfria" após
+  inatividade, primeiro request depois de um tempo ocioso leva ~15s).
+- **Frontend**: completo e em produção na Vercel
+  (`https://saudeconecta-pi.vercel.app`), App Router + Supabase Auth (e-mail,
+  Google, LinkedIn), tema claro/escuro, todas as telas do spec original mais
+  chat e aceite de demanda direta dentro de Contato.
+- **Testes**: 205 passando (`pytest`, backend), `tsc --noEmit` limpo
+  (frontend — sem suíte automatizada de frontend ainda). CI verde a cada PR.
+- **Bloqueado**: nada crítico no momento — os bloqueios de 2026-09-24 (Stripe,
+  credenciais) foram resolvidos. Ver
+  [O que falta](#o-que-falta-2026-09-29) para os gaps reais atuais.
+
+## O que mudou desde 2026-09-24
+
+Frontend Next.js inteiro construído e publicado (Vercel), autenticação social
+(Google + LinkedIn, substituindo a tentativa inicial com Facebook), correção
+de bugs de UX real (mensagens de erro cruas tipo `nao_elegivel` chegando ao
+usuário, campo obrigatório que devia ser opcional, zoom/acessibilidade em
+mobile), tema claro/escuro com padrão correto, polish de design (hierarquia
+tipográfica, terceiro nível de texto), e a primeira funcionalidade que vai
+além do spec original: **chat + aceite de demanda direta** dentro de um
+`Contato` já existente (`mensagens_contato`, `Contato.aceito_em`,
+`GET/POST /contatos/{id}/mensagens`, `POST /contatos/{id}/aceitar`) — ver
+[`docs/superpowers/specs/2026-09-29-chat-aceite-demanda-direta-design.md`](docs/superpowers/specs/2026-09-29-chat-aceite-demanda-direta-design.md).
+CORS também foi configurado nesse meio tempo (`CORSMiddleware` em
+`app/main.py`) — o item 13 da checklist de prontidão abaixo, marcado ❌ em
+2026-09-24, já está resolvido.
 
 ## Checklist de implementação (sequência do spec original)
 
 | # | Etapa | Status | Observações |
 |---|---|---|---|
 | 1 | Backend inicializado (FastAPI + SQLAlchemy + Alembic) | ✅ | Plano 1. |
-| 2 | Postgres + migrations | ✅ | 7 migrations lineares (`alembic heads` = 1), todas com `downgrade` testado ida e volta. |
-| 3 | Supabase Storage + Sentry no backend | ✅ | Upload de avatar em `POST /perfis/me/avatar` (Plano 4). Storage real ainda não reconfirmado de ponta a ponta — credenciais perdidas no incidente de 2026-09-22 (ver abaixo). |
+| 2 | Postgres + migrations | ✅ | 10 migrations lineares (`alembic heads` = 1), todas com `downgrade` testado ida e volta. |
+| 3 | Supabase Storage + Sentry no backend | ✅ | Upload de avatar em `POST /perfis/me/avatar` (Plano 4). |
 | 4 | Validação de JWT do Supabase + sync de perfil | ✅ | Plano 2 — JWKS, `POST /auth/sync`. |
 | 5 | Endpoints REST: perfis, especialidades, busca, avaliações, contatos | ✅ | Planos 2 e 3. |
-| 6 | Frontend Next.js + Sentry + cliente HTTP | ❌ Não iniciado | `apps/web/` não existe. |
-| 7 | Páginas (Landing, Cadastro, Busca, Perfil, Painel, Avaliações) | ❌ Não iniciado | Depende do item 6. |
-| 8 | Fluxo de contato (+ e-mail) e criação de avaliação | ✅ | Plano 3. Contatos gerados por demanda seguem o mesmo fluxo. |
-| 9 | Link de pagamento por contato | ❌ Não iniciado | Diferente da assinatura B2B desta branch: é a cobrança do *serviço* entre empresa e profissional (`POST /contatos/{id}/pagamento`). |
+| 6 | Frontend Next.js + Sentry + cliente HTTP | ✅ | `apps/web/` completo, em produção na Vercel. |
+| 7 | Páginas (Landing, Cadastro, Busca, Perfil, Painel, Avaliações) | ✅ | Todas construídas e testadas ao vivo. |
+| 8 | Fluxo de contato (+ e-mail) e criação de avaliação | ✅ | Plano 3. Contatos gerados por demanda seguem o mesmo fluxo. Chat completo adicionado em 2026-09-29 (além do escopo original). |
+| 9 | Link de pagamento por contato | ❌ Não iniciado | Diferente da assinatura B2B: é a cobrança do *serviço* entre empresa e profissional (`POST /contatos/{id}/pagamento`). Adiado duas vezes por decisão consciente — chat + aceite de demanda direta (2026-09-29) cobre o mesmo gatilho sem depender de pagamento. |
 | 10 | Relatório com pandas | ✅ | Plano 5 — `GET /analytics/relatorio`. |
-| 11 | CI (lint + testes por PR) | ✅ | Esta branch — `.github/workflows/ci.yml` (Postgres 16 + Python 3.11). |
-| 12 | `.env.example` + `README.md` | 🟡 Parcial | Backend completo, incluindo setup do Stripe CLI. Falta `apps/web/.env.example` (frontend não existe). |
-| 13 | Deploy | ❌ Não iniciado | Depende de decisões de hospedagem (ver bloqueios de deploy). |
+| 11 | CI (lint + testes por PR) | ✅ | `.github/workflows/ci.yml` (Postgres 16 + Python 3.11). |
+| 12 | `.env.example` + `README.md` | ✅ | Backend e frontend, incluindo Stripe CLI e Supabase. |
+| 13 | Deploy | ✅ | Backend no Render, frontend na Vercel, ambos em produção. |
 
 ## Assinatura B2B e demandas (`feature/b2b-assinatura-demandas`)
 
@@ -120,68 +144,57 @@ foi verificado rodando comandos, não por suposição.
 
 ## ⛔ Bloqueado — o que precisa de você
 
-### Para o teste manual ponta a ponta (Stripe, modo de teste)
+Nada crítico agora. Os dois bloqueios de 2026-09-24 (credenciais perdidas,
+Stripe não configurado) foram resolvidos — `apps/api/.env` tem valores reais
+e o fluxo de checkout já foi testado ao vivo com conta descartável nesta
+sessão. Histórico mantido abaixo por rastreabilidade.
 
-Estado verificado em 2026-09-24 no `apps/api/.env` local (só presença/tamanho,
-nenhum valor lido): `STRIPE_SECRET_KEY` vazia; `STRIPE_WEBHOOK_SECRET`,
+<details>
+<summary>Histórico: bloqueios de 2026-09-24 (resolvidos)</summary>
+
+### Teste manual ponta a ponta (Stripe, modo de teste)
+
+Estado em 2026-09-24: `STRIPE_SECRET_KEY` vazia; `STRIPE_WEBHOOK_SECRET`,
 `STRIPE_PRICE_ESSENCIAL`, `STRIPE_PRICE_PRO` e `APP_URL` ausentes; Stripe CLI
-não instalado. **Com isso a API local não sobe** (falha rápido, por design).
-
-1. ⛔ Chave secreta de teste (`sk_test_...`) em `STRIPE_SECRET_KEY`.
-2. ⛔ Criar no painel (modo de teste) os produtos **Essencial** e **Pro**, cada um com
-   preço mensal recorrente, e colocar os `price_...` em `STRIPE_PRICE_ESSENCIAL` e
-   `STRIPE_PRICE_PRO`. Se as migrations já tiverem rodado antes, depois rode
-   `python -m app.jobs.sincronizar_planos`.
-3. ⛔ Ativar e salvar o **Customer Portal** (Settings → Billing → Customer portal).
-4. ⛔ Instalar o Stripe CLI, rodar `stripe listen --forward-to localhost:8000/webhooks/stripe`
-   e colocar o `whsec_...` exibido em `STRIPE_WEBHOOK_SECRET`.
-5. `APP_URL=http://localhost:3000` (não é segredo; ainda não há frontend, então os
-   redirecionamentos do Checkout vão para uma página inexistente — esperado).
-
-Roteiro do teste, a registrar aqui quando rodar: assinar com `4242 4242 4242 4242`
-→ publicar demanda → profissional de teste demonstra interesse → contato aparece
-para os dois em `GET /contatos` → simular falha de pagamento → `POST /demandas`
-responde 402 `pagamento_pendente` → cancelar pelo Portal → status `canceled`.
-**Resultado: não executado (bloqueado pelos itens 1–4).**
+não instalado. Resolvido — essas variáveis estão preenchidas e o checkout foi
+exercitado de ponta a ponta (incluindo o bug do código de erro cru
+`nao_elegivel` que chegava ao usuário, corrigido em `fix/checkout-error-message`).
 
 ### Credenciais perdidas (incidente de 2026-09-22)
 
 As credenciais reais coladas em 2026-09-22 (Supabase, Sentry, Resend, Stripe
-teste) foram perdidas junto com o worktree onde estava o `.env`. O
-`apps/api/.env` atual tem esses campos vazios. Para reconfirmar Storage, e-mail
-e Sentry de ponta a ponta, é preciso fornecê-las de novo.
+teste) foram perdidas junto com o worktree onde estava o `.env`. Foram
+re-inseridas; `apps/api/.env` e `apps/web/.env.local` têm valores reais hoje.
 
-### Para o deploy (não bloqueia implementação)
+</details>
 
-0. **Check `Vercel` falhando nos PRs** ("Deployment was blocked"): a integração
-   da Vercel está ligada ao repositório inteiro e tenta publicar a raiz, mas o
-   frontend (`apps/web`) ainda não existe. Não é causado pelo código do backend.
-   Quando o frontend existir, configure na Vercel o *Root Directory* como
-   `apps/web`; até lá, dá para desligar os deploys automáticos do projeto ou
-   ignorar esse check.
+### Para produção completa (não bloqueia — refinamentos)
 
-1. Hospedagem do backend (Render free / Railway / outra).
-2. Projeto Supabase de produção: o mesmo `rhjatedvqqginixlkdxh` ou um separado
-   (recomendado para dado de saúde) — decide também o `DATABASE_URL` de produção.
-3. Domínio próprio, se houver.
-4. Stripe em modo produção (`sk_live_...`, produtos/preços e webhook de produção).
+1. Domínio próprio, se houver (hoje: `*.vercel.app` / `*.onrender.com`).
+2. Stripe em modo produção (`sk_live_...`, produtos/preços e webhook de
+   produção) — o fluxo foi validado só em modo de teste até agora.
+3. Confirmar se o projeto Supabase atual (`rhjatedvqqginixlkdxh`) é o de
+   produção definitivo ou se vale separar um dedicado (dado de saúde) —
+   decisão de produto, não travada tecnicamente.
+4. Plano pago do Render, se o cold-start de ~15s do free tier incomodar
+   usuários reais.
 
 ## Checklist de critérios de aceite do MVP
 
 | Critério | Status | Observações |
 |---|---|---|
-| Backend e frontend rodam localmente | 🟡 | Backend ✅ (com as variáveis obrigatórias preenchidas). Frontend não existe. |
-| Cadastro e login para os dois papéis | 🟡 | Backend ✅ (JWT via JWKS + `/auth/sync`); falta a UI. |
-| Busca com texto e filtros | 🟡 | Backend ✅ (`GET /profissionais`); falta a UI. |
-| Upload de foto/logo | 🟡 | Endpoint ✅; falta reconfirmar contra o Storage real (credenciais). |
-| Perfil público com avaliações | 🟡 | Backend ✅; falta a UI. |
-| Contato registra mensagem e envia e-mail | 🟡 | Backend ✅; envio real depende de `RESEND_API_KEY`. |
-| Link de pagamento abre checkout válido | ❌ | Item 9 não iniciado (a assinatura B2B desta branch é outra coisa). |
-| Relatório pandas retorna métricas corretas | ✅ | Plano 5, com dados reais desde a integração do Plano 3. |
-| Erro forçado aparece no Sentry | 🟡 | Código pronto; passo manual pendente de `SENTRY_DSN` real. |
-| CI (lint + testes) passa | ✅ | GitHub Actions verde no PR #1. |
-| Layout responsivo | ❌ | Frontend não existe. |
-| README permite rodar do zero | ✅ | Backend, incluindo Stripe CLI. |
+| Backend e frontend rodam localmente | ✅ | Backend (`.venv` + Postgres via Docker) e frontend (`npm run dev`) rodando lado a lado nesta sessão. |
+| Cadastro e login para os dois papéis | ✅ | E-mail, Google e LinkedIn (LinkedIn com código pronto em PR #10, pendente só de config externa — ver [Pendências externas](#pendências-externas-fora-do-código)). |
+| Busca com texto e filtros | ✅ | `/buscar` completo, testado ao vivo. |
+| Upload de foto/logo | 🟡 | Endpoint ✅ e usado pela UI; Storage real não reconfirmado nesta rodada de verificação. |
+| Perfil público com avaliações | ✅ | Testado ao vivo, com estrela em destaque (polish de design). |
+| Contato registra mensagem e envia e-mail | ✅ | Mais chat completo (2026-09-29). |
+| Link de pagamento abre checkout válido | ❌ | Item 9 segue não implementado (decisão consciente, ver acima). |
+| Relatório pandas retorna métricas corretas | ✅ | Plano 5, com dados reais. |
+| Erro forçado aparece no Sentry | 🟡 | Código pronto; não reconfirmado nesta rodada. |
+| CI (lint + testes) passa | ✅ | GitHub Actions verde a cada PR. |
+| Layout responsivo | ✅ | Verificado em viewport mobile emulado; zoom/pinch corrigido em `fix/viewport-zoom`. |
+| README permite rodar do zero | ✅ | Backend e frontend. |
 
 ## Checklist de prontidão para produção (segurança e estabilidade)
 
@@ -189,25 +202,36 @@ e Sentry de ponta a ponta, é preciso fornecê-las de novo.
 |---|---|---|
 | Configuração validada na inicialização | ✅ | Variáveis obrigatórias falham rápido, listando só os nomes. |
 | Segredos fora do controle de versão | ✅ | `.env` no `.gitignore`; testes forçam valores fictícios. |
-| Migrations com rollback testado | ✅ | Ida e volta em `tests/test_migrations.py`. |
+| Migrations com rollback testado | ✅ | Ida e volta em `tests/test_migrations.py` (10 migrations). |
 | Acesso a dado via ORM | ✅ | Nenhum SQL cru com input de usuário. |
-| Autenticação e autorização | ✅ | JWT via JWKS; regras na camada de serviço; RLS nas tabelas novas. Tabelas antigas sem RLS (ver desvio 1). |
+| Autenticação e autorização | ✅ | JWT via JWKS; regras na camada de serviço; RLS em `planos`/`assinaturas`/`eventos_stripe`/`demandas`/`mensagens_contato`. `contatos` e tabelas mais antigas seguem sem RLS (risco pré-existente, ver desvio 1). |
 | Webhook de pagamento seguro | ✅ | Assinatura HMAC validada no corpo bruto, idempotência, sem payload armazenado. |
 | LGPD no Sentry | ✅ | `descricao`/`mensagem` filtradas; teste de ponta a ponta com o SDK real. |
 | CI | ✅ | GitHub Actions a cada PR/push na `main`. |
-| CORS | ❌ | Obrigatório antes do frontend — lista explícita de origens, nunca `*`. |
-| Rate limiting | ❌ | Relevante para busca, contato, interesse em demanda e checkout. |
-| Health check consciente do banco | 🟡 | `/health` é estático; recomendado `/ready` com `SELECT 1`. |
+| CORS | ✅ | `CORSMiddleware` em `app/main.py`, origem única (`app_url`), configurado depois de 2026-09-24. |
+| Rate limiting | ❌ | Ainda ausente — busca, contato, mensagens, interesse em demanda e checkout sem limite. |
+| Health check consciente do banco | 🟡 | `/health` ainda estático; falta `/ready` com `SELECT 1`. |
 | Verificação de vulnerabilidades de dependências | ❌ | Sem `pip-audit`/Dependabot. |
-| Dependências de produção x desenvolvimento | ❌ | `requirements.txt` mistura `pytest`/`ruff`/`black` com runtime. |
+| Dependências de produção x desenvolvimento | ❌ | `requirements.txt` ainda mistura `pytest`/`ruff`/`black` com runtime. |
 | Convenção de nomes de constraints | ❌ Adiado | Decisão do Plano 1; fica mais cara quando houver dado real. |
-| Ambiente e segredos de produção | ❌ | Ver bloqueios de deploy. |
-| Agendamento do job de expiração | ❌ | `python -m app.jobs.expirar_demandas` existe; falta agendar (cron da hospedagem). As leituras já tratam demanda vencida como expirada, então o atraso do job não expõe nada. |
+| Ambiente e segredos de produção | ✅ | Render + Vercel com variáveis reais preenchidas. |
+| Agendamento do job de expiração | ❌ | `python -m app.jobs.expirar_demandas` existe; ainda sem cron em lugar nenhum (nem GH Actions agendado, nem cron do Render). As leituras já tratam demanda vencida como expirada, então o atraso do job não expõe nada — só acumula linhas "vencidas mas não marcadas". |
+
+## Pendências externas (fora do código)
+
+- **LinkedIn OAuth** ([PR #10](https://github.com/kelvnnicolas/saudeconecta/pull/10)): código pronto (`linkedin_oidc`), falta criar o app no LinkedIn Developers (produto "Sign In with LinkedIn using OpenID Connect"), configurar a redirect URI e habilitar o provider no Supabase.
+- **Diretório de empresas**: escopo decidido em conversa (diretório público, só instituições — não `pessoa_fisica`), sem spec nem código ainda.
+- **Notificações** (e-mail e/ou sino com não lidas): deliberadamente adiado pelo spec do chat (seção 8), aguardando spec próprio.
 
 ## Por onde retomar
 
-1. Destravar os itens ⛔ do Stripe e rodar o teste manual ponta a ponta,
-   registrando o resultado acima.
-2. Revisar e integrar o PR de `feature/b2b-assinatura-demandas`.
-3. Próximas etapas do MVP: link de pagamento por contato (item 9), CORS + rate
-   limiting, frontend, deploy.
+1. Fechar os gaps de prontidão para produção que ainda são ❌ acima: rate
+   limiting, `/ready`, agendamento do job de expiração, split de
+   `requirements.txt`, Dependabot — nenhum depende de decisão de produto,
+   só de implementação.
+2. Diretório de empresas — precisa de um desenho curto (modelo de dado,
+   quem acessa) antes de codar.
+3. Notificações — precisa de spec próprio (seção 8 do spec do chat).
+4. Link de pagamento por contato (item 9) — decisão de produto: manter
+   adiado (chat + aceite já cobre o gatilho original) ou implementar mesmo
+   assim.
