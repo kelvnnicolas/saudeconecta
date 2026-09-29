@@ -24,7 +24,7 @@ const config: Config = {
         "surface-tint": "var(--accent)",
         background: "var(--bg)",
         "on-background": "var(--ink)",
-        outline: "var(--ink-soft)",
+        outline: "var(--ink-mute)",
         "outline-variant": "var(--line)",
 
         primary: "var(--accent)",
@@ -99,26 +99,35 @@ const config: Config = {
         "headline-xl": ["var(--font-quicksand)", "var(--font-inter)"],
         "headline-md": ["var(--font-quicksand)", "var(--font-inter)"],
         "headline-lg": ["var(--font-quicksand)", "var(--font-inter)"],
+        "display-rating": ["var(--font-quicksand)", "var(--font-inter)"],
       },
       fontSize: {
         "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
         caption: ["12px", { lineHeight: "16px", fontWeight: "400" }],
         "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
         "label-md": ["14px", { lineHeight: "20px", fontWeight: "500" }],
-        "title-md": ["18px", { lineHeight: "26px", fontWeight: "700" }],
+        "title-md": ["18px", { lineHeight: "26px", fontWeight: "600" }],
         "headline-xl": [
           "32px",
           { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" },
         ],
         "headline-md": [
           "20px",
-          { lineHeight: "28px", letterSpacing: "-0.01em", fontWeight: "700" },
+          { lineHeight: "28px", letterSpacing: "-0.01em", fontWeight: "600" },
         ],
         "headline-lg": [
           "24px",
           { lineHeight: "32px", letterSpacing: "-0.015em", fontWeight: "700" },
         ],
         "label-sm": ["12px", { lineHeight: "16px", fontWeight: "500" }],
+        // Único momento de peso tipográfico grande do sistema — reservado pra
+        // nota média de avaliação (o dado mais decisivo pra confiança num
+        // marketplace de serviços). Ver /profissional/[id]. Inspirado no
+        // rating-display do DESIGN.md da Airbnb (awesome-claude-design).
+        "display-rating": [
+          "40px",
+          { lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "700" },
+        ],
       },
     },
   },

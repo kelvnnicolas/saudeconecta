@@ -152,6 +152,19 @@ export default function PerfilPublicoProfissionalPage({ params }: { params: { id
 
           <section className="flex flex-col gap-space-sm">
             <h2 className="font-title-md text-title-md text-on-surface">Avaliações</h2>
+            {notaMedia != null && (
+              <div className="flex items-center gap-space-md bg-surface-container-lowest rounded-2xl neu-surface p-space-md">
+                <span className="font-display-rating text-display-rating text-on-surface">
+                  {notaMedia.toFixed(1)}
+                </span>
+                <div className="flex flex-col gap-1">
+                  <StarRating nota={notaMedia} size={18} />
+                  <span className="font-caption text-caption text-on-surface-variant">
+                    {avaliacoes.length} avaliações
+                  </span>
+                </div>
+              </div>
+            )}
             {avaliacoes.length === 0 && (
               <p className="font-body-md text-body-md text-on-surface-variant">Ainda sem avaliações.</p>
             )}
