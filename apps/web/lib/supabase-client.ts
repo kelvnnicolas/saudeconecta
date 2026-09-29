@@ -48,6 +48,13 @@ export async function signInWithGoogle() {
   return data;
 }
 
+export async function signInWithFacebook() {
+  if (!supabase) throw new Error("Supabase não configurado (ver .env.example)");
+  const { data, error } = await supabase.auth.signInWithOAuth({ provider: "facebook" });
+  if (error) throw error;
+  return data;
+}
+
 export async function signUpWithPassword(email: string, password: string, papel: Papel) {
   if (!supabase) throw new Error("Supabase não configurado (ver .env.example)");
   const { data, error } = await supabase.auth.signUp({

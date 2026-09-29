@@ -9,12 +9,13 @@ import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Logo } from "@/components/ui/Logo";
 import { type LoginInput, loginSchema } from "@/lib/validations/auth";
-import { signInWithGoogle, signInWithPassword } from "@/lib/supabase-client";
+import { signInWithFacebook, signInWithGoogle, signInWithPassword } from "@/lib/supabase-client";
 
 export default function EntrarPage() {
   const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [provedorSocial, setProvedorSocial] = useState<"google" | "facebook" | null>(null);
   const {
     register,
     handleSubmit,
@@ -39,10 +40,25 @@ export default function EntrarPage() {
 
   async function entrarComGoogle() {
     setErro(null);
+    setProvedorSocial("google");
     try {
       await signInWithGoogle();
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível entrar com o Google.");
+    } finally {
+      setProvedorSocial(null);
+    }
+  }
+
+  async function entrarComFacebook() {
+    setErro(null);
+    setProvedorSocial("facebook");
+    try {
+      await signInWithFacebook();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível entrar com o Facebook.");
+    } finally {
+      setProvedorSocial(null);
     }
   }
 
@@ -98,10 +114,27 @@ export default function EntrarPage() {
         <button
           type="button"
           onClick={entrarComGoogle}
-          className="h-12 rounded-xl bg-surface-container-lowest text-on-surface font-label-md text-label-md flex items-center justify-center gap-space-xs neu-surface neu-pressable"
+          disabled={provedorSocial !== null}
+          className="h-12 rounded-xl bg-surface-container-lowest text-on-surface font-label-md text-label-md flex items-center justify-center gap-space-xs neu-surface neu-pressable disabled:opacity-60"
         >
           <MaterialIcon name="account_circle" className="text-[20px]" />
-          Continuar com Google
+          {provedorSocial === "google" ? "Conectando..." : "Continuar com Google"}
+        </button>
+
+        <button
+          type="button"
+          onClick={entrarComFacebook}
+          disabled={provedorSocial !== null}
+          className="h-12 rounded-xl bg-surface-container-lowest text-on-surface font-label-md text-label-md flex items-center justify-center gap-space-xs neu-surface neu-pressable disabled:opacity-60"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" className="flex-shrink-0">
+            <circle cx="10" cy="10" r="10" fill="#1877F2" />
+            <path
+              d="M13.2 12.7l.44-2.7h-2.59V8.28c0-.74.36-1.46 1.53-1.46h1.18V4.53s-1.08-.18-2.11-.18c-2.15 0-3.56 1.3-3.56 3.66v2.06H5.83v2.7h2.26v6.53c.45.07.92.11 1.4.11s.94-.04 1.4-.11V12.7h2.31z"
+              fill="#fff"
+            />
+          </svg>
+          {provedorSocial === "facebook" ? "Conectando..." : "Continuar com Facebook"}
         </button>
       </form>
 
