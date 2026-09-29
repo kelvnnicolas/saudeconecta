@@ -48,7 +48,10 @@ export default function CadastroEmpresaPage() {
         estado: data.estado,
       });
       await api.updateOwnEmpresa({
-        nome_fantasia: data.nomeFantasia,
+        // Backend exige nome_fantasia não-vazio (NOT NULL) mesmo pra
+        // pessoa_fisica — quando o campo fica em branco (opcional nesse
+        // caso), usa o próprio nome da pessoa como nome de exibição.
+        nome_fantasia: data.nomeFantasia?.trim() || data.nome,
         tipo: data.tipo,
         cidade: data.cidade,
         estado: data.estado,
