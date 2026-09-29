@@ -14,6 +14,7 @@ import type {
   EmpresaUpdateRequest,
   Especialidade,
   InteresseResponse,
+  MensagemContatoRead,
   MinhaAssinaturaResponse,
   MinhaDemandaRead,
   OportunidadesResponse,
@@ -129,6 +130,18 @@ export const api = {
     request<ContatoRead>("/contatos", { method: "POST", body: JSON.stringify(data) }),
 
   listContatos: () => request<ContatoRead[]>("/contatos"),
+
+  listarMensagensContato: (contatoId: number) =>
+    request<MensagemContatoRead[]>(`/contatos/${contatoId}/mensagens`),
+
+  enviarMensagemContato: (contatoId: number, corpo: string) =>
+    request<MensagemContatoRead>(`/contatos/${contatoId}/mensagens`, {
+      method: "POST",
+      body: JSON.stringify({ corpo }),
+    }),
+
+  aceitarDemandaDireta: (contatoId: number) =>
+    request<ContatoRead>(`/contatos/${contatoId}/aceitar`, { method: "POST" }),
 
   // Avaliações
   createAvaliacao: (data: AvaliacaoCreateRequest) =>
