@@ -6,6 +6,7 @@ from app.main import app
 from app.models.contato import Contato
 from app.models.profile import Papel, Profile
 from app.models.profissional import Profissional
+from tests.fabrica import autenticar, criar_contato, criar_empresa, criar_profissional
 
 
 def test_create_contato_requires_authentication(client):
@@ -118,3 +119,165 @@ def test_list_own_contatos_returns_only_own(client, db_session):
     body = response.json()
     assert len(body) == 1
     assert body[0]["mensagem"] == "A para B"
+
+
+def test_listar_mensagens_ambas_partes_conseguem_ler(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(solicitante_id)
+    resposta = client.get(f"/contatos/{contato.id}/mensagens")
+    assert resposta.status_code == 200
+    assert resposta.json() == []
+
+    autenticar(profissional_id)
+    resposta = client.get(f"/contatos/{contato.id}/mensagens")
+    assert resposta.status_code == 200
+
+
+def test_listar_mensagens_terceiro_recebe_403(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    outro_usuario = criar_empresa(db_session, nome="Outra Empresa", email="outra@example.com")
+    db_session.commit()
+
+    autenticar(outro_usuario)
+    resposta = client.get(f"/contatos/{contato.id}/mensagens")
+    assert resposta.status_code == 403
+    assert resposta.json()["detail"]["code"] == "nao_participante"
+
+
+def test_listar_mensagens_contato_inexistente_404(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    db_session.commit()
+
+    autenticar(solicitante_id)
+    resposta = client.get("/contatos/999999/mensagens")
+    assert resposta.status_code == 404
+    assert resposta.json()["detail"]["code"] == "contato_inexistente"
+
+
+def test_criar_mensagem_ambas_partes_conseguem_enviar(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(solicitante_id)
+    resposta = client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": "Oi, tudo bem?"})
+    assert resposta.status_code == 201
+    body = resposta.json()
+    assert body["corpo"] == "Oi, tudo bem?"
+    assert body["autor_id"] == str(solicitante_id)
+
+    autenticar(profissional_id)
+    resposta = client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": "Tudo, e você?"})
+    assert resposta.status_code == 201
+    assert resposta.json()["autor_id"] == str(profissional_id)
+
+
+def test_criar_mensagem_corpo_vazio_e_rejeitado(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(solicitante_id)
+    assert client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": ""}).status_code == 422
+    assert (
+        client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": "   "}).status_code == 422
+    )
+
+
+def test_criar_mensagem_ignora_autor_id_do_body(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(solicitante_id)
+    resposta = client.post(
+        f"/contatos/{contato.id}/mensagens",
+        json={"corpo": "Oi", "autor_id": str(profissional_id)},
+    )
+    assert resposta.status_code == 201
+    assert resposta.json()["autor_id"] == str(solicitante_id)
+
+
+def test_criar_mensagem_terceiro_recebe_403(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    outro_usuario = criar_empresa(db_session, nome="Outra Empresa", email="outra2@example.com")
+    db_session.commit()
+
+    autenticar(outro_usuario)
+    resposta = client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": "Oi"})
+    assert resposta.status_code == 403
+    assert resposta.json()["detail"]["code"] == "nao_participante"
+
+
+def test_aceitar_profissional_com_sucesso(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(profissional_id)
+    resposta = client.post(f"/contatos/{contato.id}/aceitar")
+    assert resposta.status_code == 200
+    assert resposta.json()["aceito_em"] is not None
+
+
+def test_aceitar_empresa_recebe_403(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(solicitante_id)
+    resposta = client.post(f"/contatos/{contato.id}/aceitar")
+    assert resposta.status_code == 403
+    assert resposta.json()["detail"]["code"] == "apenas_profissional_aceita"
+
+
+def test_aceitar_duas_vezes_e_idempotente(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(profissional_id)
+    primeira = client.post(f"/contatos/{contato.id}/aceitar")
+    timestamp_original = primeira.json()["aceito_em"]
+
+    segunda = client.post(f"/contatos/{contato.id}/aceitar")
+    assert segunda.status_code == 200
+    assert segunda.json()["aceito_em"] == timestamp_original
+
+
+def test_aceitar_terceiro_recebe_403(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    outro_usuario = criar_empresa(db_session, nome="Outra Empresa", email="outra3@example.com")
+    db_session.commit()
+
+    autenticar(outro_usuario)
+    resposta = client.post(f"/contatos/{contato.id}/aceitar")
+    assert resposta.status_code == 403
+    assert resposta.json()["detail"]["code"] == "nao_participante"
+
+
+def test_criar_mensagem_corpo_muito_longo_e_rejeitado(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(solicitante_id)
+    resposta = client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": "a" * 2001})
+    assert resposta.status_code == 422

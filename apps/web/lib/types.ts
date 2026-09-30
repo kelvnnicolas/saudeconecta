@@ -119,11 +119,24 @@ export interface ContatoRead {
   origem: OrigemContato;
   demanda_id: string | null;
   criado_em: string;
+  aceito_em: string | null;
 }
 
 export interface ContatoCreateRequest {
   profissional_id: string;
   mensagem: string;
+}
+
+export interface MensagemContatoRead {
+  id: number;
+  contato_id: number;
+  autor_id: string;
+  corpo: string;
+  criado_em: string;
+}
+
+export interface MensagemContatoCreateRequest {
+  corpo: string;
 }
 
 export interface AvaliacaoRead {

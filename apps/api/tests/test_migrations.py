@@ -13,6 +13,7 @@ EXPECTED_TABLES = {
     "empresas",
     "avaliacoes",
     "contatos",
+    "mensagens_contato",
     "links_pagamento",
     "planos",
     "assinaturas",
@@ -20,7 +21,7 @@ EXPECTED_TABLES = {
     "demandas",
 }
 
-TABELAS_COM_RLS = {"planos", "assinaturas", "eventos_stripe", "demandas"}
+TABELAS_COM_RLS = {"planos", "assinaturas", "eventos_stripe", "demandas", "mensagens_contato"}
 
 
 def test_migration_creates_all_tables_and_seeds_especialidades():
@@ -73,3 +74,8 @@ def test_migration_adds_origem_and_demanda_id_to_contatos():
     colunas = {c["name"]: c for c in inspect(engine).get_columns("contatos")}
     assert colunas["origem"]["nullable"] is False
     assert colunas["demanda_id"]["nullable"] is True
+
+
+def test_migration_adds_aceito_em_to_contatos():
+    colunas = {c["name"]: c for c in inspect(engine).get_columns("contatos")}
+    assert colunas["aceito_em"]["nullable"] is True
