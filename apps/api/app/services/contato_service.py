@@ -49,6 +49,7 @@ def create_contato(db: Session, solicitante_id: uuid.UUID, data: ContatoCreateRe
         corpo=f"{solicitante.nome} enviou uma mensagem.",
         link=f"/contatos/{contato.id}",
     )
+    db.commit()
 
     if profissional.profile.email:
         send_contact_notification_email(profissional.profile.email, solicitante.nome, data.mensagem)
@@ -108,6 +109,7 @@ def criar_mensagem(db: Session, user_id: uuid.UUID, contato_id: int, corpo: str)
         corpo=corpo[:200],
         link=f"/contatos/{contato_id}",
     )
+    db.commit()
     destinatario_profile = db.get(Profile, destinatario_id)
     if destinatario_profile is not None and destinatario_profile.email:
         link = f"{get_settings().app_url}/contatos/{contato_id}"
@@ -137,6 +139,7 @@ def aceitar_demanda_direta(db: Session, user_id: uuid.UUID, contato_id: int) -> 
             corpo="O profissional aceitou atender sua demanda direta.",
             link=f"/contatos/{contato_id}",
         )
+        db.commit()
         solicitante_profile = db.get(Profile, contato.solicitante_id)
         if solicitante_profile is not None and solicitante_profile.email:
             link = f"{get_settings().app_url}/contatos/{contato_id}"

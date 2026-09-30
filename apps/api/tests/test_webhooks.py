@@ -12,7 +12,7 @@ from sqlalchemy import select
 
 from app.models.assinatura import Assinatura, StatusAssinatura
 from app.models.evento_stripe import EventoStripe
-from tests.fabrica import criar_assinatura, criar_empresa, plano
+from tests.fabrica import autenticar, criar_assinatura, criar_empresa, plano
 
 SEGREDO = "whsec_dummy_for_tests"
 FIM_PERIODO = 1792800000
@@ -298,6 +298,25 @@ def test_pagamento_falhou_envia_email_com_link_da_assinatura(client, db_session,
     assert assunto == "Não conseguimos processar o pagamento da sua assinatura"
     assert "http://localhost:3000/empresa/assinatura" in texto
     assert "http://localhost:3000/empresa/assinatura" in html
+
+
+def test_pagamento_falhou_gera_notificacao_in_app(client, db_session, retrieve):
+    empresa_id = criar_empresa(db_session, email="financeiro2@clinica.com")
+    criar_assinatura(db_session, empresa_id, subscription_id="sub_falha2", customer_id="cus_falha2")
+    db_session.commit()
+    payload = _evento(
+        "invoice.payment_failed",
+        {"id": "in_2", "object": "invoice", "customer": "cus_falha2"},
+    )
+
+    with patch("app.services.billing.enviar_email"):
+        response = _enviar(client, payload)
+    assert response.status_code == 200
+
+    autenticar(empresa_id)
+    notificacoes = client.get("/notificacoes")
+    assert notificacoes.json()["total"] == 1
+    assert notificacoes.json()["items"][0]["tipo"] == "falha_pagamento"
 
 
 def test_webhook_nao_exige_autenticacao_de_usuario(client, db_session, retrieve):

@@ -12,6 +12,7 @@ from app.models.contato import Contato, OrigemContato
 from app.models.demanda import Demanda, StatusDemanda
 from app.models.empresa import Empresa
 from app.models.especialidade import Especialidade
+from app.models.notificacao import TipoNotificacao
 from app.models.profile import Papel, Profile
 from app.models.profissional import Profissional
 from app.schemas.demanda import (
@@ -25,6 +26,7 @@ from app.schemas.demanda import (
 from app.services import email_templates
 from app.services.email_service import enviar_email
 from app.services.entitlements import verificar_publicacao_demanda
+from app.services.notificacao_service import registrar_notificacao
 
 MENSAGEM_INTERESSE_PADRAO = "Tenho interesse na sua demanda."
 TRANSICOES_PERMITIDAS = (StatusDemanda.preenchida, StatusDemanda.encerrada)
@@ -252,4 +254,14 @@ def demonstrar_interesse(
     if empresa_profile is not None and empresa_profile.email:
         link = f"{get_settings().app_url}/contatos/{contato.id}"
         enviar_email(empresa_profile.email, *email_templates.novo_interesse_em_demanda(link))
+
+    registrar_notificacao(
+        db,
+        destinatario_id=demanda.empresa_id,
+        tipo=TipoNotificacao.novo_interesse,
+        titulo="Novo interesse em demanda",
+        corpo="Um profissional demonstrou interesse na sua demanda.",
+        link=f"/contatos/{contato.id}",
+    )
+    db.commit()
     return contato

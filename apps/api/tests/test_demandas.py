@@ -344,6 +344,18 @@ def test_interesse_cria_contato_de_origem_demanda_e_avisa_empresa(client, db_ses
     assert DESCRICAO_SENSIVEL not in texto + html + assunto
 
 
+def test_interesse_gera_notificacao_para_empresa(client, db_session, cenario):
+    empresa_id, demanda, profissional_id = cenario
+    autenticar(profissional_id)
+    response, _ = _interesse(client, demanda.id)
+    assert response.status_code == 201
+
+    autenticar(empresa_id)
+    notificacoes = client.get("/notificacoes")
+    assert notificacoes.json()["total"] == 1
+    assert notificacoes.json()["items"][0]["tipo"] == "novo_interesse"
+
+
 def test_interesse_guarda_mensagem_opcional_do_profissional(client, db_session, cenario):
     _, demanda, profissional_id = cenario
     autenticar(profissional_id)

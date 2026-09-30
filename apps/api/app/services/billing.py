@@ -18,6 +18,7 @@ from app.core.errors import erro_negocio
 from app.models.assinatura import Assinatura, StatusAssinatura
 from app.models.empresa import Empresa
 from app.models.evento_stripe import EventoStripe
+from app.models.notificacao import TipoNotificacao
 from app.models.plano import Plano
 from app.models.profile import Papel, Profile
 from app.services import email_templates
@@ -27,6 +28,7 @@ from app.services.entitlements import (
     contar_demandas_abertas,
     obter_empresa_elegivel,
 )
+from app.services.notificacao_service import registrar_notificacao
 
 EVENTOS_ASSINATURA = (
     "customer.subscription.created",
@@ -313,6 +315,14 @@ def _pagamento_falhou(db: Session, invoice: Any) -> None:
         return
     link = f"{get_settings().app_url}/empresa/assinatura"
     enviar_email(profile.email, *email_templates.falha_pagamento_assinatura(link))
+    registrar_notificacao(
+        db,
+        destinatario_id=assinatura.empresa_id,
+        tipo=TipoNotificacao.falha_pagamento,
+        titulo="Falha no pagamento",
+        corpo="Não conseguimos processar o pagamento da sua assinatura.",
+        link="/empresa/assinatura",
+    )
 
 
 def _despachar(db: Session, tipo: str, objeto: Any) -> str | None:

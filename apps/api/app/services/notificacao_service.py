@@ -17,11 +17,14 @@ def registrar_notificacao(
     corpo: str,
     link: str,
 ) -> Notificacao:
+    # Flush only, never commit: a caller inside a savepoint (e.g. billing's
+    # processar_evento) would have its `with db.begin_nested()` block broken by
+    # a commit here. Callers outside a savepoint must commit themselves.
     notificacao = Notificacao(
         destinatario_id=destinatario_id, tipo=tipo, titulo=titulo, corpo=corpo, link=link
     )
     db.add(notificacao)
-    db.commit()
+    db.flush()
     db.refresh(notificacao)
     return notificacao
 
