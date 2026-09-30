@@ -209,29 +209,29 @@ re-inseridas; `apps/api/.env` e `apps/web/.env.local` têm valores reais hoje.
 | LGPD no Sentry | ✅ | `descricao`/`mensagem` filtradas; teste de ponta a ponta com o SDK real. |
 | CI | ✅ | GitHub Actions a cada PR/push na `main`. |
 | CORS | ✅ | `CORSMiddleware` em `app/main.py`, origem única (`app_url`), configurado depois de 2026-09-24. |
-| Rate limiting | ❌ | Ainda ausente — busca, contato, mensagens, interesse em demanda e checkout sem limite. |
-| Health check consciente do banco | 🟡 | `/health` ainda estático; falta `/ready` com `SELECT 1`. |
-| Verificação de vulnerabilidades de dependências | ❌ | Sem `pip-audit`/Dependabot. |
-| Dependências de produção x desenvolvimento | ❌ | `requirements.txt` ainda mistura `pytest`/`ruff`/`black` com runtime. |
+| Rate limiting | 🟡 | `slowapi` em busca/contato/mensagens/interesse/checkout — código pronto em [PR #12](https://github.com/kelvnnicolas/saudeconecta/pull/12), aguardando merge. |
+| Health check consciente do banco | 🟡 | `/ready` com `SELECT 1` pronto em [PR #12](https://github.com/kelvnnicolas/saudeconecta/pull/12), aguardando merge. |
+| Verificação de vulnerabilidades de dependências | 🟡 | `.github/dependabot.yml` pronto em [PR #12](https://github.com/kelvnnicolas/saudeconecta/pull/12), aguardando merge. |
+| Dependências de produção x desenvolvimento | 🟡 | Split em `requirements.txt`/`requirements-dev.txt` pronto em [PR #12](https://github.com/kelvnnicolas/saudeconecta/pull/12), aguardando merge. |
 | Convenção de nomes de constraints | ❌ Adiado | Decisão do Plano 1; fica mais cara quando houver dado real. |
 | Ambiente e segredos de produção | ✅ | Render + Vercel com variáveis reais preenchidas. |
-| Agendamento do job de expiração | ❌ | `python -m app.jobs.expirar_demandas` existe; ainda sem cron em lugar nenhum (nem GH Actions agendado, nem cron do Render). As leituras já tratam demanda vencida como expirada, então o atraso do job não expõe nada — só acumula linhas "vencidas mas não marcadas". |
+| Agendamento do job de expiração | 🟡 | Workflow agendado (`expirar-demandas.yml`, diário 3h UTC) pronto em [PR #12](https://github.com/kelvnnicolas/saudeconecta/pull/12) — Render Cron Job não tem tier grátis (cobraria mensalmente, decisão de custo não tomada sem confirmar), então ficou em GitHub Actions. Falta o secret `PROD_DATABASE_URL` no repositório antes de funcionar de verdade; até lá roda e falha sem efeito (não afeta o site — as leituras já tratam demanda vencida como expirada independente do job). |
 
 ## Pendências externas (fora do código)
 
 - **LinkedIn OAuth** ([PR #10](https://github.com/kelvnnicolas/saudeconecta/pull/10)): código pronto (`linkedin_oidc`), falta criar o app no LinkedIn Developers (produto "Sign In with LinkedIn using OpenID Connect"), configurar a redirect URI e habilitar o provider no Supabase.
+- **Secret `PROD_DATABASE_URL`** ([PR #12](https://github.com/kelvnnicolas/saudeconecta/pull/12)): necessário pro workflow agendado de `expirar_demandas` funcionar —
+  `gh secret set PROD_DATABASE_URL --repo kelvnnicolas/saudeconecta` (cola a `DATABASE_URL` de produção quando pedir).
 - **Diretório de empresas**: escopo decidido em conversa (diretório público, só instituições — não `pessoa_fisica`), sem spec nem código ainda.
 - **Notificações** (e-mail e/ou sino com não lidas): deliberadamente adiado pelo spec do chat (seção 8), aguardando spec próprio.
 
 ## Por onde retomar
 
-1. Fechar os gaps de prontidão para produção que ainda são ❌ acima: rate
-   limiting, `/ready`, agendamento do job de expiração, split de
-   `requirements.txt`, Dependabot — nenhum depende de decisão de produto,
-   só de implementação.
-2. Diretório de empresas — precisa de um desenho curto (modelo de dado,
+1. Mergear [PR #11](https://github.com/kelvnnicolas/saudeconecta/pull/11) (chat + aceite) e [PR #12](https://github.com/kelvnnicolas/saudeconecta/pull/12) (rate limiting, `/ready`, Dependabot, split de deps, cron via GH Actions) — ambos com CI verde, aguardando revisão/merge.
+2. Configurar o secret `PROD_DATABASE_URL` (ver acima) pro cron de expiração funcionar de verdade.
+3. Diretório de empresas — precisa de um desenho curto (modelo de dado,
    quem acessa) antes de codar.
-3. Notificações — precisa de spec próprio (seção 8 do spec do chat).
+4. Notificações — precisa de spec próprio (seção 8 do spec do chat).
 4. Link de pagamento por contato (item 9) — decisão de produto: manter
    adiado (chat + aceite já cobre o gatilho original) ou implementar mesmo
    assim.
