@@ -14,6 +14,7 @@ import type {
   EmpresaUpdateRequest,
   Especialidade,
   InteresseResponse,
+  ListaNotificacoesResponse,
   MensagemContatoRead,
   MinhaAssinaturaResponse,
   MinhaDemandaRead,
@@ -186,4 +187,14 @@ export const api = {
   abrirPortal: () => request<PortalResponse>("/assinaturas/portal", { method: "POST" }),
 
   minhaAssinatura: () => request<MinhaAssinaturaResponse>("/assinaturas/me"),
+
+  // Notificações
+  listarNotificacoes: (params: { limit?: number; offset?: number } = {}) =>
+    request<ListaNotificacoesResponse>(`/notificacoes${qs(params)}`),
+
+  marcarNotificacaoLida: (id: number) =>
+    request<void>(`/notificacoes/${id}/marcar-lida`, { method: "POST" }),
+
+  marcarTodasNotificacoesLidas: () =>
+    request<{ marcadas: number }>("/notificacoes/marcar-todas-lidas", { method: "POST" }),
 };

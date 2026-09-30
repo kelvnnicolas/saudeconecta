@@ -248,3 +248,29 @@ export interface ErroNegocio {
     [key: string]: unknown;
   };
 }
+
+export type TipoNotificacao =
+  | "novo_contato"
+  | "nova_mensagem"
+  | "aceite_demanda"
+  | "novo_interesse"
+  | "falha_pagamento"
+  | "nova_oportunidade";
+
+export interface NotificacaoRead {
+  id: number;
+  tipo: TipoNotificacao;
+  titulo: string;
+  corpo: string;
+  link: string;
+  lida_em: string | null;
+  criado_em: string;
+}
+
+export interface ListaNotificacoesResponse {
+  items: NotificacaoRead[];
+  total: number;
+  total_nao_lidas: number;
+  limit: number;
+  offset: number;
+}
