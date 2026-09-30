@@ -222,15 +222,13 @@ re-inseridas; `apps/api/.env` e `apps/web/.env.local` têm valores reais hoje.
 - **LinkedIn OAuth** ([PR #10](https://github.com/kelvnnicolas/saudeconecta/pull/10)): código pronto (`linkedin_oidc`), falta criar o app no LinkedIn Developers (produto "Sign In with LinkedIn using OpenID Connect"), configurar a redirect URI e habilitar o provider no Supabase.
 - **Secret `PROD_DATABASE_URL`** ([PR #12](https://github.com/kelvnnicolas/saudeconecta/pull/12)): necessário pro workflow agendado de `expirar_demandas` funcionar —
   `gh secret set PROD_DATABASE_URL --repo kelvnnicolas/saudeconecta` (cola a `DATABASE_URL` de produção quando pedir).
-- **Diretório de empresas**: escopo decidido em conversa (diretório público, só instituições — não `pessoa_fisica`), sem spec nem código ainda.
 - **Notificações** (e-mail e/ou sino com não lidas): deliberadamente adiado pelo spec do chat (seção 8), aguardando spec próprio.
 
 ## Por onde retomar
 
-1. Mergear [PR #11](https://github.com/kelvnnicolas/saudeconecta/pull/11) (chat + aceite) e [PR #12](https://github.com/kelvnnicolas/saudeconecta/pull/12) (rate limiting, `/ready`, Dependabot, split de deps, cron via GH Actions) — ambos com CI verde, aguardando revisão/merge.
+1. Mergear [PR #11](https://github.com/kelvnnicolas/saudeconecta/pull/11) (chat + aceite), [PR #12](https://github.com/kelvnnicolas/saudeconecta/pull/12) (rate limiting, `/ready`, Dependabot, split de deps, cron via GH Actions) e [PR #13](https://github.com/kelvnnicolas/saudeconecta/pull/13) (`GET /empresas`, diretório público de instituições) — todos com CI verde, aguardando revisão/merge. Depois de mergear a #12, aplicar rate limiting em `GET /empresas` também (ficou de fora de propósito pra não depender de outra PR aberta).
 2. Configurar o secret `PROD_DATABASE_URL` (ver acima) pro cron de expiração funcionar de verdade.
-3. Diretório de empresas — precisa de um desenho curto (modelo de dado,
-   quem acessa) antes de codar.
+3. `GET /empresas` ainda não tem página no frontend — só o endpoint. UI é o próximo passo natural se quiser a feature completa.
 4. Notificações — precisa de spec próprio (seção 8 do spec do chat).
 4. Link de pagamento por contato (item 9) — decisão de produto: manter
    adiado (chat + aceite já cobre o gatilho original) ou implementar mesmo
