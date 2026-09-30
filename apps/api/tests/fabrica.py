@@ -6,6 +6,7 @@ from sqlalchemy import select
 from app.core.auth import CurrentUser, get_current_user
 from app.main import app
 from app.models.assinatura import Assinatura, StatusAssinatura
+from app.models.contato import Contato
 from app.models.demanda import Demanda, StatusDemanda
 from app.models.empresa import Empresa, TipoEmpresa
 from app.models.especialidade import Especialidade
@@ -69,6 +70,22 @@ def criar_profissional(
         db.add(profissional)
         db.flush()
     return user_id
+
+
+def criar_contato(
+    db,
+    solicitante_id: uuid.UUID,
+    profissional_id: uuid.UUID,
+    mensagem: str = "Preciso de um profissional para plantão",
+) -> Contato:
+    contato = Contato(
+        solicitante_id=solicitante_id,
+        profissional_id=profissional_id,
+        mensagem=mensagem,
+    )
+    db.add(contato)
+    db.flush()
+    return contato
 
 
 def criar_assinatura(

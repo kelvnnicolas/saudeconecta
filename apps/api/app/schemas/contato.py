@@ -22,3 +22,4 @@ class ContatoRead(BaseModel):
     origem: OrigemContato
     demanda_id: uuid.UUID | None
     criado_em: datetime
+    aceito_em: datetime | None
