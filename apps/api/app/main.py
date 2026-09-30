@@ -17,6 +17,7 @@ from app.routers import (
     empresas,
     especialidades,
     health,
+    notificacoes,
     perfis,
     planos,
     profissionais,
@@ -45,6 +46,7 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(especialidades.router)
+app.include_router(notificacoes.router)
 app.include_router(profissionais.router)
 app.include_router(empresas.router)
 app.include_router(perfis.router)

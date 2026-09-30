@@ -10,6 +10,7 @@ from app.models.contato import Contato
 from app.models.demanda import Demanda, StatusDemanda
 from app.models.empresa import Empresa, TipoEmpresa
 from app.models.especialidade import Especialidade
+from app.models.notificacao import Notificacao, TipoNotificacao
 from app.models.plano import Plano
 from app.models.profile import Papel, Profile
 from app.models.profissional import Profissional
@@ -130,6 +131,28 @@ def criar_demanda(
     db.add(demanda)
     db.flush()
     return demanda
+
+
+def criar_notificacao(
+    db,
+    destinatario_id: uuid.UUID,
+    tipo: TipoNotificacao = TipoNotificacao.novo_contato,
+    titulo: str = "Novo contato recebido",
+    corpo: str = "Alguém enviou uma mensagem.",
+    link: str = "/contatos/1",
+    lida_em: datetime | None = None,
+) -> Notificacao:
+    notificacao = Notificacao(
+        destinatario_id=destinatario_id,
+        tipo=tipo,
+        titulo=titulo,
+        corpo=corpo,
+        link=link,
+        lida_em=lida_em,
+    )
+    db.add(notificacao)
+    db.flush()
+    return notificacao
 
 
 def payload_demanda(db, **sobrescritas) -> dict:
