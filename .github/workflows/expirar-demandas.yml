@@ -1,0 +1,34 @@
+name: Expirar demandas agendado
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  expirar:
+    name: Marcar demandas vencidas como expiradas
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: apps/api/requirements.txt
+      - run: pip install -r requirements.txt
+      # app.jobs.expirar_demandas só lê Demanda via SQLAlchemy — os campos
+      # Stripe/APP_URL abaixo existem só para passar na validação de
+      # Settings() (ver app/core/config.py), nunca são de fato usados aqui,
+      # então não precisam ser segredos reais.
+      - run: python -m app.jobs.expirar_demandas
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+          STRIPE_SECRET_KEY: "unused-by-this-job"
+          STRIPE_WEBHOOK_SECRET: "unused-by-this-job"
+          STRIPE_PRICE_ESSENCIAL: "unused-by-this-job"
+          STRIPE_PRICE_PRO: "unused-by-this-job"
+          APP_URL: "https://saudeconecta-pi.vercel.app"
