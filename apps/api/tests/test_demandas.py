@@ -356,6 +356,56 @@ def test_interesse_gera_notificacao_para_empresa(client, db_session, cenario):
     assert notificacoes.json()["items"][0]["tipo"] == "novo_interesse"
 
 
+def test_criar_demanda_notifica_profissional_compativel(client, db_session):
+    empresa_id = criar_empresa(db_session, email="rh@clinica.com")
+    criar_assinatura(db_session, empresa_id)
+    profissional_id = criar_profissional(
+        db_session, especialidades=("Enfermagem",), cidade="São Paulo"
+    )
+    db_session.commit()
+
+    autenticar(empresa_id)
+    resposta = client.post("/demandas", json=payload_demanda(db_session))
+    assert resposta.status_code == 201
+
+    autenticar(profissional_id)
+    notificacoes = client.get("/notificacoes")
+    assert notificacoes.json()["total"] == 1
+    assert notificacoes.json()["items"][0]["tipo"] == "nova_oportunidade"
+
+
+def test_criar_demanda_nao_notifica_profissional_de_outra_especialidade(client, db_session):
+    empresa_id = criar_empresa(db_session, email="rh@clinica.com")
+    criar_assinatura(db_session, empresa_id)
+    profissional_id = criar_profissional(
+        db_session, especialidades=("Fisioterapia",), cidade="São Paulo"
+    )
+    db_session.commit()
+
+    autenticar(empresa_id)
+    client.post("/demandas", json=payload_demanda(db_session))
+
+    autenticar(profissional_id)
+    notificacoes = client.get("/notificacoes")
+    assert notificacoes.json()["total"] == 0
+
+
+def test_criar_demanda_nao_notifica_profissional_de_outra_cidade(client, db_session):
+    empresa_id = criar_empresa(db_session, email="rh@clinica.com")
+    criar_assinatura(db_session, empresa_id)
+    profissional_id = criar_profissional(
+        db_session, especialidades=("Enfermagem",), cidade="Curitiba"
+    )
+    db_session.commit()
+
+    autenticar(empresa_id)
+    client.post("/demandas", json=payload_demanda(db_session))
+
+    autenticar(profissional_id)
+    notificacoes = client.get("/notificacoes")
+    assert notificacoes.json()["total"] == 0
+
+
 def test_interesse_guarda_mensagem_opcional_do_profissional(client, db_session, cenario):
     _, demanda, profissional_id = cenario
     autenticar(profissional_id)

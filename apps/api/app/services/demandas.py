@@ -15,6 +15,7 @@ from app.models.especialidade import Especialidade
 from app.models.notificacao import TipoNotificacao
 from app.models.profile import Papel, Profile
 from app.models.profissional import Profissional
+from app.models.profissional_especialidade import profissional_especialidades
 from app.schemas.demanda import (
     DemandaCreate,
     DemandaDetalheEmpresa,
@@ -78,6 +79,31 @@ def _exigir_papel(db: Session, user_id: uuid.UUID, papel: Papel) -> Profile:
     return profile
 
 
+def _notificar_profissionais_compativeis(db: Session, demanda: Demanda) -> None:
+    profissional_ids = db.scalars(
+        select(Profissional.user_id)
+        .join(Profile, Profissional.user_id == Profile.id)
+        .join(
+            profissional_especialidades,
+            profissional_especialidades.c.profissional_id == Profissional.user_id,
+        )
+        .where(
+            profissional_especialidades.c.especialidade_id == demanda.especialidade_id,
+            func.lower(Profile.cidade) == demanda.cidade.strip().lower(),
+        )
+    ).all()
+    for profissional_id in profissional_ids:
+        registrar_notificacao(
+            db,
+            destinatario_id=profissional_id,
+            tipo=TipoNotificacao.nova_oportunidade,
+            titulo="Nova oportunidade compatível",
+            corpo=f"Uma nova demanda em {demanda.cidade} bate com sua especialidade.",
+            link="/oportunidades",
+        )
+    db.commit()
+
+
 def criar_demanda(db: Session, user_id: uuid.UUID, data: DemandaCreate) -> DemandaRead:
     empresa = verificar_publicacao_demanda(db, user_id)
     if db.get(Especialidade, data.especialidade_id) is None:
@@ -88,6 +114,7 @@ def criar_demanda(db: Session, user_id: uuid.UUID, data: DemandaCreate) -> Deman
     db.add(demanda)
     db.commit()
     db.refresh(demanda)
+    _notificar_profissionais_compativeis(db, demanda)
     return DemandaRead(**_campos_leitura(demanda, empresa.nome_fantasia))
 
 
