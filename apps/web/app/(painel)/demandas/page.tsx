@@ -6,6 +6,7 @@ import Image from "next/image";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 import { DemandaStatusBadge } from "@/components/ui/StatusBadge";
 import { api, ApiError } from "@/lib/api";
 import type { DemandaDetalheEmpresa, InteressadoRead, MinhaDemandaRead, StatusDemanda } from "@/lib/types";
@@ -76,13 +77,16 @@ export default function MinhasDemandasPage() {
             <Logo compact />
             <h1 className="font-headline-md text-headline-md text-on-surface">Minhas Demandas</h1>
           </div>
-          <Link
-            href="/demandas/nova"
-            aria-label="Nova demanda"
-            className="w-11 h-11 flex items-center justify-center rounded-full bg-primary text-on-primary neu-surface"
-          >
-            <MaterialIcon name="add" />
-          </Link>
+          <div className="flex items-center gap-space-xs">
+            <NotificationBell />
+            <Link
+              href="/demandas/nova"
+              aria-label="Nova demanda"
+              className="w-11 h-11 flex items-center justify-center rounded-full bg-primary text-on-primary neu-surface"
+            >
+              <MaterialIcon name="add" />
+            </Link>
+          </div>
         </div>
 
         <div className="flex items-center gap-space-xs overflow-x-auto no-scrollbar py-0.5">

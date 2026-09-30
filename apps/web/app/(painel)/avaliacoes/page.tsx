@@ -5,6 +5,7 @@ import { BottomNav } from "@/components/ui/BottomNav";
 import { StarRating } from "@/components/ui/StarRating";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 import { useCurrentUser } from "@/lib/use-current-user";
 import { api } from "@/lib/api";
 import type { AvaliacaoRead } from "@/lib/types";
@@ -40,11 +41,14 @@ export default function MinhasAvaliacoesPage() {
             <Logo compact />
             <h1 className="font-headline-md text-headline-md text-on-surface">Minhas Avaliações</h1>
           </div>
-          {media != null && (
-            <span className="inline-flex items-center gap-1 font-label-md text-label-md text-on-surface">
-              <StarRating nota={media} /> {media.toFixed(1)}
-            </span>
-          )}
+          <div className="flex items-center gap-space-xs">
+            <NotificationBell />
+            {media != null && (
+              <span className="inline-flex items-center gap-1 font-label-md text-label-md text-on-surface">
+                <StarRating nota={media} /> {media.toFixed(1)}
+              </span>
+            )}
+          </div>
         </div>
 
         {carregando && (

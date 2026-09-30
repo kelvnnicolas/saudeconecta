@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 import { ThemeSettings } from "@/components/ui/ThemeSettings";
 import { useCurrentUser } from "@/lib/use-current-user";
 import { signOut } from "@/lib/supabase-client";
@@ -55,9 +56,12 @@ export default function MeuPerfilPage() {
             <Logo compact />
             <span className="font-headline-md text-headline-md text-on-surface">Meu Perfil</span>
           </div>
-          <button onClick={sair} aria-label="Sair" className="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant">
-            <MaterialIcon name="logout" />
-          </button>
+          <div className="flex items-center gap-space-xs">
+            <NotificationBell />
+            <button onClick={sair} aria-label="Sair" className="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant">
+              <MaterialIcon name="logout" />
+            </button>
+          </div>
         </div>
 
         <section className="flex flex-col items-center gap-space-sm bg-surface-container-lowest rounded-2xl p-space-md neu-surface">

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { MaterialIcon } from "./MaterialIcon";
 import { Logo } from "./Logo";
+import { NotificationBell } from "./NotificationBell";
 
 export function Header({
   title,
@@ -58,6 +59,7 @@ export function Header({
               <MaterialIcon name={action.icon} />
             </button>
           ))}
+        <NotificationBell />
       </div>
     </header>
   );

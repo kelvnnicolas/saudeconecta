@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 import { ContatoStatusBadge } from "@/components/ui/StatusBadge";
 import { useCurrentUser } from "@/lib/use-current-user";
 import { api } from "@/lib/api";
@@ -77,14 +78,17 @@ export default function MeusContatosPage() {
   return (
     <>
       <main className="flex-1 pt-space-md pb-24 px-gutter bg-surface min-h-screen flex flex-col gap-space-md">
-        <div>
-          <div className="flex items-center gap-1.5">
-            <Logo compact />
-            <h1 className="font-headline-md text-headline-md text-on-surface">Meus Contatos</h1>
+        <div className="flex items-start justify-between gap-space-sm">
+          <div>
+            <div className="flex items-center gap-1.5">
+              <Logo compact />
+              <h1 className="font-headline-md text-headline-md text-on-surface">Meus Contatos</h1>
+            </div>
+            <p className="font-body-md text-body-md text-on-surface-variant">
+              Gerencie conversas, propostas e atendimentos em andamento
+            </p>
           </div>
-          <p className="font-body-md text-body-md text-on-surface-variant">
-            Gerencie conversas, propostas e atendimentos em andamento
-          </p>
+          <NotificationBell />
         </div>
 
         <div className="relative w-full">

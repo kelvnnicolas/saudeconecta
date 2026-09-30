@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 import { ProfessionalCard } from "@/components/busca/ProfessionalCard";
 import { api } from "@/lib/api";
 import type { ProfissionalSearchResult } from "@/lib/types";
@@ -51,9 +52,7 @@ export default function BuscarPage() {
         <div className="flex items-center justify-between">
           <Logo />
           <div className="flex items-center gap-space-xs">
-            <button aria-label="Notificações" className="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant neu-surface-sm neu-pressable">
-              <MaterialIcon name="notifications" />
-            </button>
+            <NotificationBell />
           </div>
         </div>
         <p className="font-caption text-caption text-on-surface-variant">+1.400 profissionais ativos</p>

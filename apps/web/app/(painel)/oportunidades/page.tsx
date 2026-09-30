@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 import { DemandCard } from "@/components/demandas/DemandCard";
 import { api, ApiError } from "@/lib/api";
 import type { DemandaRead } from "@/lib/types";
@@ -46,14 +47,17 @@ export default function OportunidadesPage() {
   return (
     <>
       <main className="flex-1 pt-space-md pb-24 px-gutter bg-surface min-h-screen flex flex-col gap-space-md">
-        <div>
-          <div className="flex items-center gap-1.5">
-            <Logo compact />
-            <h1 className="font-headline-md text-headline-md text-on-surface">Oportunidades</h1>
+        <div className="flex items-start justify-between gap-space-sm">
+          <div>
+            <div className="flex items-center gap-1.5">
+              <Logo compact />
+              <h1 className="font-headline-md text-headline-md text-on-surface">Oportunidades</h1>
+            </div>
+            <p className="font-body-md text-body-md text-on-surface-variant">
+              Demandas abertas por empresas compatíveis com suas especialidades e cidade.
+            </p>
           </div>
-          <p className="font-body-md text-body-md text-on-surface-variant">
-            Demandas abertas por empresas compatíveis com suas especialidades e cidade.
-          </p>
+          <NotificationBell />
         </div>
 
         {carregando && (
