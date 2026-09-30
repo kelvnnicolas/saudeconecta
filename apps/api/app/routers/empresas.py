@@ -1,10 +1,11 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.auth import CurrentUser, get_current_user
 from app.core.database import get_db
+from app.core.rate_limit import limiter
 from app.models.empresa import TipoEmpresa
 from app.schemas.busca import EmpresaSearchResponse, EmpresaSearchResult
 from app.schemas.empresa import EmpresaRead, EmpresaUpdateRequest
@@ -19,7 +20,9 @@ router = APIRouter(prefix="/empresas", tags=["empresas"])
 
 
 @router.get("", response_model=EmpresaSearchResponse)
+@limiter.limit("30/minute")
 def search_empresas_route(
+    request: Request,
     q: str | None = None,
     tipo: TipoEmpresa | None = None,
     cidade: str | None = None,
