@@ -1,6 +1,7 @@
 import uuid
 from datetime import UTC, datetime
 
+import sentry_sdk
 from fastapi import status
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
@@ -16,15 +17,25 @@ def registrar_notificacao(
     titulo: str,
     corpo: str,
     link: str,
-) -> Notificacao:
+) -> Notificacao | None:
+    # A notification must never block the action that triggered it (spec §6) —
+    # same spirit as enviar_email, which already swallows its own exceptions.
+    # The insert runs in its own savepoint so a failure here rolls back only
+    # the notification, leaving the caller's session (and its own pending or
+    # already-committed work) untouched.
+    try:
+        with db.begin_nested():
+            notificacao = Notificacao(
+                destinatario_id=destinatario_id, tipo=tipo, titulo=titulo, corpo=corpo, link=link
+            )
+            db.add(notificacao)
+            db.flush()
+    except Exception as exc:
+        sentry_sdk.capture_exception(exc)
+        return None
     # Flush only, never commit: a caller inside a savepoint (e.g. billing's
     # processar_evento) would have its `with db.begin_nested()` block broken by
     # a commit here. Callers outside a savepoint must commit themselves.
-    notificacao = Notificacao(
-        destinatario_id=destinatario_id, tipo=tipo, titulo=titulo, corpo=corpo, link=link
-    )
-    db.add(notificacao)
-    db.flush()
     db.refresh(notificacao)
     return notificacao
 

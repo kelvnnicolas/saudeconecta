@@ -315,6 +315,118 @@ def test_create_contato_gera_notificacao_para_profissional(client, db_session):
     assert notificacoes.json()["items"][0]["tipo"] == "novo_contato"
 
 
+def test_create_contato_comita_apos_registrar_notificacao(client, db_session):
+    # registrar_notificacao() só dá flush, nunca commit — quem chama é
+    # responsável por commitar. Um spy em Session.commit prova isso sem
+    # depender de rollback (não confiável aqui: o handler roda numa thread
+    # do threadpool do FastAPI, diferente da thread do teste).
+    solicitante_id = uuid.uuid4()
+    db_session.add(Profile(id=solicitante_id, papel=Papel.empresa, nome="Clínica X"))
+
+    profissional_id = uuid.uuid4()
+    db_session.add(
+        Profile(
+            id=profissional_id,
+            papel=Papel.profissional,
+            nome="Maria Silva",
+            email="maria@example.com",
+        )
+    )
+    db_session.flush()
+    db_session.add(Profissional(user_id=profissional_id))
+    db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: CurrentUser(
+        id=solicitante_id, email="x@example.com", role="authenticated"
+    )
+
+    with patch.object(db_session, "commit", wraps=db_session.commit) as commit_espiao:
+        resposta = client.post(
+            "/contatos", json={"profissional_id": str(profissional_id), "mensagem": "Oi"}
+        )
+
+    assert resposta.status_code == 200
+    assert commit_espiao.call_count == 2, (
+        "create_contato deve commitar o contato e, separadamente, a "
+        "notificação — um commit só significa que ficou apenas flushed"
+    )
+
+
+@patch("app.services.notificacao_service.sentry_sdk.capture_exception")
+@patch("app.services.contato_service.send_contact_notification_email")
+def test_create_contato_sobrevive_a_falha_de_notificacao(
+    mock_send_email, mock_capture, client, db_session
+):
+    solicitante_id = uuid.uuid4()
+    db_session.add(Profile(id=solicitante_id, papel=Papel.empresa, nome="Clínica X"))
+
+    profissional_id = uuid.uuid4()
+    db_session.add(
+        Profile(
+            id=profissional_id,
+            papel=Papel.profissional,
+            nome="Maria Silva",
+            email="maria@example.com",
+        )
+    )
+    db_session.flush()
+    db_session.add(Profissional(user_id=profissional_id))
+    db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: CurrentUser(
+        id=solicitante_id, email="x@example.com", role="authenticated"
+    )
+
+    with patch("app.services.notificacao_service.Notificacao", side_effect=RuntimeError("boom")):
+        resposta = client.post(
+            "/contatos", json={"profissional_id": str(profissional_id), "mensagem": "Oi"}
+        )
+
+    assert resposta.status_code == 200
+    mock_send_email.assert_called_once()
+    mock_capture.assert_called_once()
+
+
+def test_create_contato_notifica_depois_do_email_existente(client, db_session):
+    solicitante_id = uuid.uuid4()
+    db_session.add(Profile(id=solicitante_id, papel=Papel.empresa, nome="Clínica X"))
+
+    profissional_id = uuid.uuid4()
+    db_session.add(
+        Profile(
+            id=profissional_id,
+            papel=Papel.profissional,
+            nome="Maria Silva",
+            email="maria@example.com",
+        )
+    )
+    db_session.flush()
+    db_session.add(Profissional(user_id=profissional_id))
+    db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: CurrentUser(
+        id=solicitante_id, email="x@example.com", role="authenticated"
+    )
+
+    ordem = []
+    with (
+        patch(
+            "app.services.contato_service.send_contact_notification_email",
+            side_effect=lambda *a, **kw: ordem.append("email"),
+        ),
+        patch(
+            "app.services.contato_service.registrar_notificacao",
+            side_effect=lambda *a, **kw: ordem.append("notificacao"),
+        ),
+    ):
+        resposta = client.post(
+            "/contatos", json={"profissional_id": str(profissional_id), "mensagem": "Oi"}
+        )
+
+    assert resposta.status_code == 200
+    assert ordem == ["email", "notificacao"]
+
+
 def test_criar_mensagem_notifica_a_outra_parte_nao_o_autor(client, db_session):
     solicitante_id = criar_empresa(db_session)
     profissional_id = criar_profissional(db_session)
@@ -334,6 +446,23 @@ def test_criar_mensagem_notifica_a_outra_parte_nao_o_autor(client, db_session):
     assert notificacoes_solicitante.json()["total"] == 0
 
 
+def test_criar_mensagem_comita_apos_registrar_notificacao(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(solicitante_id)
+    with patch.object(db_session, "commit", wraps=db_session.commit) as commit_espiao:
+        resposta = client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": "Oi"})
+
+    assert resposta.status_code == 201
+    assert commit_espiao.call_count == 2, (
+        "criar_mensagem deve commitar a mensagem e, separadamente, a "
+        "notificação — um commit só significa que ficou apenas flushed"
+    )
+
+
 def test_aceitar_gera_notificacao_para_solicitante_so_na_primeira_vez(client, db_session):
     solicitante_id = criar_empresa(db_session)
     profissional_id = criar_profissional(db_session)
@@ -348,3 +477,20 @@ def test_aceitar_gera_notificacao_para_solicitante_so_na_primeira_vez(client, db
     notificacoes = client.get("/notificacoes")
     assert notificacoes.json()["total"] == 1
     assert notificacoes.json()["items"][0]["tipo"] == "aceite_demanda"
+
+
+def test_aceitar_comita_apos_registrar_notificacao(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(profissional_id)
+    with patch.object(db_session, "commit", wraps=db_session.commit) as commit_espiao:
+        resposta = client.post(f"/contatos/{contato.id}/aceitar")
+
+    assert resposta.status_code == 200
+    assert commit_espiao.call_count == 2, (
+        "aceitar_demanda_direta deve commitar o aceite e, separadamente, a "
+        "notificação — um commit só significa que ficou apenas flushed"
+    )

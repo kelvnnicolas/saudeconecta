@@ -1,3 +1,8 @@
+import uuid
+from unittest.mock import patch
+
+from app.models.notificacao import TipoNotificacao
+from app.services.notificacao_service import registrar_notificacao
 from tests.fabrica import autenticar, criar_notificacao, criar_profissional
 
 
@@ -103,6 +108,23 @@ def test_marcar_lida_e_idempotente(client, db_session):
 
     assert segunda.status_code == 200
     assert segunda.json()["lida_em"] == timestamp_original
+
+
+@patch("app.services.notificacao_service.sentry_sdk.capture_exception")
+def test_registrar_notificacao_falha_e_capturada_no_sentry_sem_lancar(capture, db_session):
+    # destinatario_id não existe em profiles — viola a FK no flush, um jeito
+    # realista de forçar a falha interna que o try/except deve engolir.
+    resultado = registrar_notificacao(
+        db_session,
+        destinatario_id=uuid.uuid4(),
+        tipo=TipoNotificacao.novo_contato,
+        titulo="Teste",
+        corpo="Teste",
+        link="/x",
+    )
+
+    assert resultado is None
+    capture.assert_called_once()
 
 
 def test_marcar_todas_lidas_marca_so_as_proprias_nao_lidas(client, db_session):

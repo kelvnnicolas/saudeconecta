@@ -321,7 +321,7 @@ def _pagamento_falhou(db: Session, invoice: Any) -> None:
         tipo=TipoNotificacao.falha_pagamento,
         titulo="Falha no pagamento",
         corpo="Não conseguimos processar o pagamento da sua assinatura.",
-        link="/empresa/assinatura",
+        link="/assinatura",
     )
 
 

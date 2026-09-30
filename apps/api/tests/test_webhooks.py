@@ -317,6 +317,7 @@ def test_pagamento_falhou_gera_notificacao_in_app(client, db_session, retrieve):
     notificacoes = client.get("/notificacoes")
     assert notificacoes.json()["total"] == 1
     assert notificacoes.json()["items"][0]["tipo"] == "falha_pagamento"
+    assert notificacoes.json()["items"][0]["link"] == "/assinatura"
 
 
 def test_webhook_nao_exige_autenticacao_de_usuario(client, db_session, retrieve):

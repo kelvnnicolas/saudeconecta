@@ -41,6 +41,9 @@ def create_contato(db: Session, solicitante_id: uuid.UUID, data: ContatoCreateRe
     db.commit()
     db.refresh(contato)
 
+    if profissional.profile.email:
+        send_contact_notification_email(profissional.profile.email, solicitante.nome, data.mensagem)
+
     registrar_notificacao(
         db,
         destinatario_id=data.profissional_id,
@@ -50,9 +53,6 @@ def create_contato(db: Session, solicitante_id: uuid.UUID, data: ContatoCreateRe
         link=f"/contatos/{contato.id}",
     )
     db.commit()
-
-    if profissional.profile.email:
-        send_contact_notification_email(profissional.profile.email, solicitante.nome, data.mensagem)
 
     return contato
 
