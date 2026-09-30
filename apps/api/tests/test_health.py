@@ -9,3 +9,9 @@ def test_health_check_returns_ok():
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_ready_check_returns_ok_when_db_reachable(client):
+    response = client.get("/ready")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}

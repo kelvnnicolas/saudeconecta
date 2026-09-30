@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     app_url: str
     resend_api_key: str = ""
     sentry_dsn: str = ""
+    rate_limit_enabled: bool = True
 
     @field_validator(*_OBRIGATORIAS_NAO_VAZIAS)
     @classmethod

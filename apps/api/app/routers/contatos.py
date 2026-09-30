@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.core.auth import CurrentUser, get_current_user
 from app.core.database import get_db
 from app.core.errors import ErroNegocio
+from app.core.rate_limit import limiter
 from app.models.contato import Contato
 from app.schemas.contato import ContatoCreateRequest, ContatoRead
 from app.schemas.mensagem_contato import MensagemContatoCreateRequest, MensagemContatoRead
@@ -24,7 +25,9 @@ ERRO_403_404 = {
 
 
 @router.post("", response_model=ContatoRead)
+@limiter.limit("10/minute")
 def create_contato_route(
+    request: Request,
     data: ContatoCreateRequest,
     current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -57,7 +60,9 @@ def listar_mensagens_route(
     status_code=201,
     responses=ERRO_403_404,
 )
+@limiter.limit("20/minute")
 def criar_mensagem_route(
+    request: Request,
     contato_id: int,
     data: MensagemContatoCreateRequest,
     current_user: CurrentUser = Depends(get_current_user),

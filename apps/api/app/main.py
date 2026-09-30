@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app.core.config import get_settings
 from app.core.errors import registrar_tratadores
+from app.core.rate_limit import limiter
 from app.core.sentry import init_sentry
 from app.routers import (
     analytics,
@@ -24,6 +27,9 @@ init_sentry()
 
 app = FastAPI(title="SaúdeConecta API")
 registrar_tratadores(app)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Lista explícita, nunca "*": APP_URL já é a origem do frontend, obrigatória
 # na configuração (ver app/core/config.py) — reaproveitada aqui em vez de uma
