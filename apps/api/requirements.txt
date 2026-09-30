@@ -4,7 +4,7 @@ sqlalchemy==2.0.35
 alembic==1.13.3
 psycopg[binary]==3.2.3
 pydantic==2.9.2
-pydantic-settings==2.5.2
+pydantic-settings==2.15.0
 supabase==2.9.0
 sentry-sdk[fastapi]==2.16.0
 python-multipart==0.0.12
