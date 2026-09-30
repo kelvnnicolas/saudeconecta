@@ -281,3 +281,70 @@ def test_criar_mensagem_corpo_muito_longo_e_rejeitado(client, db_session):
     autenticar(solicitante_id)
     resposta = client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": "a" * 2001})
     assert resposta.status_code == 422
+
+
+def test_create_contato_gera_notificacao_para_profissional(client, db_session):
+    solicitante_id = uuid.uuid4()
+    db_session.add(Profile(id=solicitante_id, papel=Papel.empresa, nome="Clínica X"))
+
+    profissional_id = uuid.uuid4()
+    db_session.add(
+        Profile(
+            id=profissional_id,
+            papel=Papel.profissional,
+            nome="Maria Silva",
+            email="maria@example.com",
+        )
+    )
+    db_session.flush()
+    db_session.add(Profissional(user_id=profissional_id))
+    db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: CurrentUser(
+        id=solicitante_id, email="x@example.com", role="authenticated"
+    )
+
+    resposta = client.post(
+        "/contatos", json={"profissional_id": str(profissional_id), "mensagem": "Oi"}
+    )
+    assert resposta.status_code == 200
+
+    autenticar(profissional_id)
+    notificacoes = client.get("/notificacoes")
+    assert notificacoes.json()["total"] == 1
+    assert notificacoes.json()["items"][0]["tipo"] == "novo_contato"
+
+
+def test_criar_mensagem_notifica_a_outra_parte_nao_o_autor(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(solicitante_id)
+    client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": "Oi"})
+
+    autenticar(profissional_id)
+    notificacoes_profissional = client.get("/notificacoes")
+    assert notificacoes_profissional.json()["total"] == 1
+    assert notificacoes_profissional.json()["items"][0]["tipo"] == "nova_mensagem"
+
+    autenticar(solicitante_id)
+    notificacoes_solicitante = client.get("/notificacoes")
+    assert notificacoes_solicitante.json()["total"] == 0
+
+
+def test_aceitar_gera_notificacao_para_solicitante_so_na_primeira_vez(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(profissional_id)
+    client.post(f"/contatos/{contato.id}/aceitar")
+    client.post(f"/contatos/{contato.id}/aceitar")  # re-aceite idempotente
+
+    autenticar(solicitante_id)
+    notificacoes = client.get("/notificacoes")
+    assert notificacoes.json()["total"] == 1
+    assert notificacoes.json()["items"][0]["tipo"] == "aceite_demanda"
