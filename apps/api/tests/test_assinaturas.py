@@ -104,7 +104,7 @@ def test_checkout_cria_customer_sessao_e_assinatura_incomplete(client, db_sessio
     assert kwargs["line_items"] == [{"price": "price_test_pro", "quantity": 1}]
     assert kwargs["client_reference_id"] == str(empresa_id)
     assert kwargs["subscription_data"] == {"metadata": {"empresa_id": str(empresa_id)}}
-    assert kwargs["success_url"] == "http://localhost:3000/empresa/assinatura?status=processando"
+    assert kwargs["success_url"] == "http://localhost:3000/assinatura?status=processando"
     assert kwargs["cancel_url"] == "http://localhost:3000/empresa/planos"
 
     assinatura = db_session.scalar(select(Assinatura).where(Assinatura.empresa_id == empresa_id))
@@ -197,9 +197,7 @@ def test_portal_cria_sessao_com_return_url(client, db_session, stripe_mock):
     assert response.status_code == 200
     assert response.json() == {"portal_url": "https://billing.stripe.test/bps_1"}
     assert portal_create.call_args.kwargs["customer"] == "cus_portal"
-    assert portal_create.call_args.kwargs["return_url"] == (
-        "http://localhost:3000/empresa/assinatura"
-    )
+    assert portal_create.call_args.kwargs["return_url"] == "http://localhost:3000/assinatura"
 
 
 def test_minha_assinatura_sem_assinatura(client, db_session):

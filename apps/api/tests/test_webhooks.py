@@ -296,8 +296,8 @@ def test_pagamento_falhou_envia_email_com_link_da_assinatura(client, db_session,
     para, assunto, texto, html = enviar.call_args.args
     assert para == "financeiro@clinica.com"
     assert assunto == "Não conseguimos processar o pagamento da sua assinatura"
-    assert "http://localhost:3000/empresa/assinatura" in texto
-    assert "http://localhost:3000/empresa/assinatura" in html
+    assert "http://localhost:3000/assinatura" in texto
+    assert "http://localhost:3000/assinatura" in html
 
 
 def test_pagamento_falhou_gera_notificacao_in_app(client, db_session, retrieve):

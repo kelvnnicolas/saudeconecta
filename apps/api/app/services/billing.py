@@ -152,7 +152,7 @@ def criar_checkout(db: Session, user_id: uuid.UUID, plano_codigo: str) -> str:
             line_items=[{"price": plano.stripe_price_id, "quantity": 1}],
             client_reference_id=str(empresa.user_id),
             subscription_data={"metadata": {"empresa_id": str(empresa.user_id)}},
-            success_url=f"{app_url}/empresa/assinatura?status=processando",
+            success_url=f"{app_url}/assinatura?status=processando",
             cancel_url=f"{app_url}/empresa/planos",
         )
 
@@ -189,7 +189,7 @@ def criar_portal(db: Session, user_id: uuid.UUID) -> str:
         sessao = stripe.billing_portal.Session.create(
             api_key=_api_key(),
             customer=customer_id,
-            return_url=f"{get_settings().app_url}/empresa/assinatura",
+            return_url=f"{get_settings().app_url}/assinatura",
         )
     return sessao["url"]
 
@@ -313,7 +313,7 @@ def _pagamento_falhou(db: Session, invoice: Any) -> None:
     profile = db.get(Profile, assinatura.empresa_id)
     if profile is None or not profile.email:
         return
-    link = f"{get_settings().app_url}/empresa/assinatura"
+    link = f"{get_settings().app_url}/assinatura"
     enviar_email(profile.email, *email_templates.falha_pagamento_assinatura(link))
     registrar_notificacao(
         db,
