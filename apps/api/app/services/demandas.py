@@ -89,7 +89,7 @@ def _notificar_profissionais_compativeis(db: Session, demanda: Demanda) -> None:
         )
         .where(
             profissional_especialidades.c.especialidade_id == demanda.especialidade_id,
-            func.lower(Profile.cidade) == demanda.cidade.strip().lower(),
+            func.lower(func.trim(Profile.cidade)) == demanda.cidade.strip().lower(),
         )
     ).all()
     for profissional_id in profissional_ids:
@@ -159,7 +159,7 @@ def listar_oportunidades(
 
     cidade_filtro = cidade or profile.cidade
     if cidade_filtro:
-        filtros.append(func.lower(Demanda.cidade) == cidade_filtro.strip().lower())
+        filtros.append(func.lower(func.trim(Demanda.cidade)) == cidade_filtro.strip().lower())
 
     total = db.scalar(select(func.count()).select_from(Demanda).where(*filtros))
     linhas = db.execute(

@@ -414,6 +414,21 @@ def test_criar_demanda_notifica_profissional_compativel(client, db_session):
     assert notificacoes.json()["items"][0]["tipo"] == "nova_oportunidade"
 
 
+def test_criar_demanda_notifica_mesmo_com_espaco_sobrando_na_cidade_do_perfil(client, db_session):
+    empresa_id = criar_empresa(db_session, email="rh@clinica.com")
+    criar_assinatura(db_session, empresa_id)
+    profissional_id = criar_profissional(
+        db_session, especialidades=("Enfermagem",), cidade="  São Paulo "
+    )
+    db_session.commit()
+
+    autenticar(empresa_id)
+    assert client.post("/demandas", json=payload_demanda(db_session)).status_code == 201
+
+    autenticar(profissional_id)
+    assert client.get("/notificacoes").json()["total"] == 1
+
+
 def test_criar_demanda_nao_notifica_profissional_de_outra_especialidade(client, db_session):
     empresa_id = criar_empresa(db_session, email="rh@clinica.com")
     criar_assinatura(db_session, empresa_id)
