@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Header } from "@/components/ui/Header";
+import { CidadeEstadoFields } from "@/components/ui/CidadeEstadoFields";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { type CadastroProfissionalInput, cadastroProfissionalSchema } from "@/lib/validations/auth";
 import { MOCK_ESPECIALIDADES } from "@/lib/mock-data";
@@ -21,8 +22,12 @@ export default function CadastroProfissionalPage() {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
-  } = useForm<CadastroProfissionalInput>({ resolver: zodResolver(cadastroProfissionalSchema) });
+  } = useForm<CadastroProfissionalInput>({
+    resolver: zodResolver(cadastroProfissionalSchema),
+    defaultValues: { cidade: "", estado: "" },
+  });
 
   function toggleEspecialidade(id: number) {
     setEspecialidadeIds((atual) => {
@@ -126,19 +131,12 @@ export default function CadastroProfissionalPage() {
 
           <section className="flex flex-col gap-space-sm">
             <h2 className="font-title-md text-title-md text-on-surface">Local e remuneração base</h2>
-            <div className="flex gap-space-sm">
-              <label className="flex-1 flex flex-col gap-1">
-                <span className="font-label-md text-label-md text-on-surface">Cidade</span>
-                <input {...register("cidade")} placeholder="Florianópolis" className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
-              </label>
-              <label className="w-20 flex flex-col gap-1">
-                <span className="font-label-md text-label-md text-on-surface">UF</span>
-                <input {...register("estado")} placeholder="SC" maxLength={2} className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm uppercase" />
-              </label>
-            </div>
-            {(errors.cidade || errors.estado) && (
-              <span className="font-caption text-caption text-error">{errors.cidade?.message ?? errors.estado?.message}</span>
-            )}
+            <CidadeEstadoFields
+              estado={watch("estado") ?? ""}
+              cidade={watch("cidade") ?? ""}
+              onChange={(campo, valor) => setValue(campo, valor, { shouldValidate: valor !== "", shouldDirty: true })}
+              erro={errors.cidade?.message ?? errors.estado?.message}
+            />
             <label className="flex flex-col gap-1">
               <span className="font-label-md text-label-md text-on-surface">Preço base por hora (R$)</span>
               <input type="number" step="0.01" {...register("precoHora")} placeholder="Ex.: 45" className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />

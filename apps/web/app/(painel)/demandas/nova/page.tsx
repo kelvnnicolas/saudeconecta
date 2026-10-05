@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Header } from "@/components/ui/Header";
+import { CidadeEstadoFields } from "@/components/ui/CidadeEstadoFields";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { MOCK_ESPECIALIDADES } from "@/lib/mock-data";
 import { type CriarDemandaInput, criarDemandaSchema } from "@/lib/validations/demanda";
@@ -37,7 +38,10 @@ export default function CriarNovaDemandaPage() {
     setValue,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<CriarDemandaInput>({ resolver: zodResolver(criarDemandaSchema) });
+  } = useForm<CriarDemandaInput>({
+    resolver: zodResolver(criarDemandaSchema),
+    defaultValues: { cidade: "", estado: "" },
+  });
   const descricao = watch("descricao") ?? "";
 
   function aplicarServicoSugerido(servico: string) {
@@ -107,23 +111,16 @@ export default function CriarNovaDemandaPage() {
             {errors.especialidadeId && <span className="font-caption text-caption text-error">{errors.especialidadeId.message}</span>}
           </label>
 
-          <div className="flex gap-space-sm">
-            <label className="flex-1 flex flex-col gap-1">
-              <span className="font-label-md text-label-md text-on-surface">Cidade</span>
-              <input {...register("cidade")} className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
-            </label>
-            <label className="w-20 flex flex-col gap-1">
-              <span className="font-label-md text-label-md text-on-surface">UF</span>
-              <input {...register("estado")} maxLength={2} className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm uppercase" />
-            </label>
-          </div>
+          <CidadeEstadoFields
+            estado={watch("estado") ?? ""}
+            cidade={watch("cidade") ?? ""}
+            onChange={(campo, valor) => setValue(campo, valor, { shouldValidate: valor !== "", shouldDirty: true })}
+            erro={errors.cidade?.message ?? errors.estado?.message}
+            />
           <label className="flex flex-col gap-1">
             <span className="font-label-md text-label-md text-on-surface">Bairro (opcional)</span>
             <input {...register("bairro")} className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
           </label>
-          {(errors.cidade || errors.estado) && (
-            <span className="font-caption text-caption text-error">{errors.cidade?.message ?? errors.estado?.message}</span>
-          )}
 
           <label className="flex flex-col gap-1">
             <span className="font-label-md text-label-md text-on-surface">Data de início</span>

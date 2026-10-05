@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Header } from "@/components/ui/Header";
+import { CidadeEstadoFields } from "@/components/ui/CidadeEstadoFields";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { type CadastroEmpresaInput, cadastroEmpresaSchema } from "@/lib/validations/auth";
 import { signUpAndEnsureSession } from "@/lib/supabase-client";
@@ -31,7 +32,7 @@ export default function CadastroEmpresaPage() {
     formState: { errors },
   } = useForm<CadastroEmpresaInput>({
     resolver: zodResolver(cadastroEmpresaSchema),
-    defaultValues: { tipo: "pessoa_fisica" },
+    defaultValues: { tipo: "pessoa_fisica", cidade: "", estado: "" },
   });
   const tipoSelecionado = watch("tipo");
 
@@ -121,19 +122,12 @@ export default function CadastroEmpresaPage() {
               <input type="password" {...register("password")} placeholder="••••••••" className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
               {errors.password && <span className="font-caption text-caption text-error">{errors.password.message}</span>}
             </label>
-            <div className="flex gap-space-sm">
-              <label className="flex-1 flex flex-col gap-1">
-                <span className="font-label-md text-label-md text-on-surface">Cidade</span>
-                <input {...register("cidade")} placeholder="ex: Florianópolis" className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
-              </label>
-              <label className="w-20 flex flex-col gap-1">
-                <span className="font-label-md text-label-md text-on-surface">UF</span>
-                <input {...register("estado")} placeholder="SC" maxLength={2} className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm uppercase" />
-              </label>
-            </div>
-            {(errors.cidade || errors.estado) && (
-              <span className="font-caption text-caption text-error">{errors.cidade?.message ?? errors.estado?.message}</span>
-            )}
+            <CidadeEstadoFields
+              estado={watch("estado") ?? ""}
+              cidade={watch("cidade") ?? ""}
+              onChange={(campo, valor) => setValue(campo, valor, { shouldValidate: valor !== "", shouldDirty: true })}
+              erro={errors.cidade?.message ?? errors.estado?.message}
+            />
           </section>
 
           {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">{erro}</p>}
