@@ -48,9 +48,11 @@ export async function signInWithGoogle() {
   return data;
 }
 
-export async function signInWithFacebook() {
+export async function signInWithLinkedIn() {
   if (!supabase) throw new Error("Supabase não configurado (ver .env.example)");
-  const { data, error } = await supabase.auth.signInWithOAuth({ provider: "facebook" });
+  // Supabase usa "linkedin_oidc" (OpenID Connect) — o provider "linkedin"
+  // antigo foi descontinuado.
+  const { data, error } = await supabase.auth.signInWithOAuth({ provider: "linkedin_oidc" });
   if (error) throw error;
   return data;
 }
