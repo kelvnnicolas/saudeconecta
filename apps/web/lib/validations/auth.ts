@@ -7,6 +7,22 @@ export const loginSchema = z.object({
 });
 export type LoginInput = z.infer<typeof loginSchema>;
 
+export const esqueciSenhaSchema = z.object({
+  email: z.string().email("Informe um e-mail válido"),
+});
+export type EsqueciSenhaInput = z.infer<typeof esqueciSenhaSchema>;
+
+export const novaSenhaSchema = z
+  .object({
+    password: z.string().min(8, "Mínimo de 8 caracteres"),
+    confirmacao: z.string(),
+  })
+  .refine((data) => data.password === data.confirmacao, {
+    message: "As senhas não coincidem",
+    path: ["confirmacao"],
+  });
+export type NovaSenhaInput = z.infer<typeof novaSenhaSchema>;
+
 export const cadastroProfissionalSchema = z.object({
   nome: z.string().min(3, "Informe seu nome completo"),
   email: z.string().email("Informe um e-mail válido"),

@@ -31,6 +31,13 @@ import type {
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
+function mensagemDeValidacao(itens: unknown[]): string | null {
+  const primeiro = itens[0];
+  if (typeof primeiro !== "object" || primeiro === null || !("msg" in primeiro)) return null;
+  // Pydantic prefixa validadores próprios com "Value error, ".
+  return String((primeiro as Record<string, unknown>).msg).replace(/^Value error, /, "");
+}
+
 export class ApiError extends Error {
   status: number;
   code: string | null;
@@ -42,14 +49,19 @@ export class ApiError extends Error {
     // negócio). Sem isso, `message` virava o `code` cru ("nao_elegivel"),
     // que telas sem tratamento especial (ex.: criar demanda) mostravam
     // direto pro usuário em vez da frase explicativa que o backend já manda.
-    const isObjectDetail = typeof detail === "object" && detail !== null;
+    // Terceira forma: erro de validação do FastAPI/Pydantic (422), uma lista
+    // [{loc, msg, type}] — sem tratar, caía em "Erro HTTP 422".
+    const isObjectDetail = typeof detail === "object" && detail !== null && !Array.isArray(detail);
     const code = isObjectDetail && "code" in detail ? String((detail as Record<string, unknown>).code) : null;
+    const mensagemValidacao = Array.isArray(detail) ? mensagemDeValidacao(detail) : null;
     const mensagem =
       typeof detail === "string"
         ? detail
-        : isObjectDetail && "mensagem" in detail
-          ? String((detail as Record<string, unknown>).mensagem)
-          : null;
+        : mensagemValidacao
+          ? mensagemValidacao
+          : isObjectDetail && "mensagem" in detail
+            ? String((detail as Record<string, unknown>).mensagem)
+            : null;
     super(mensagem ?? code ?? `Erro HTTP ${status}`);
     this.status = status;
     this.code = code;
