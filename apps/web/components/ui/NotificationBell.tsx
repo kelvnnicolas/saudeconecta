@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { MaterialIcon } from "./MaterialIcon";
 import { useCurrentUser } from "@/lib/use-current-user";
@@ -12,6 +12,23 @@ export function NotificationBell() {
   const [aberto, setAberto] = useState(false);
   const [notificacoes, setNotificacoes] = useState<NotificacaoRead[]>([]);
   const [totalNaoLidas, setTotalNaoLidas] = useState(0);
+  const raiz = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!aberto) return;
+    function aoClicarFora(evento: MouseEvent) {
+      if (raiz.current && !raiz.current.contains(evento.target as Node)) setAberto(false);
+    }
+    function aoPressionarTecla(evento: KeyboardEvent) {
+      if (evento.key === "Escape") setAberto(false);
+    }
+    document.addEventListener("mousedown", aoClicarFora);
+    document.addEventListener("keydown", aoPressionarTecla);
+    return () => {
+      document.removeEventListener("mousedown", aoClicarFora);
+      document.removeEventListener("keydown", aoPressionarTecla);
+    };
+  }, [aberto]);
 
   useEffect(() => {
     if (!session) return;
@@ -47,13 +64,24 @@ export function NotificationBell() {
     }
   }
 
+  async function marcarTodasComoLidas() {
+    try {
+      await api.marcarTodasNotificacoesLidas();
+      setNotificacoes((atual) => atual.map((n) => (n.lida_em ? n : { ...n, lida_em: new Date().toISOString() })));
+      setTotalNaoLidas(0);
+    } catch {
+      // ignora — próximo poll corrige
+    }
+  }
+
   if (!session) return null;
 
   return (
-    <div className="relative">
+    <div className="relative" ref={raiz}>
       <button
         type="button"
         aria-label="Notificações"
+        aria-expanded={aberto}
         onClick={() => setAberto((atual) => !atual)}
         className="relative w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-on-surface-variant neu-surface-sm neu-pressable"
       >
@@ -66,6 +94,15 @@ export function NotificationBell() {
       </button>
       {aberto && (
         <div className="absolute right-0 top-14 w-80 max-h-96 overflow-y-auto rounded-2xl neu-surface bg-surface-container-lowest p-space-sm flex flex-col gap-space-xs z-50">
+          {totalNaoLidas > 0 && (
+            <button
+              type="button"
+              onClick={marcarTodasComoLidas}
+              className="self-end font-caption text-caption text-primary px-space-xs py-1"
+            >
+              Marcar todas como lidas
+            </button>
+          )}
           {notificacoes.length === 0 && (
             <p className="font-caption text-caption text-on-surface-variant text-center py-space-sm">
               Nenhuma notificação ainda.

@@ -18,6 +18,7 @@ import type {
   MensagemContatoRead,
   MinhaAssinaturaResponse,
   MinhaDemandaRead,
+  NotificacaoRead,
   OportunidadesResponse,
   PlanoRead,
   PortalResponse,
@@ -205,7 +206,7 @@ export const api = {
     request<ListaNotificacoesResponse>(`/notificacoes${qs(params)}`),
 
   marcarNotificacaoLida: (id: number) =>
-    request<void>(`/notificacoes/${id}/marcar-lida`, { method: "POST" }),
+    request<NotificacaoRead>(`/notificacoes/${id}/marcar-lida`, { method: "POST" }),
 
   marcarTodasNotificacoesLidas: () =>
     request<{ marcadas: number }>("/notificacoes/marcar-todas-lidas", { method: "POST" }),
