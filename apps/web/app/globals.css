@@ -111,7 +111,7 @@
     overscroll-behavior: none;
     min-height: max(884px, 100dvh);
     background: var(--bg);
-    transition: background-color 0.25s ease, color 0.25s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
   button,
   a,
@@ -163,5 +163,26 @@
   }
   .btn-accent-neu:active {
     box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.35);
+  }
+}
+
+/* Movimento reduzido: sem deslocamento/escala e sem transições longas. O
+   spinner continua indicando atividade, mas só pulsa em opacidade. */
+@keyframes spin-reduzido {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+  .neu-pressable:active,
+  [class*="active:scale"]:active {
+    transform: none !important;
+  }
+  .animate-spin {
+    animation: spin-reduzido 1.5s ease-in-out infinite !important;
   }
 }

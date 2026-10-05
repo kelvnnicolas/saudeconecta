@@ -111,7 +111,7 @@ export default function MeusContatosPage() {
               <button
                 key={f.value}
                 onClick={() => setFiltro(f.value)}
-                className={`flex-shrink-0 px-space-md py-1.5 rounded-full font-label-sm text-label-sm transition-all ${
+                className={`flex-shrink-0 px-space-md py-1.5 rounded-full font-label-sm text-label-sm transition-[background-color,color,box-shadow] ${
                   ativo ? "bg-primary text-on-primary neu-surface" : "bg-surface-container-high text-on-surface-variant"
                 }`}
               >
@@ -133,7 +133,7 @@ export default function MeusContatosPage() {
             <Link
               key={c.id}
               href={`/contatos/${c.id}`}
-              className="bg-surface-container-lowest rounded-2xl p-space-md neu-surface neu-pressable transition-all active:scale-[0.99] flex flex-col gap-1"
+              className="bg-surface-container-lowest rounded-2xl p-space-md neu-surface neu-pressable active:scale-[0.99] flex flex-col gap-1"
             >
               <div className="flex items-center justify-between gap-space-xs">
                 <h2 className="font-title-md text-title-md text-on-surface truncate">{nomeDaOutraParte(c)}</h2>
