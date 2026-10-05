@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Header } from "@/components/ui/Header";
+import { PaginaEsqueleto } from "@/components/ui/Skeleton";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { assinaturaStatusLabel } from "@/components/ui/StatusBadge";
 import { api, ApiError } from "@/lib/api";
@@ -44,8 +45,8 @@ export default function MinhaAssinaturaPage() {
     return (
       <>
         <Header title="Minha Assinatura" backHref="/perfil" />
-        <main className="flex-1 pt-16 flex items-center justify-center bg-surface min-h-screen">
-          <MaterialIcon name="progress_activity" className="text-[32px] text-primary animate-spin" />
+        <main className="flex-1 pt-20 px-gutter pb-space-lg bg-surface min-h-screen">
+          <PaginaEsqueleto comTitulo={false} />
         </main>
       </>
     );

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Header } from "@/components/ui/Header";
+import { ListaEsqueleto } from "@/components/ui/Skeleton";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { api, ApiError } from "@/lib/api";
 import type { PlanoRead } from "@/lib/types";
@@ -83,11 +84,7 @@ export default function PlanosEmpresaPage() {
           </p>
         </section>
 
-        {carregandoPlanos && (
-          <div className="flex justify-center py-space-lg">
-            <MaterialIcon name="progress_activity" className="text-[28px] text-primary animate-spin" />
-          </div>
-        )}
+        {carregandoPlanos && <ListaEsqueleto quantidade={2} />}
 
         <div className="flex flex-col gap-space-sm">
           {planos.map((plano) => {

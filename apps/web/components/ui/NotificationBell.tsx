@@ -117,7 +117,7 @@ export function NotificationBell() {
                 setAberto(false);
               }}
               className={`rounded-xl p-space-sm flex flex-col gap-0.5 ${
-                n.lida_em ? "bg-transparent" : "bg-secondary-container/40"
+                n.lida_em ? "bg-transparent" : "bg-[color-mix(in_srgb,var(--accent)_12%,transparent)]"
               }`}
             >
               <span className="font-label-md text-label-md text-on-surface">{n.titulo}</span>

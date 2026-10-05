@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Header } from "@/components/ui/Header";
+import { PaginaEsqueleto } from "@/components/ui/Skeleton";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { useCurrentUser } from "@/lib/use-current-user";
 import { type AvaliacaoInput, avaliacaoSchema } from "@/lib/validations/contato";
@@ -124,8 +125,8 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
     return (
       <>
         <Header title="Detalhes do Contato" backHref="/contatos" />
-        <main className="flex-1 pt-16 flex items-center justify-center bg-surface min-h-screen">
-          <MaterialIcon name="progress_activity" className="text-[32px] text-primary animate-spin" />
+        <main className="flex-1 pt-20 px-gutter pb-space-lg bg-surface min-h-screen">
+          <PaginaEsqueleto comTitulo={false} />
         </main>
       </>
     );

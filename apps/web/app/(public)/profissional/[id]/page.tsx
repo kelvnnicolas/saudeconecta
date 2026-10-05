@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Header } from "@/components/ui/Header";
+import { PaginaEsqueleto } from "@/components/ui/Skeleton";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { StarRating } from "@/components/ui/StarRating";
 import { api } from "@/lib/api";
@@ -34,8 +35,8 @@ export default function PerfilPublicoProfissionalPage({ params }: { params: { id
     return (
       <>
         <Header title="Perfil do Profissional" backHref="/buscar" />
-        <main className="flex-1 pt-16 flex items-center justify-center bg-surface min-h-screen">
-          <MaterialIcon name="progress_activity" className="text-[32px] text-primary animate-spin" />
+        <main className="flex-1 pt-20 px-gutter pb-space-lg bg-surface min-h-screen">
+          <PaginaEsqueleto comTitulo={false} />
         </main>
       </>
     );

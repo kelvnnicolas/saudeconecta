@@ -6,6 +6,7 @@ import Image from "next/image";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
+import { ListaEsqueleto } from "@/components/ui/Skeleton";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { DemandaStatusBadge } from "@/components/ui/StatusBadge";
 import { api, ApiError } from "@/lib/api";
@@ -107,11 +108,7 @@ export default function MinhasDemandasPage() {
           })}
         </div>
 
-        {carregando && (
-          <div className="flex justify-center py-space-lg">
-            <MaterialIcon name="progress_activity" className="text-[28px] text-primary animate-spin" />
-          </div>
-        )}
+        {carregando && <ListaEsqueleto />}
         {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">{erro}</p>}
 
         <div className="flex flex-col gap-space-sm">
