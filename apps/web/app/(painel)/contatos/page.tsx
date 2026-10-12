@@ -164,7 +164,7 @@ export default function MeusContatosPage() {
             </div>
             <div className="flex flex-col">
               <span className="font-title-md text-title-md text-on-surface leading-snug">Precisa de outro especialista?</span>
-              <span className="font-caption text-caption text-on-surface-variant">Centenas de profissionais verificados hoje</span>
+              <span className="font-caption text-caption text-on-surface-variant">Encontre profissionais para o que você precisa</span>
             </div>
           </div>
           <MaterialIcon name="arrow_forward" className="text-[20px]" />
