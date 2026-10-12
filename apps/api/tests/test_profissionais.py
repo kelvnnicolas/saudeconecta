@@ -96,3 +96,18 @@ def test_update_own_profissional_rejects_unknown_especialidade_id(client, db_ses
     )
 
     assert response.status_code == 400
+
+
+def test_update_own_profissional_aceita_registro_vazio(client, db_session):
+    user_id = uuid.uuid4()
+    db_session.add(Profile(id=user_id, papel=Papel.profissional, nome="João Souza"))
+    db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: CurrentUser(
+        id=user_id, email="joao@example.com", role="authenticated"
+    )
+
+    response = client.put("/profissionais/me", json={"registro_profissional": None})
+
+    assert response.status_code == 200
+    assert response.json()["registro_profissional"] is None

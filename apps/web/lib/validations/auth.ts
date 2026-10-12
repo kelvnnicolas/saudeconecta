@@ -30,8 +30,14 @@ export const cadastroProfissionalSchema = z
     telefone: z.string().min(8, "Informe um telefone válido"),
     password: senhaForteSchema,
     confirmacao: z.string().min(1, "Confirme a senha"),
-    especialidadeIds: z.array(z.number()).min(1, "Selecione ao menos uma especialidade"),
-    registroProfissional: z.string().min(1, "Informe seu registro no conselho"),
+    especialidadeIds: z
+      .array(z.number(), {
+        required_error: "Selecione ao menos uma especialidade",
+        invalid_type_error: "Selecione ao menos uma especialidade",
+      })
+      .min(1, "Selecione ao menos uma especialidade"),
+    // Opcional por enquanto: a validação do registro no conselho ainda será definida.
+    registroProfissional: z.string().optional(),
     cidade: z.string().min(1, "Informe a cidade"),
     estado: z.string().length(2, "UF com 2 letras"),
     precoHora: optionalPositiveNumber(),

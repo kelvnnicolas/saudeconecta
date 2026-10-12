@@ -55,7 +55,7 @@ export default function CadastroProfissionalPage() {
         estado: data.estado,
       });
       await api.updateOwnProfissional({
-        registro_profissional: data.registroProfissional,
+        registro_profissional: data.registroProfissional?.trim() || null,
         preco_hora: data.precoHora ?? null,
         especialidade_ids: data.especialidadeIds,
       });
@@ -133,7 +133,7 @@ export default function CadastroProfissionalPage() {
               <span className="font-caption text-caption text-error">{errors.especialidadeIds.message}</span>
             )}
             <label className="flex flex-col gap-1">
-              <span className="font-label-md text-label-md text-on-surface">Registro profissional (conselho)</span>
+              <span className="font-label-md text-label-md text-on-surface">Registro profissional (conselho) <span className="text-on-surface-variant font-normal">— opcional</span></span>
               <input {...register("registroProfissional")} placeholder="Ex.: COREN-SC 123.456 ou CRM 45210" className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
               {errors.registroProfissional && <span className="font-caption text-caption text-error">{errors.registroProfissional.message}</span>}
             </label>

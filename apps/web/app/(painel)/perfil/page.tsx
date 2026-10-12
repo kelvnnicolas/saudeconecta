@@ -88,7 +88,9 @@ export default function MeuPerfilPage() {
         {profissional && (
           <section className="bg-surface-container-lowest rounded-2xl p-space-md neu-surface flex flex-col gap-space-xs">
             <h2 className="font-title-md text-title-md text-on-surface">Dados profissionais</h2>
-            <p className="font-body-md text-body-md text-on-surface-variant">{profissional.registro_profissional}</p>
+            {profissional.registro_profissional && (
+              <p className="font-body-md text-body-md text-on-surface-variant">{profissional.registro_profissional}</p>
+            )}
             <p className="font-body-md text-body-md text-on-surface-variant">
               {profissional.especialidades.map((e) => e.nome).join(", ")}
             </p>
