@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
@@ -60,6 +61,14 @@ export default function OportunidadesPage() {
           </div>
           <NotificationBell />
         </div>
+
+        <Link
+          href="/empresas"
+          className="inline-flex items-center gap-1 self-start font-label-md text-label-md text-primary"
+        >
+          <MaterialIcon name="apartment" className="text-[18px]" />
+          Ver empresas
+        </Link>
 
         {carregando && <ListaEsqueleto />}
         {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">{erro}</p>}

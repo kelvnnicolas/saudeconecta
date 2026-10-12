@@ -203,6 +203,23 @@ export interface DemandaDetalheProfissional extends DemandaRead {
   ja_demonstrei_interesse: boolean;
 }
 
+export interface EmpresaDiretorioResult {
+  user_id: string;
+  nome_fantasia: string;
+  tipo: TipoEmpresa;
+  cidade: string | null;
+  estado: string | null;
+  avatar_url: string | null;
+  demandas_abertas: number;
+}
+
+export interface EmpresaDiretorioResponse {
+  items: EmpresaDiretorioResult[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 export interface OportunidadesResponse {
   items: DemandaRead[];
   total: number;

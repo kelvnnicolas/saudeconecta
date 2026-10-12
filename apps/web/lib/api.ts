@@ -10,6 +10,7 @@ import type {
   DemandaDetalheEmpresa,
   DemandaDetalheProfissional,
   DemandaRead,
+  EmpresaDiretorioResponse,
   EmpresaRead,
   EmpresaUpdateRequest,
   Especialidade,
@@ -28,6 +29,7 @@ import type {
   ProfissionalSearchResponse,
   ProfissionalUpdateRequest,
   StatusDemanda,
+  TipoEmpresa,
 } from "./types";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -169,6 +171,10 @@ export const api = {
     request<DemandaRead>("/demandas", { method: "POST", body: JSON.stringify(data) }),
 
   minhasDemandas: () => request<MinhaDemandaRead[]>("/demandas/minhas"),
+
+  diretorioEmpresas: (
+    params: { q?: string; tipo?: TipoEmpresa; estado?: string; cidade?: string; limit?: number; offset?: number } = {},
+  ) => request<EmpresaDiretorioResponse>(`/empresas/diretorio${qs(params)}`),
 
   oportunidades: (params: { especialidade_id?: number; cidade?: string; limit?: number; offset?: number } = {}) =>
     request<OportunidadesResponse>(`/demandas/oportunidades${qs(params)}`),
