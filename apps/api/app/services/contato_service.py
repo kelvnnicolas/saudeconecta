@@ -6,7 +6,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.errors import erro_negocio
+from app.core.errors import PERFIL_NAO_CONCLUIDO, erro_negocio
 from app.models.contato import Contato
 from app.models.mensagem_contato import MensagemContato
 from app.models.notificacao import TipoNotificacao
@@ -23,7 +23,7 @@ def create_contato(db: Session, solicitante_id: uuid.UUID, data: ContatoCreateRe
     if solicitante is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Sincronize seu perfil primeiro via POST /auth/sync",
+            detail=PERFIL_NAO_CONCLUIDO,
         )
 
     profissional = db.get(Profissional, data.profissional_id)

@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core.errors import PERFIL_NAO_CONCLUIDO
 from app.models.avaliacao import Avaliacao
 from app.models.demanda import Demanda, StatusDemanda
 from app.models.empresa import Empresa, TipoEmpresa
@@ -121,7 +122,7 @@ def upsert_empresa(db: Session, user_id: uuid.UUID, data: EmpresaUpdateRequest) 
     if profile is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Sincronize seu perfil primeiro via POST /auth/sync",
+            detail=PERFIL_NAO_CONCLUIDO,
         )
     if profile.papel != "empresa":
         raise HTTPException(

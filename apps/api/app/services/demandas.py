@@ -72,9 +72,9 @@ def _nome_empresa(db: Session, empresa_id: uuid.UUID) -> str:
 def exigir_papel(db: Session, user_id: uuid.UUID, papel: Papel) -> Profile:
     profile = db.get(Profile, user_id)
     if profile is None or profile.papel != papel:
-        code = "apenas_empresas" if papel == Papel.empresa else "apenas_profissionais"
+        plural = "empresas" if papel == Papel.empresa else "profissionais"
         raise erro_negocio(
-            status.HTTP_403_FORBIDDEN, code, f"Recurso disponível só para perfis {papel.value}"
+            status.HTTP_403_FORBIDDEN, f"apenas_{plural}", f"Recurso disponível só para {plural}"
         )
     return profile
 

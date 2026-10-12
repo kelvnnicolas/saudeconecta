@@ -4,6 +4,7 @@ from unittest.mock import patch
 from app.core.auth import CurrentUser, get_current_user
 from app.main import app
 from app.models.profile import Papel, Profile
+from tests.fabrica import autenticar
 
 
 def test_upload_avatar_requires_authentication(client):
@@ -92,3 +93,13 @@ def test_upload_avatar_updates_profile_and_returns_url(mock_upload, client, db_s
 
     saved = db_session.get(Profile, user_id)
     assert saved.avatar_url == mock_upload.return_value
+
+
+def test_mensagem_de_perfil_nao_sincronizado_nao_cita_endpoint(client):
+    autenticar(uuid.uuid4())
+
+    resposta = client.put("/empresas/me", json={"nome_fantasia": "Clínica X", "tipo": "clinica"})
+
+    assert resposta.status_code == 400
+    assert "POST" not in resposta.json()["detail"]
+    assert "/auth/sync" not in resposta.json()["detail"]

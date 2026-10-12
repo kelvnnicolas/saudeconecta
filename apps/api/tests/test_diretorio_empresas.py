@@ -113,6 +113,7 @@ def test_diretorio_recusa_empresa(client, db_session):
 
     assert resposta.status_code == 403
     assert resposta.json()["detail"]["code"] == "apenas_profissionais"
+    assert resposta.json()["detail"]["mensagem"] == "Recurso disponível só para profissionais"
 
 
 def test_diretorio_exige_login(client):

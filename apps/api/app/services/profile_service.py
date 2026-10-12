@@ -3,6 +3,7 @@ import uuid
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.errors import PERFIL_NAO_CONCLUIDO
 from app.models.profile import Profile
 from app.schemas.profile import AuthSyncRequest
 from app.storage.supabase_storage import upload_avatar
@@ -41,7 +42,7 @@ def update_avatar(
     if profile is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Sincronize seu perfil primeiro via POST /auth/sync",
+            detail=PERFIL_NAO_CONCLUIDO,
         )
 
     normalized_content_type = (content_type or "").split(";")[0].strip().lower()
