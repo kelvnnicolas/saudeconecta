@@ -4,12 +4,29 @@ import type { Config } from "tailwindcss";
 // Cores resolvem em CSS custom properties definidas em app/globals.css (:root
 // + prefers-color-scheme + [data-theme]), então claro/escuro são o mesmo
 // arquivo de tokens — nada aqui muda entre temas, só os valores das variáveis.
+// Os tokens são var(--x) puros e o Tailwind 3 não consegue aplicar o
+// modificador de opacidade (bg-surface/90, border-outline-variant/30) a eles:
+// a classe simplesmente não é gerada. Com color-mix a mesma classe funciona.
+function comTransparencia(cores: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(cores).map(([nome, valor]) => [
+      nome,
+      valor.startsWith("var(")
+        ? ({ opacityValue }: { opacityValue?: string }) =>
+            opacityValue === undefined
+              ? valor
+              : `color-mix(in srgb, ${valor} calc(${opacityValue} * 100%), transparent)`
+        : valor,
+    ]),
+  ) as unknown as Record<string, string>; // os tipos do Tailwind não declaram a forma função, que ele aceita
+}
+
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   darkMode: "class",
   theme: {
     extend: {
-      colors: {
+      colors: comTransparencia({
         "on-surface": "var(--ink)",
         "on-surface-variant": "var(--ink-soft)",
         "surface-container-lowest": "var(--bg)",
@@ -61,7 +78,7 @@ const config: Config = {
         "inverse-surface": "var(--ink)",
         "inverse-on-surface": "var(--bg)",
         "inverse-primary": "var(--accent-soft)",
-      },
+      }),
       boxShadow: {
         neu: "8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light)",
         "neu-sm": "5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light)",
