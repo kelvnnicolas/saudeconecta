@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -10,6 +10,7 @@ import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { MOCK_ESPECIALIDADES } from "@/lib/mock-data";
 import { type CriarDemandaInput, criarDemandaSchema } from "@/lib/validations/demanda";
 import { api } from "@/lib/api";
+import { useAvisoAoSair } from "@/lib/use-aviso-ao-sair";
 
 const TURNOS_SUGERIDOS = [
   "08:00 - 18:00 (10h)",
@@ -50,14 +51,7 @@ export default function CriarNovaDemandaPage() {
   );
   const temAlteracoesNaoSalvas = algumCampoPreenchido && !isSubmitting && !enviada;
 
-  useEffect(() => {
-    if (!temAlteracoesNaoSalvas) return;
-    function avisar(evento: BeforeUnloadEvent) {
-      evento.preventDefault();
-    }
-    window.addEventListener("beforeunload", avisar);
-    return () => window.removeEventListener("beforeunload", avisar);
-  }, [temAlteracoesNaoSalvas]);
+  useAvisoAoSair(temAlteracoesNaoSalvas);
 
   function aplicarServicoSugerido(servico: string) {
     const atual = descricao.trim();
