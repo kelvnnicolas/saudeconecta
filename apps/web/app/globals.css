@@ -328,3 +328,13 @@
     animation: none;
   }
 }
+
+/* Ícone com tamanho fixo (1em). Enquanto a fonte de ícones não chega, o texto de reserva
+   ("search", "domain_add"...) não pode alargar o layout; sem isso, tudo salta quando ela
+   carrega (CLS medido de 0,046 nas caixas do hero). */
+.material-symbols-outlined {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+}

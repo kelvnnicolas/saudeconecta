@@ -91,12 +91,17 @@ export function HeaderLanding() {
               aria-label="Como funciona?"
               className={`h-10 min-w-10 px-2 sm:px-space-sm rounded-full flex items-center justify-center gap-1 font-label-md text-label-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${textoDoLink}`}
             >
-              <MaterialIcon name="help" className="text-[22px] sm:hidden" />
+              <MaterialIcon name="help" className="text-[22px] sm:!hidden" />
               <span className="hidden sm:inline">Como funciona?</span>
             </a>
 
             {loading && !session ? (
-              <span aria-hidden="true" className="h-10 w-10 sm:w-40" />
+              <span
+                aria-hidden="true"
+                className="invisible flex h-10 items-center whitespace-nowrap px-3 text-[13px] sm:px-space-md sm:text-label-md font-label-md"
+              >
+                Entre para começar
+              </span>
             ) : logado ? (
               <button
                 ref={botaoMenu}

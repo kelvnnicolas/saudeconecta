@@ -47,7 +47,7 @@ export function CaixasAcesso() {
             </span>
             <MaterialIcon
               name="arrow_forward"
-              className={`flex-shrink-0 text-[20px] text-white/80 transition-transform md:hidden lg:block ${SO_COM_MOUSE}:group-hover:translate-x-1`}
+              className={`flex-shrink-0 text-[20px] text-white/80 transition-transform md:!hidden lg:!block ${SO_COM_MOUSE}:group-hover:translate-x-1`}
             />
           </Link>
         </li>
