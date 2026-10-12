@@ -146,7 +146,7 @@ def test_listar_mensagens_ambas_partes_conseguem_ler(client, db_session):
     assert resposta.status_code == 200
 
 
-def test_listar_mensagens_terceiro_recebe_403(client, db_session):
+def test_listar_mensagens_terceiro_recebe_404(client, db_session):
     solicitante_id = criar_empresa(db_session)
     profissional_id = criar_profissional(db_session)
     contato = criar_contato(db_session, solicitante_id, profissional_id)
@@ -155,8 +155,8 @@ def test_listar_mensagens_terceiro_recebe_403(client, db_session):
 
     autenticar(outro_usuario)
     resposta = client.get(f"/contatos/{contato.id}/mensagens")
-    assert resposta.status_code == 403
-    assert resposta.json()["detail"]["code"] == "nao_participante"
+    assert resposta.status_code == 404
+    assert resposta.json()["detail"]["code"] == "contato_inexistente"
 
 
 def test_listar_mensagens_contato_inexistente_404(client, db_session):
@@ -216,7 +216,7 @@ def test_criar_mensagem_ignora_autor_id_do_body(client, db_session):
     assert resposta.json()["autor_id"] == str(solicitante_id)
 
 
-def test_criar_mensagem_terceiro_recebe_403(client, db_session):
+def test_criar_mensagem_terceiro_recebe_404(client, db_session):
     solicitante_id = criar_empresa(db_session)
     profissional_id = criar_profissional(db_session)
     contato = criar_contato(db_session, solicitante_id, profissional_id)
@@ -225,8 +225,8 @@ def test_criar_mensagem_terceiro_recebe_403(client, db_session):
 
     autenticar(outro_usuario)
     resposta = client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": "Oi"})
-    assert resposta.status_code == 403
-    assert resposta.json()["detail"]["code"] == "nao_participante"
+    assert resposta.status_code == 404
+    assert resposta.json()["detail"]["code"] == "contato_inexistente"
 
 
 def test_aceitar_profissional_com_sucesso(client, db_session):
@@ -268,7 +268,7 @@ def test_aceitar_duas_vezes_e_idempotente(client, db_session):
     assert segunda.json()["aceito_em"] == timestamp_original
 
 
-def test_aceitar_terceiro_recebe_403(client, db_session):
+def test_aceitar_terceiro_recebe_404(client, db_session):
     solicitante_id = criar_empresa(db_session)
     profissional_id = criar_profissional(db_session)
     contato = criar_contato(db_session, solicitante_id, profissional_id)
@@ -277,8 +277,8 @@ def test_aceitar_terceiro_recebe_403(client, db_session):
 
     autenticar(outro_usuario)
     resposta = client.post(f"/contatos/{contato.id}/aceitar")
-    assert resposta.status_code == 403
-    assert resposta.json()["detail"]["code"] == "nao_participante"
+    assert resposta.status_code == 404
+    assert resposta.json()["detail"]["code"] == "contato_inexistente"
 
 
 def test_criar_mensagem_corpo_muito_longo_e_rejeitado(client, db_session):

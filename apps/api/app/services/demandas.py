@@ -242,7 +242,7 @@ def demonstrar_interesse(
         raise erro_negocio(
             status.HTTP_400_BAD_REQUEST,
             "perfil_profissional_incompleto",
-            "Complete seu perfil profissional (PUT /profissionais/me) antes",
+            "Complete seu perfil profissional antes de demonstrar interesse.",
         )
     demanda = db.get(Demanda, demanda_id)
     if demanda is None:

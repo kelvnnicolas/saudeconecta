@@ -73,13 +73,11 @@ def list_own_contatos(db: Session, user_id: uuid.UUID) -> list[Contato]:
 
 def _contato_das_partes(db: Session, contato_id: int, user_id: uuid.UUID) -> Contato:
     contato = db.get(Contato, contato_id)
-    if contato is None:
+    # Quem não é parte recebe a mesma resposta de um contato que não existe: os IDs
+    # são sequenciais e um 403 diferente revelaria quais contatos existem.
+    if contato is None or user_id not in (contato.solicitante_id, contato.profissional_id):
         raise erro_negocio(
             status.HTTP_404_NOT_FOUND, "contato_inexistente", "Contato não encontrado"
-        )
-    if user_id not in (contato.solicitante_id, contato.profissional_id):
-        raise erro_negocio(
-            status.HTTP_403_FORBIDDEN, "nao_participante", "Você não faz parte deste contato"
         )
     return contato
 
