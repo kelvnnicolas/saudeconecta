@@ -116,9 +116,8 @@ export default function MeuPerfilPage() {
           <section className="rounded-2xl p-space-md bg-secondary-container/40 border border-secondary-container flex items-start gap-space-xs">
             <MaterialIcon name="info" className="text-[18px] text-on-secondary-container mt-0.5" />
             <p className="font-caption text-caption text-on-secondary-container">
-              Seu perfil ainda não foi sincronizado com a API (falta um{" "}
-              <code>PUT /profissionais/me</code> ou <code>PUT /empresas/me</code> — normalmente
-              feito no cadastro).
+              Não conseguimos carregar os dados do seu perfil. Saia e entre novamente; se o problema
+              continuar, conclua o cadastro para liberar todas as telas.
             </p>
           </section>
         )}
