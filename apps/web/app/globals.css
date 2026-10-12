@@ -196,3 +196,24 @@
     font-size: 16px;
   }
 }
+
+/* Entrada ao rolar da landing (components/landing/Revelar.tsx). A classe .revelar só é
+   posta pelo JavaScript, então sem JS o conteúdo fica visível. */
+.revelar {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
+}
+.revelar[data-visivel] {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .revelar {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

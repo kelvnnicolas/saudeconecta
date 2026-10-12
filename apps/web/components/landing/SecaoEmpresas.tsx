@@ -1,10 +1,11 @@
+import { Revelar } from "./Revelar";
 import { InicioCadastroEmpresa } from "./InicioCadastroEmpresa";
 
 /** Captação de empresas em etapas: só o e-mail primeiro. */
 export function SecaoEmpresas() {
   return (
     <section id="empresas" className="scroll-mt-24 px-gutter md:px-gutter-lg py-space-xl md:py-20">
-      <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-space-lg md:gap-12 items-center rounded-3xl bg-surface-container-lowest neu-surface p-space-lg md:p-12">
+      <Revelar className="max-w-5xl mx-auto grid md:grid-cols-2 gap-space-lg md:gap-12 items-center rounded-3xl bg-surface-container-lowest neu-surface p-space-lg md:p-12">
         <div className="flex flex-col gap-space-sm">
           <span className="self-start rounded-full bg-primary-fixed text-on-primary-fixed px-space-sm py-1 font-label-sm text-label-sm">
             Para empresas
@@ -18,7 +19,7 @@ export function SecaoEmpresas() {
           </p>
         </div>
         <InicioCadastroEmpresa />
-      </div>
+      </Revelar>
     </section>
   );
 }

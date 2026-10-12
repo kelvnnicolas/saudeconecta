@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { CTA_VIDRO } from "./estilos";
+import { Revelar } from "./Revelar";
 
 /** Para profissionais + CTA final. */
 export function SecaoProfissionais() {
   return (
     <section id="profissionais" className="scroll-mt-24 px-gutter md:px-gutter-lg pb-space-xl md:pb-20">
-      <div className="relative isolate overflow-hidden max-w-6xl mx-auto rounded-3xl bg-gradient-to-br from-[#6d3fd1] via-[#4f2aa8] to-[#1b1238] text-white p-space-lg md:p-14">
+      <Revelar className="relative isolate overflow-hidden max-w-6xl mx-auto rounded-3xl bg-gradient-to-br from-[#6d3fd1] via-[#4f2aa8] to-[#1b1238] text-white p-space-lg md:p-14">
         {/* Pétalas da marca, decorativas */}
         <svg aria-hidden="true" viewBox="0 0 60 60" className="absolute -right-16 -bottom-20 w-80 h-80 md:w-[420px] md:h-[420px] -z-10 opacity-25">
           <circle cx="30" cy="18" r="12" fill="#3B82F6" />
@@ -38,7 +39,7 @@ export function SecaoProfissionais() {
             </Link>
           </div>
         </div>
-      </div>
+      </Revelar>
     </section>
   );
 }

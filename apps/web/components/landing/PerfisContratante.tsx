@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
+import { Revelar } from "./Revelar";
 
 const PERFIS_CONTRATANTE = [
   {
@@ -41,18 +42,20 @@ export function PerfisContratante() {
   return (
     <section className="px-gutter md:px-gutter-lg pb-space-xl md:pb-20">
       <div className="max-w-6xl mx-auto flex flex-col gap-space-lg">
-        <div className="text-center flex flex-col gap-space-xs">
+        <Revelar className="text-center flex flex-col gap-space-xs">
           <h2 className="font-headline-lg text-headline-lg md:text-[36px] md:leading-[44px] text-on-surface">
             Feito para quem contrata cuidado
           </h2>
           <p className="font-body-lg text-body-lg text-on-surface-variant">
             Veja como o SaúdeConecta funciona para cada tipo de contratante.
           </p>
-        </div>
+        </Revelar>
         <div className="grid gap-space-md sm:grid-cols-2 lg:grid-cols-4">
-          {PERFIS_CONTRATANTE.map((p) => (
-            <article
+          {PERFIS_CONTRATANTE.map((p, i) => (
+            <Revelar
+              as="article"
               key={p.titulo}
+              atraso={(i % 3) * 80}
               className="flex flex-col gap-space-sm rounded-2xl bg-surface-container-lowest neu-surface p-space-lg"
             >
               <div className="w-11 h-11 rounded-xl bg-primary-fixed text-primary flex items-center justify-center">
@@ -75,7 +78,7 @@ export function PerfisContratante() {
                 {p.cta}
                 <MaterialIcon name="arrow_forward" className="text-[18px]" />
               </Link>
-            </article>
+            </Revelar>
           ))}
         </div>
       </div>
