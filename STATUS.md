@@ -3,7 +3,7 @@
 > **Função:** registro do que já foi feito e do estado atual verificado. Serve para retomar o projeto.
 > **Não guarda tarefas pendentes.** O que fazer a seguir está no [`nextmove.md`](nextmove.md).
 
-**Última atualização:** 2026-10-12 · `main` com 129 commits (todos enviados ao `origin`)
+**Última atualização:** 2026-10-12 · `main` com 131 commits (todos enviados ao `origin`)
 **Produção:** frontend <https://saudeconecta-pi.vercel.app> · API <https://saudeconecta-api.onrender.com> (free tier: ~15 s no primeiro request depois de ociosidade)
 
 ## Como manter este arquivo
