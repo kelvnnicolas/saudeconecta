@@ -56,7 +56,6 @@ export default function BuscarPage() {
             <NotificationBell />
           </div>
         </div>
-        <p className="font-caption text-caption text-on-surface-variant">+1.400 profissionais ativos</p>
         <h1 className="font-headline-lg text-headline-lg text-on-surface">
           Encontre profissionais de saúde para o que você precisa.
         </h1>
