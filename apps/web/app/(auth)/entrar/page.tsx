@@ -8,13 +8,13 @@ import { useForm } from "react-hook-form";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
 import { type LoginInput, loginSchema } from "@/lib/validations/auth";
-import { signInWithFacebook, signInWithGoogle, signInWithPassword } from "@/lib/supabase-client";
+import { signInWithLinkedIn, signInWithGoogle, signInWithPassword } from "@/lib/supabase-client";
 
 export default function EntrarPage() {
   const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
-  const [provedorSocial, setProvedorSocial] = useState<"google" | "facebook" | null>(null);
+  const [provedorSocial, setProvedorSocial] = useState<"google" | "linkedin" | null>(null);
   const {
     register,
     handleSubmit,
@@ -49,13 +49,13 @@ export default function EntrarPage() {
     }
   }
 
-  async function entrarComFacebook() {
+  async function entrarComLinkedIn() {
     setErro(null);
-    setProvedorSocial("facebook");
+    setProvedorSocial("linkedin");
     try {
-      await signInWithFacebook();
+      await signInWithLinkedIn();
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não foi possível entrar com o Facebook.");
+      setErro(e instanceof Error ? e.message : "Não foi possível entrar com o LinkedIn.");
     } finally {
       setProvedorSocial(null);
     }
@@ -119,18 +119,18 @@ export default function EntrarPage() {
 
         <button
           type="button"
-          onClick={entrarComFacebook}
+          onClick={entrarComLinkedIn}
           disabled={provedorSocial !== null}
           className="h-12 rounded-xl bg-surface-container-lowest text-on-surface font-label-md text-label-md flex items-center justify-center gap-space-xs neu-surface neu-pressable disabled:opacity-60"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" className="flex-shrink-0">
-            <circle cx="10" cy="10" r="10" fill="#1877F2" />
+            <rect width="20" height="20" rx="4" fill="#0A66C2" />
             <path
-              d="M13.2 12.7l.44-2.7h-2.59V8.28c0-.74.36-1.46 1.53-1.46h1.18V4.53s-1.08-.18-2.11-.18c-2.15 0-3.56 1.3-3.56 3.66v2.06H5.83v2.7h2.26v6.53c.45.07.92.11 1.4.11s.94-.04 1.4-.11V12.7h2.31z"
+              d="M6.94 7.5H4.56V15.5H6.94V7.5ZM5.75 6.44C6.54 6.44 7.06 5.9 7.06 5.22C7.06 4.53 6.55 4 5.77 4C4.99 4 4.46 4.53 4.46 5.22C4.46 5.9 4.98 6.44 5.74 6.44H5.75ZM8.36 15.5H10.74V11.09C10.74 10.85 10.76 10.61 10.83 10.44C11.02 9.96 11.46 9.46 12.2 9.46C13.17 9.46 13.56 10.2 13.56 11.28V15.5H15.94V11C15.94 8.8 14.77 7.78 13.21 7.78C11.93 7.78 11.37 8.49 11.05 8.98H11.07V7.9L8.36 7.9C8.4 8.75 8.36 15.5 8.36 15.5Z"
               fill="#fff"
             />
           </svg>
-          {provedorSocial === "facebook" ? "Conectando..." : "Continuar com Facebook"}
+          {provedorSocial === "linkedin" ? "Conectando..." : "Continuar com LinkedIn"}
         </button>
       </form>
 
