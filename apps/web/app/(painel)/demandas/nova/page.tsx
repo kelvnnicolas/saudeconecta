@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -43,6 +43,21 @@ export default function CriarNovaDemandaPage() {
     defaultValues: { cidade: "", estado: "" },
   });
   const descricao = watch("descricao") ?? "";
+  // isDirty do RHF começa true aqui (select com valueAsNumber vira NaN), então
+  // olhamos direto se algum campo tem conteúdo.
+  const algumCampoPreenchido = Object.values(watch()).some(
+    (v) => v !== undefined && v !== null && v !== "" && !(typeof v === "number" && Number.isNaN(v)),
+  );
+  const temAlteracoesNaoSalvas = algumCampoPreenchido && !isSubmitting && !enviada;
+
+  useEffect(() => {
+    if (!temAlteracoesNaoSalvas) return;
+    function avisar(evento: BeforeUnloadEvent) {
+      evento.preventDefault();
+    }
+    window.addEventListener("beforeunload", avisar);
+    return () => window.removeEventListener("beforeunload", avisar);
+  }, [temAlteracoesNaoSalvas]);
 
   function aplicarServicoSugerido(servico: string) {
     const atual = descricao.trim();
@@ -86,7 +101,11 @@ export default function CriarNovaDemandaPage() {
 
   return (
     <>
-      <Header title="Criar Nova Demanda" backHref="/demandas" />
+      <Header
+        title="Criar Nova Demanda"
+        backHref="/demandas"
+        confirmarSaida={temAlteracoesNaoSalvas ? "Sair sem publicar? Os dados preenchidos serão perdidos." : undefined}
+      />
       <main className="flex-1 pt-16 pb-space-xl px-gutter bg-surface min-h-screen">
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-space-md max-w-sm w-full mx-auto mt-space-sm">
           <div className="flex flex-col gap-1">

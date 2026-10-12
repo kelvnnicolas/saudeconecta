@@ -9,11 +9,14 @@ export function Header({
   title,
   subtitle,
   backHref,
+  confirmarSaida,
   action,
 }: {
   title: string;
   subtitle?: string;
   backHref?: string;
+  /** Quando definido, voltar pede confirmação com esta mensagem (ex.: dados não salvos). */
+  confirmarSaida?: string;
   action?: { icon: string; label: string; onClick?: () => void; href?: string };
 }) {
   return (
@@ -23,6 +26,9 @@ export function Header({
           <Link
             aria-label="Voltar"
             href={backHref}
+            onClick={(e) => {
+              if (confirmarSaida && !window.confirm(confirmarSaida)) e.preventDefault();
+            }}
             className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-on-surface neu-surface-sm neu-pressable transition-colors"
           >
             <MaterialIcon name="arrow_back_ios_new" />
