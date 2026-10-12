@@ -310,3 +310,21 @@
     }
   }
 }
+
+/* Troca de painel em "Como funciona" (components/landing/ComoFunciona.tsx): fade de 200 ms. */
+@keyframes painel-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.painel-fade {
+  animation: painel-fade 0.2s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .painel-fade {
+    animation: none;
+  }
+}
