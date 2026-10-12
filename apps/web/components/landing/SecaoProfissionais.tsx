@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
-import { CTA_VIDRO } from "./estilos";
 import { Revelar } from "./Revelar";
 
 /** Para profissionais + CTA final. */
@@ -29,12 +28,15 @@ export function SecaoProfissionais() {
           <div className="flex flex-col sm:flex-row gap-space-sm pt-1">
             <Link
               href="/cadastro/profissional"
-              className="inline-flex items-center justify-center gap-space-xs h-12 px-space-lg rounded-full bg-white text-[#4f2aa8] font-label-md text-label-md shadow-lg shadow-black/20 transition hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#4f2aa8]"
+              className="vidro-midia bg-white/25 inline-flex items-center justify-center gap-space-xs h-12 px-space-lg rounded-full font-label-md text-label-md transition hover:bg-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               Criar meu perfil grátis
               <MaterialIcon name="arrow_forward" className="text-[18px]" />
             </Link>
-            <Link href="/buscar" className={CTA_VIDRO}>
+            <Link
+              href="/buscar"
+              className="vidro-midia inline-flex items-center justify-center gap-space-xs h-12 px-space-lg rounded-full font-label-md text-label-md transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
               Ver profissionais cadastrados
             </Link>
           </div>
