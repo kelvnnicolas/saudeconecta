@@ -27,7 +27,7 @@ function HeroImagem() {
 export function HeroLanding() {
   return (
     <>
-      <section className="relative isolate overflow-hidden bg-[#1b1238] text-white min-h-[70svh] md:min-h-[760px] lg:min-h-[min(100svh,880px)] flex flex-col">
+      <section data-hero-landing className="relative isolate overflow-hidden bg-[#1b1238] text-white min-h-[70svh] md:min-h-[760px] lg:min-h-[min(100svh,880px)] flex flex-col">
         <HeroImagem />
         {/* Escurece de baixo para cima nos dois tamanhos: os rostos ficam no alto da
             foto e o texto e as caixas ocupam a parte de baixo. */}
