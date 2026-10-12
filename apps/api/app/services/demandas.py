@@ -69,7 +69,7 @@ def _nome_empresa(db: Session, empresa_id: uuid.UUID) -> str:
     return db.get(Empresa, empresa_id).nome_fantasia
 
 
-def _exigir_papel(db: Session, user_id: uuid.UUID, papel: Papel) -> Profile:
+def exigir_papel(db: Session, user_id: uuid.UUID, papel: Papel) -> Profile:
     profile = db.get(Profile, user_id)
     if profile is None or profile.papel != papel:
         code = "apenas_empresas" if papel == Papel.empresa else "apenas_profissionais"
@@ -119,7 +119,7 @@ def criar_demanda(db: Session, user_id: uuid.UUID, data: DemandaCreate) -> Deman
 
 
 def listar_minhas(db: Session, user_id: uuid.UUID) -> list[MinhaDemandaRead]:
-    _exigir_papel(db, user_id, Papel.empresa)
+    exigir_papel(db, user_id, Papel.empresa)
     empresa = db.get(Empresa, user_id)
     if empresa is None:
         return []
@@ -146,7 +146,7 @@ def listar_oportunidades(
     limit: int,
     offset: int,
 ) -> tuple[list[DemandaRead], int]:
-    profile = _exigir_papel(db, user_id, Papel.profissional)
+    profile = exigir_papel(db, user_id, Papel.profissional)
     filtros = [Demanda.status == StatusDemanda.aberta, Demanda.expira_em > func.now()]
 
     if especialidade_id is not None:
@@ -237,7 +237,7 @@ def atualizar_status(
 def demonstrar_interesse(
     db: Session, user_id: uuid.UUID, demanda_id: uuid.UUID, mensagem: str | None
 ) -> Contato:
-    _exigir_papel(db, user_id, Papel.profissional)
+    exigir_papel(db, user_id, Papel.profissional)
     if db.get(Profissional, user_id) is None:
         raise erro_negocio(
             status.HTTP_400_BAD_REQUEST,
