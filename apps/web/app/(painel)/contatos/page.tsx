@@ -154,21 +154,23 @@ export default function MeusContatosPage() {
           )}
         </div>
 
-        <Link
-          href="/buscar"
-          className="mt-space-sm w-full bg-gradient-to-br from-primary-fixed via-surface-container to-surface-container-low rounded-2xl p-space-md neu-surface flex items-center justify-between gap-space-md"
-        >
-          <div className="flex items-center gap-space-sm">
-            <div className="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center flex-shrink-0 neu-surface">
-              <MaterialIcon name="person_search" className="text-[22px]" />
+        {papel === "empresa" && (
+          <Link
+            href="/buscar"
+            className="mt-space-sm w-full bg-gradient-to-br from-primary-fixed via-surface-container to-surface-container-low rounded-2xl p-space-md neu-surface flex items-center justify-between gap-space-md"
+          >
+            <div className="flex items-center gap-space-sm">
+              <div className="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center flex-shrink-0 neu-surface">
+                <MaterialIcon name="person_search" className="text-[22px]" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-title-md text-title-md text-on-surface leading-snug">Precisa de outro especialista?</span>
+                <span className="font-caption text-caption text-on-surface-variant">Encontre profissionais para o que você precisa</span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="font-title-md text-title-md text-on-surface leading-snug">Precisa de outro especialista?</span>
-              <span className="font-caption text-caption text-on-surface-variant">Encontre profissionais para o que você precisa</span>
-            </div>
-          </div>
-          <MaterialIcon name="arrow_forward" className="text-[20px]" />
-        </Link>
+            <MaterialIcon name="arrow_forward" className="text-[20px]" />
+          </Link>
+        )}
       </main>
       <BottomNav />
     </>

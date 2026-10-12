@@ -10,6 +10,7 @@ import { ListaEsqueleto } from "@/components/ui/Skeleton";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { ProfessionalCard } from "@/components/busca/ProfessionalCard";
 import { api } from "@/lib/api";
+import { useCurrentUser } from "@/lib/use-current-user";
 import type { ProfissionalSearchResult } from "@/lib/types";
 
 // Agrupamento de UX só do frontend — GET /profissionais não tem conceito de
@@ -26,6 +27,9 @@ const CATEGORIAS = [
 
 export default function BuscarPage() {
   const searchParams = useSearchParams();
+  const { papel, session } = useCurrentUser();
+  // Publicar demanda é de empresa; visitantes ainda veem e caem no login.
+  const ehProfissional = !!session && papel === "profissional";
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [resultados, setResultados] = useState<ProfissionalSearchResult[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -92,16 +96,18 @@ export default function BuscarPage() {
           </div>
         </div>
 
-        <Link
-          href="/demandas/nova"
-          className="flex items-center justify-between bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-2xl p-space-md neu-surface"
-        >
-          <div className="flex items-center gap-space-sm">
-            <MaterialIcon name="emergency" className="text-[24px]" />
-            <span className="font-title-md text-title-md">Precisa com urgência? Publicar demanda</span>
-          </div>
-          <MaterialIcon name="arrow_forward" />
-        </Link>
+        {!ehProfissional && (
+          <Link
+            href="/demandas/nova"
+            className="flex items-center justify-between bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-2xl p-space-md neu-surface"
+          >
+            <div className="flex items-center gap-space-sm">
+              <MaterialIcon name="emergency" className="text-[24px]" />
+              <span className="font-title-md text-title-md">Precisa com urgência? Publicar demanda</span>
+            </div>
+            <MaterialIcon name="arrow_forward" />
+          </Link>
+        )}
 
         <div>
           <h2 className="font-title-md text-title-md text-on-surface mb-1">Profissionais em destaque</h2>

@@ -115,9 +115,9 @@ export default function PlanosEmpresaPage() {
                   ))}
                 </ul>
                 <span className="font-caption text-caption text-on-surface-variant">
-                  {plano.limite_demandas_ativas != null
-                    ? `Limite de ${plano.limite_demandas_ativas} demandas ativas`
-                    : "Demandas ativas ilimitadas"}
+                  {plano.limite_mensal != null
+                    ? `Até ${plano.limite_mensal} contatos e demandas por mês`
+                    : "Contatos e demandas ilimitados"}
                 </span>
               </button>
             );

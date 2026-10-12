@@ -8,6 +8,7 @@ import { PaginaEsqueleto } from "@/components/ui/Skeleton";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { StarRating } from "@/components/ui/StarRating";
 import { api } from "@/lib/api";
+import { useCurrentUser } from "@/lib/use-current-user";
 import type { AvaliacaoRead, ProfissionalRead } from "@/lib/types";
 
 export default function PerfilPublicoProfissionalPage({ params }: { params: { id: string } }) {
@@ -16,6 +17,9 @@ export default function PerfilPublicoProfissionalPage({ params }: { params: { id
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [favorito, setFavorito] = useState(false);
+  const { papel, session } = useCurrentUser();
+  // Profissionais não iniciam contato com outros profissionais; visitantes veem o botão e caem no login.
+  const podeContatar = !session || papel === "empresa";
 
   useEffect(() => {
     Promise.all([api.getProfissional(params.id), api.listAvaliacoes(params.id)])
@@ -185,6 +189,7 @@ export default function PerfilPublicoProfissionalPage({ params }: { params: { id
           </section>
         </div>
       </main>
+      {podeContatar && (
       <div className="fixed bottom-0 w-full z-50 pb-safe bg-surface/95 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.06)] px-gutter py-space-sm">
         <Link
           href={`/contato/novo?profissional_id=${profissional.user_id}&nome=${encodeURIComponent(profissional.nome)}`}
@@ -194,6 +199,7 @@ export default function PerfilPublicoProfissionalPage({ params }: { params: { id
           Entrar em contato
         </Link>
       </div>
+      )}
     </>
   );
 }

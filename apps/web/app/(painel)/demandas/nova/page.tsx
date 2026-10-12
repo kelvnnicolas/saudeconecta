@@ -9,7 +9,8 @@ import { CidadeEstadoFields } from "@/components/ui/CidadeEstadoFields";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { MOCK_ESPECIALIDADES } from "@/lib/mock-data";
 import { type CriarDemandaInput, criarDemandaSchema } from "@/lib/validations/demanda";
-import { api } from "@/lib/api";
+import { AcaoDoErro } from "@/components/ui/AcaoDoErro";
+import { api, ApiError } from "@/lib/api";
 import { useAvisoAoSair } from "@/lib/use-aviso-ao-sair";
 
 const TURNOS_SUGERIDOS = [
@@ -33,6 +34,7 @@ export default function CriarNovaDemandaPage() {
   const router = useRouter();
   const [enviada, setEnviada] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [codigoErro, setCodigoErro] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
@@ -61,6 +63,7 @@ export default function CriarNovaDemandaPage() {
 
   async function onSubmit(data: CriarDemandaInput) {
     setErro(null);
+    setCodigoErro(null);
     try {
       await api.criarDemanda({
         especialidade_id: data.especialidadeId,
@@ -75,6 +78,7 @@ export default function CriarNovaDemandaPage() {
       setEnviada(true);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível publicar a demanda.");
+      setCodigoErro(e instanceof ApiError ? e.code : null);
     }
   }
 
@@ -182,7 +186,12 @@ export default function CriarNovaDemandaPage() {
             {errors.valorOferecido && <span className="font-caption text-caption text-error">{errors.valorOferecido.message}</span>}
           </label>
 
-          {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">{erro}</p>}
+          {erro && (
+            <div className="flex flex-col gap-space-xs bg-error-container rounded-lg p-space-sm">
+              <p className="font-caption text-caption text-error">{erro}</p>
+              <AcaoDoErro codigo={codigoErro} />
+            </div>
+          )}
 
           <button
             type="submit"

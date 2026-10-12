@@ -234,7 +234,7 @@ export interface InteresseResponse {
 export interface PlanoRead {
   codigo: string;
   nome: string;
-  limite_demandas_ativas: number | null;
+  limite_mensal: number | null;
 }
 
 export interface CheckoutResponse {
@@ -245,8 +245,8 @@ export interface PortalResponse {
   portal_url: string;
 }
 
-export interface UsoDemandas {
-  demandas_ativas: number;
+export interface UsoMensal {
+  usado: number;
   limite: number | null;
 }
 
@@ -255,7 +255,7 @@ export interface MinhaAssinaturaResponse {
   status: StatusAssinatura | null;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
-  uso: UsoDemandas;
+  uso: UsoMensal;
 }
 
 // Corpo estável de erro de regra de negócio (detail.code), conforme README/STATUS.
