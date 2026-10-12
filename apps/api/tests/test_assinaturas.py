@@ -44,8 +44,8 @@ def test_listar_planos_e_publico_e_nao_expoe_price_id(client):
 
     assert response.status_code == 200
     assert response.json() == [
-        {"codigo": "essencial", "nome": "Essencial", "limite_demandas_ativas": 5},
-        {"codigo": "pro", "nome": "Pro", "limite_demandas_ativas": None},
+        {"codigo": "essencial", "nome": "Essencial", "limite_mensal": 50},
+        {"codigo": "pro", "nome": "Pro", "limite_mensal": None},
     ]
 
 
@@ -213,7 +213,7 @@ def test_minha_assinatura_sem_assinatura(client, db_session):
         "status": None,
         "current_period_end": None,
         "cancel_at_period_end": False,
-        "uso": {"demandas_ativas": 0, "limite": None},
+        "uso": {"usado": 0, "limite": 5},
     }
 
 
@@ -233,7 +233,7 @@ def test_minha_assinatura_mostra_plano_status_periodo_e_uso(client, db_session):
     assert body["status"] == "active"
     assert body["current_period_end"].startswith("2026-10-24")
     assert body["cancel_at_period_end"] is True
-    assert body["uso"] == {"demandas_ativas": 2, "limite": 5}
+    assert body["uso"] == {"usado": 2, "limite": 50}
 
 
 def test_minha_assinatura_recusa_profissional(client, db_session):

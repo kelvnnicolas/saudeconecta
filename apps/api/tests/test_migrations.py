@@ -57,12 +57,12 @@ def test_migration_seeds_planos_with_price_ids_from_env():
     with engine.connect() as conn:
         rows = conn.execute(
             sa.text(
-                "SELECT codigo, stripe_price_id, limite_demandas_ativas, ativo "
+                "SELECT codigo, stripe_price_id, limite_mensal, ativo "
                 "FROM planos ORDER BY codigo"
             )
         ).all()
     assert rows == [
-        ("essencial", "price_test_essencial", 5, True),
+        ("essencial", "price_test_essencial", 50, True),
         ("pro", "price_test_pro", None, True),
     ]
 

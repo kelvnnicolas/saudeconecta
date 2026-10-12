@@ -25,7 +25,7 @@ from app.services import email_templates
 from app.services.email_service import enviar_email
 from app.services.entitlements import (
     assinatura_vigente,
-    contar_demandas_abertas,
+    contar_uso_mensal,
     obter_empresa_elegivel,
 )
 from app.services.notificacao_service import registrar_notificacao
@@ -206,7 +206,7 @@ def obter_assinatura_da_empresa(db: Session, user_id: uuid.UUID) -> tuple[Assina
         .order_by(Assinatura.criado_em.desc())
         .limit(1)
     )
-    return assinatura, contar_demandas_abertas(db, user_id)
+    return assinatura, contar_uso_mensal(db, user_id)
 
 
 def construir_evento(payload: bytes, assinatura_header: str | None) -> Any:

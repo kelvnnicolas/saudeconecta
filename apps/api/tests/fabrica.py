@@ -6,7 +6,7 @@ from sqlalchemy import select
 from app.core.auth import CurrentUser, get_current_user
 from app.main import app
 from app.models.assinatura import Assinatura, StatusAssinatura
-from app.models.contato import Contato
+from app.models.contato import Contato, OrigemContato
 from app.models.demanda import Demanda, StatusDemanda
 from app.models.empresa import Empresa, TipoEmpresa
 from app.models.especialidade import Especialidade
@@ -78,12 +78,17 @@ def criar_contato(
     solicitante_id: uuid.UUID,
     profissional_id: uuid.UUID,
     mensagem: str = "Preciso de um profissional para plantão",
+    origem: OrigemContato = OrigemContato.busca,
+    criado_em: datetime | None = None,
 ) -> Contato:
     contato = Contato(
         solicitante_id=solicitante_id,
         profissional_id=profissional_id,
         mensagem=mensagem,
+        origem=origem,
     )
+    if criado_em is not None:
+        contato.criado_em = criado_em
     db.add(contato)
     db.flush()
     return contato
@@ -116,6 +121,7 @@ def criar_demanda(
     cidade: str = "São Paulo",
     status: StatusDemanda = StatusDemanda.aberta,
     expira_em: datetime | None = None,
+    criado_em: datetime | None = None,
 ) -> Demanda:
     demanda = Demanda(
         empresa_id=empresa_id,
@@ -128,6 +134,8 @@ def criar_demanda(
         status=status,
         expira_em=expira_em or datetime.now(UTC) + timedelta(days=30),
     )
+    if criado_em is not None:
+        demanda.criado_em = criado_em
     db.add(demanda)
     db.flush()
     return demanda

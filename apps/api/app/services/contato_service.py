@@ -15,6 +15,7 @@ from app.models.profissional import Profissional
 from app.schemas.contato import ContatoCreateRequest
 from app.services import email_templates
 from app.services.email_service import enviar_email, send_contact_notification_email
+from app.services.entitlements import verificar_contato_direto
 from app.services.notificacao_service import registrar_notificacao
 
 
@@ -31,6 +32,9 @@ def create_contato(db: Session, solicitante_id: uuid.UUID, data: ContatoCreateRe
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profissional não encontrado"
         )
+
+    # Só empresas iniciam contato (profissionais só respondem), dentro da cota mensal.
+    verificar_contato_direto(db, solicitante_id)
 
     contato = Contato(
         solicitante_id=solicitante_id,

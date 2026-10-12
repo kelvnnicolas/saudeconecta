@@ -11,9 +11,10 @@ from app.schemas.assinatura import (
     MinhaAssinaturaResponse,
     PlanoRead,
     PortalResponse,
-    UsoDemandas,
+    UsoMensal,
 )
 from app.services.billing import criar_checkout, criar_portal, obter_assinatura_da_empresa
+from app.services.entitlements import limite_vigente
 
 router = APIRouter(prefix="/assinaturas", tags=["assinaturas"])
 
@@ -61,15 +62,12 @@ def minha_assinatura(
     current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> MinhaAssinaturaResponse:
-    assinatura, demandas_ativas = obter_assinatura_da_empresa(db, current_user.id)
+    assinatura, usado = obter_assinatura_da_empresa(db, current_user.id)
     plano = assinatura.plano if assinatura else None
     return MinhaAssinaturaResponse(
         plano=PlanoRead.model_validate(plano) if plano else None,
         status=assinatura.status if assinatura else None,
         current_period_end=assinatura.current_period_end if assinatura else None,
         cancel_at_period_end=assinatura.cancel_at_period_end if assinatura else False,
-        uso=UsoDemandas(
-            demandas_ativas=demandas_ativas,
-            limite=plano.limite_demandas_ativas if plano else None,
-        ),
+        uso=UsoMensal(usado=usado, limite=limite_vigente(assinatura)),
     )

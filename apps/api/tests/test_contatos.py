@@ -4,6 +4,7 @@ from unittest.mock import patch
 from app.core.auth import CurrentUser, get_current_user
 from app.main import app
 from app.models.contato import Contato
+from app.models.empresa import Empresa, TipoEmpresa
 from app.models.profile import Papel, Profile
 from app.models.profissional import Profissional
 from tests.fabrica import autenticar, criar_contato, criar_empresa, criar_profissional
@@ -30,6 +31,10 @@ def test_create_contato_requires_synced_profile(client):
 def test_create_contato_returns_404_for_unknown_profissional(client, db_session):
     solicitante_id = uuid.uuid4()
     db_session.add(Profile(id=solicitante_id, papel=Papel.empresa, nome="Clínica X"))
+    db_session.flush()
+    db_session.add(
+        Empresa(user_id=solicitante_id, nome_fantasia="Clínica X", tipo=TipoEmpresa.clinica)
+    )
     db_session.commit()
 
     app.dependency_overrides[get_current_user] = lambda: CurrentUser(
@@ -46,6 +51,10 @@ def test_create_contato_returns_404_for_unknown_profissional(client, db_session)
 def test_create_contato_persists_and_notifies_by_email(mock_send_email, client, db_session):
     solicitante_id = uuid.uuid4()
     db_session.add(Profile(id=solicitante_id, papel=Papel.empresa, nome="Clínica X"))
+    db_session.flush()
+    db_session.add(
+        Empresa(user_id=solicitante_id, nome_fantasia="Clínica X", tipo=TipoEmpresa.clinica)
+    )
 
     profissional_id = uuid.uuid4()
     db_session.add(
@@ -286,6 +295,10 @@ def test_criar_mensagem_corpo_muito_longo_e_rejeitado(client, db_session):
 def test_create_contato_gera_notificacao_para_profissional(client, db_session):
     solicitante_id = uuid.uuid4()
     db_session.add(Profile(id=solicitante_id, papel=Papel.empresa, nome="Clínica X"))
+    db_session.flush()
+    db_session.add(
+        Empresa(user_id=solicitante_id, nome_fantasia="Clínica X", tipo=TipoEmpresa.clinica)
+    )
 
     profissional_id = uuid.uuid4()
     db_session.add(
@@ -322,6 +335,10 @@ def test_create_contato_comita_apos_registrar_notificacao(client, db_session):
     # do threadpool do FastAPI, diferente da thread do teste).
     solicitante_id = uuid.uuid4()
     db_session.add(Profile(id=solicitante_id, papel=Papel.empresa, nome="Clínica X"))
+    db_session.flush()
+    db_session.add(
+        Empresa(user_id=solicitante_id, nome_fantasia="Clínica X", tipo=TipoEmpresa.clinica)
+    )
 
     profissional_id = uuid.uuid4()
     db_session.add(
@@ -359,6 +376,10 @@ def test_create_contato_sobrevive_a_falha_de_notificacao(
 ):
     solicitante_id = uuid.uuid4()
     db_session.add(Profile(id=solicitante_id, papel=Papel.empresa, nome="Clínica X"))
+    db_session.flush()
+    db_session.add(
+        Empresa(user_id=solicitante_id, nome_fantasia="Clínica X", tipo=TipoEmpresa.clinica)
+    )
 
     profissional_id = uuid.uuid4()
     db_session.add(
@@ -390,6 +411,10 @@ def test_create_contato_sobrevive_a_falha_de_notificacao(
 def test_create_contato_notifica_depois_do_email_existente(client, db_session):
     solicitante_id = uuid.uuid4()
     db_session.add(Profile(id=solicitante_id, papel=Papel.empresa, nome="Clínica X"))
+    db_session.flush()
+    db_session.add(
+        Empresa(user_id=solicitante_id, nome_fantasia="Clínica X", tipo=TipoEmpresa.clinica)
+    )
 
     profissional_id = uuid.uuid4()
     db_session.add(
