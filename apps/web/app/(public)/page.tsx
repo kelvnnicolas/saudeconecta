@@ -2,6 +2,7 @@ import { HeaderLanding } from "@/components/landing/HeaderLanding";
 import { HeroLanding } from "@/components/landing/HeroLanding";
 import { SecaoEmpresas } from "@/components/landing/SecaoEmpresas";
 import { PerfisContratante } from "@/components/landing/PerfisContratante";
+import { ChamadaEmpresa } from "@/components/landing/ChamadaEmpresa";
 import { ComoFunciona } from "@/components/landing/ComoFunciona";
 import { SecaoProfissionais } from "@/components/landing/SecaoProfissionais";
 import { RodapeLanding } from "@/components/landing/RodapeLanding";
@@ -18,6 +19,7 @@ export default function LandingPage() {
       <HeroLanding />
       <SecaoEmpresas />
       <PerfisContratante />
+      <ChamadaEmpresa />
       <ComoFunciona />
       <SecaoProfissionais />
       <RodapeLanding />
