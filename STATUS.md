@@ -3,7 +3,7 @@
 > **Função:** registro do que já foi feito e do estado atual verificado. Serve para retomar o projeto.
 > **Não guarda tarefas pendentes.** O que fazer a seguir está no [`nextmove.md`](nextmove.md).
 
-**Última atualização:** 2026-10-12 · `main` com 131 commits (todos enviados ao `origin`)
+**Última atualização:** 2026-10-12 · `main` com 133 commits (2 ainda não enviados ao `origin`)
 **Produção:** frontend <https://saudeconecta-pi.vercel.app> · API <https://saudeconecta-api.onrender.com> (free tier: ~15 s no primeiro request depois de ociosidade)
 
 ## Como manter este arquivo
@@ -23,7 +23,7 @@
 |---|---|---|
 | Backend (FastAPI) | ✅ Produção (Render) | Spec do MVP, assinatura B2B, demandas, chat, aceite, notificações, diretório de empresas, regras de contato e cota mensal (plano gratuito, Essencial, Pro). Único item do spec fora: link de pagamento por contato (⏸️). |
 | Frontend (Next.js) | ✅ Produção (Vercel) | App Router + Supabase Auth (e-mail, Google). LinkedIn com código pronto, falta config externa. |
-| Testes do backend | ✅ | 275 passando em 2026-10-12 (suíte inteira, PostgreSQL real), com Black e Ruff limpos. |
+| Testes do backend | ✅ | 285 passando em 2026-10-12 (suíte inteira, PostgreSQL real), com Black e Ruff limpos. |
 | Testes do frontend | ❌ | Sem suíte. CI não roda `tsc` nem lint do `apps/web`. |
 | CI | ✅ | GitHub Actions a cada PR e push na `main`. |
 | Deploy | ✅ | Render com auto-deploy por commit (desde 2026-10-12). Vercel por push. |
@@ -72,6 +72,7 @@
 Mais recente primeiro. Uma linha por entrega; IDs referem-se ao `nextmove.md`.
 
 ### 2026-10-12
+- **B-002** Auditoria de acesso por ID (440f793, só local): todas as rotas com ID têm teste com dois usuários (contatos, mensagens, aceite, demandas, interesse, notificações). Demandas e notificações já negavam corretamente; contatos respondiam 403 para contato alheio e 404 para inexistente, o que revelava quais IDs sequenciais existem. Agora os dois dão o mesmo 404. Nenhum vazamento de dados foi encontrado.
 - Registro profissional opcional no cadastro, até a validação ser definida (commit mais recente da `main`); mensagem de especialidades deixou de aparecer como "Required".
 - **F-002** Segurança de senha (813251a): senha forte (8+ caracteres, maiúscula, minúscula, número e símbolo) com checklist do que falta, campo de confirmação nos dois cadastros e em `/entrar/nova-senha`, botão mostrar/ocultar em todos os campos de senha. Regra em `lib/validations/senha.ts`.
 - "Esqueceu a senha?" abaixo do campo de senha do login, maior, sublinhado e com ícone (813251a).
@@ -199,3 +200,6 @@ Decisões técnicas e de produto já tomadas. Decisões **em aberto** ficam no `
 19. **Registro profissional opcional**: o campo existe no cadastro e no perfil, mas não é
     obrigatório nem validado. Não há selo de "registro verificado" até a validação ser
     definida (F-015 e D-009 no `nextmove.md`).
+20. **Contato alheio responde 404**: quem não é parte de um contato recebe o mesmo 404
+    `contato_inexistente` de um ID que não existe (o código `nao_participante` deixou de
+    existir). Vale para mensagens, envio de mensagem e aceite.
