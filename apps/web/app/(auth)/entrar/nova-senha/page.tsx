@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Logo } from "@/components/ui/Logo";
+import { CampoSenha, ChecklistSenha } from "@/components/ui/CampoSenha";
 import { type NovaSenhaInput, novaSenhaSchema } from "@/lib/validations/auth";
 import { getSession, onAuthStateChange, updatePassword } from "@/lib/supabase-client";
 
@@ -17,6 +18,7 @@ export default function NovaSenhaPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<NovaSenhaInput>({ resolver: zodResolver(novaSenhaSchema) });
 
@@ -78,22 +80,13 @@ export default function NovaSenhaPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-space-sm max-w-sm w-full mx-auto">
           <label className="flex flex-col gap-1">
             <span className="font-label-md text-label-md text-on-surface">Nova senha</span>
-            <input
-              type="password"
-              autoComplete="new-password"
-              {...register("password")}
-              className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
-            />
+            <CampoSenha autoComplete="new-password" {...register("password")} />
             {errors.password && <span className="font-caption text-caption text-error">{errors.password.message}</span>}
           </label>
+          <ChecklistSenha senha={watch("password") ?? ""} />
           <label className="flex flex-col gap-1">
             <span className="font-label-md text-label-md text-on-surface">Confirme a nova senha</span>
-            <input
-              type="password"
-              autoComplete="new-password"
-              {...register("confirmacao")}
-              className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
-            />
+            <CampoSenha autoComplete="new-password" {...register("confirmacao")} />
             {errors.confirmacao && <span className="font-caption text-caption text-error">{errors.confirmacao.message}</span>}
           </label>
 

@@ -8,6 +8,8 @@ import { useForm } from "react-hook-form";
 import { Header } from "@/components/ui/Header";
 import { CidadeEstadoFields } from "@/components/ui/CidadeEstadoFields";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
+import { CampoSenha, ChecklistSenha } from "@/components/ui/CampoSenha";
+import { mensagemDeErroAuth } from "@/lib/erros-auth";
 import { type CadastroEmpresaInput, cadastroEmpresaSchema } from "@/lib/validations/auth";
 import { signUpAndEnsureSession } from "@/lib/supabase-client";
 import { api } from "@/lib/api";
@@ -59,7 +61,7 @@ export default function CadastroEmpresaPage() {
       });
       router.push("/perfil");
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não foi possível concluir o cadastro.");
+      setErro(mensagemDeErroAuth(e, "Não foi possível concluir o cadastro."));
     } finally {
       setEnviando(false);
     }
@@ -117,11 +119,19 @@ export default function CadastroEmpresaPage() {
               <input {...register("telefone")} placeholder="(00) 00000-0000" className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
               {errors.telefone && <span className="font-caption text-caption text-error">{errors.telefone.message}</span>}
             </label>
-            <label className="flex flex-col gap-1">
-              <span className="font-label-md text-label-md text-on-surface">Senha</span>
-              <input type="password" {...register("password")} placeholder="••••••••" className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
-              {errors.password && <span className="font-caption text-caption text-error">{errors.password.message}</span>}
-            </label>
+            <div className="flex flex-col gap-space-xs">
+              <label className="flex flex-col gap-1">
+                <span className="font-label-md text-label-md text-on-surface">Senha</span>
+                <CampoSenha autoComplete="new-password" {...register("password")} />
+                {errors.password && <span className="font-caption text-caption text-error">{errors.password.message}</span>}
+              </label>
+              <ChecklistSenha senha={watch("password") ?? ""} />
+              <label className="flex flex-col gap-1 mt-space-xs">
+                <span className="font-label-md text-label-md text-on-surface">Confirme a senha</span>
+                <CampoSenha autoComplete="new-password" {...register("confirmacao")} />
+                {errors.confirmacao && <span className="font-caption text-caption text-error">{errors.confirmacao.message}</span>}
+              </label>
+            </div>
             <CidadeEstadoFields
               estado={watch("estado") ?? ""}
               cidade={watch("cidade") ?? ""}

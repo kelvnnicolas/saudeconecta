@@ -7,6 +7,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
+import { CampoSenha } from "@/components/ui/CampoSenha";
+import { mensagemDeErroAuth } from "@/lib/erros-auth";
 import { type LoginInput, loginSchema } from "@/lib/validations/auth";
 import { signInWithFacebook, signInWithGoogle, signInWithPassword } from "@/lib/supabase-client";
 
@@ -31,7 +33,7 @@ export default function EntrarPage() {
       await signInWithPassword(data.email, data.password);
       router.push("/buscar");
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não foi possível entrar. Verifique os dados.");
+      setErro(mensagemDeErroAuth(e, "Não foi possível entrar. Verifique os dados."));
     } finally {
       setEnviando(false);
     }
@@ -43,7 +45,7 @@ export default function EntrarPage() {
     try {
       await signInWithGoogle();
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não foi possível entrar com o Google.");
+      setErro(mensagemDeErroAuth(e, "Não foi possível entrar com o Google."));
     } finally {
       setProvedorSocial(null);
     }
@@ -55,7 +57,7 @@ export default function EntrarPage() {
     try {
       await signInWithFacebook();
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não foi possível entrar com o Facebook.");
+      setErro(mensagemDeErroAuth(e, "Não foi possível entrar com o Facebook."));
     } finally {
       setProvedorSocial(null);
     }
@@ -78,18 +80,20 @@ export default function EntrarPage() {
           />
           {errors.email && <span className="font-caption text-caption text-error">{errors.email.message}</span>}
         </label>
-        <label className="flex flex-col gap-1">
-          <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-1">
+          <label className="flex flex-col gap-1">
             <span className="font-label-md text-label-md text-on-surface">Senha</span>
-            <Link href="/entrar/esqueci-senha" className="font-caption text-caption text-primary">Esqueci</Link>
-          </div>
-          <input
-            type="password"
-            {...register("password")}
-            className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-          {errors.password && <span className="font-caption text-caption text-error">{errors.password.message}</span>}
-        </label>
+            <CampoSenha autoComplete="current-password" {...register("password")} />
+            {errors.password && <span className="font-caption text-caption text-error">{errors.password.message}</span>}
+          </label>
+          <Link
+            href="/entrar/esqueci-senha"
+            className="self-start inline-flex items-center gap-1 min-h-[44px] -mt-1 font-label-md text-label-md text-primary underline underline-offset-4"
+          >
+            <MaterialIcon name="lock_reset" className="text-[18px]" />
+            Esqueceu a senha?
+          </Link>
+        </div>
 
         {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">{erro}</p>}
 
