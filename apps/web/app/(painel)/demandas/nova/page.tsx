@@ -10,6 +10,8 @@ import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { MOCK_ESPECIALIDADES } from "@/lib/mock-data";
 import { type CriarDemandaInput, criarDemandaSchema } from "@/lib/validations/demanda";
 import { AcaoDoErro } from "@/components/ui/AcaoDoErro";
+import { UsoDaCota } from "@/components/ui/UsoDaCota";
+import { estadoDaCota, useUsoMensal } from "@/lib/use-uso-mensal";
 import { api, ApiError } from "@/lib/api";
 import { useAvisoAoSair } from "@/lib/use-aviso-ao-sair";
 
@@ -35,6 +37,8 @@ export default function CriarNovaDemandaPage() {
   const [enviada, setEnviada] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [codigoErro, setCodigoErro] = useState<string | null>(null);
+  const uso = useUsoMensal();
+  const cotaEsgotada = estadoDaCota(uso) === "esgotada";
   const {
     register,
     handleSubmit,
@@ -186,6 +190,7 @@ export default function CriarNovaDemandaPage() {
             {errors.valorOferecido && <span className="font-caption text-caption text-error">{errors.valorOferecido.message}</span>}
           </label>
 
+          <UsoDaCota uso={uso} />
           {erro && (
             <div className="flex flex-col gap-space-xs bg-error-container rounded-lg p-space-sm">
               <p className="font-caption text-caption text-error">{erro}</p>
@@ -195,7 +200,7 @@ export default function CriarNovaDemandaPage() {
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || cotaEsgotada}
             className="h-12 rounded-xl neu-surface neu-pressable bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center gap-space-xs disabled:opacity-60"
           >
             <MaterialIcon name="send" className="text-[18px]" />
