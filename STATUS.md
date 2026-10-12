@@ -3,7 +3,7 @@
 > **Função:** registro do que já foi feito e do estado atual verificado. Serve para retomar o projeto.
 > **Não guarda tarefas pendentes.** O que fazer a seguir está no [`nextmove.md`](nextmove.md).
 
-**Última atualização:** 2026-10-12 · `main` com 134 commits (todos enviados ao `origin`)
+**Última atualização:** 2026-10-12 · `main` com 136 commits (2 ainda não enviados ao `origin`)
 **Produção:** frontend <https://saudeconecta-pi.vercel.app> · API <https://saudeconecta-api.onrender.com> (free tier: ~15 s no primeiro request depois de ociosidade)
 
 ## Como manter este arquivo
@@ -72,6 +72,7 @@
 Mais recente primeiro. Uma linha por entrega; IDs referem-se ao `nextmove.md`.
 
 ### 2026-10-12
+- **F-012** Uso da cota mensal em `/contato/novo` e `/demandas/nova` (d40bb9c, só local): barra "N de M neste mês", aviso a partir de 80%, e com a cota esgotada mensagem com atalho para os planos e envio desativado. Plano ilimitado não mostra nada.
 - **B-002** Auditoria de acesso por ID (440f793): todas as rotas com ID têm teste com dois usuários (contatos, mensagens, aceite, demandas, interesse, notificações). Demandas e notificações já negavam corretamente; contatos respondiam 403 para contato alheio e 404 para inexistente, o que revelava quais IDs sequenciais existem. Agora os dois dão o mesmo 404. Nenhum vazamento de dados foi encontrado.
 - Registro profissional opcional no cadastro, até a validação ser definida (commit mais recente da `main`); mensagem de especialidades deixou de aparecer como "Required".
 - **F-002** Segurança de senha (813251a): senha forte (8+ caracteres, maiúscula, minúscula, número e símbolo) com checklist do que falta, campo de confirmação nos dois cadastros e em `/entrar/nova-senha`, botão mostrar/ocultar em todos os campos de senha. Regra em `lib/validations/senha.ts`.
