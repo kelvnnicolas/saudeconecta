@@ -69,7 +69,7 @@ export default function CadastroProfissionalPage() {
 
   return (
     <>
-      <Header title="Detalhes do Profissional" backHref="/entrar" />
+      <Header title="Detalhes do Profissional" backHref="/entrar" semEntrar />
       <main className="flex-1 pt-16 pb-space-xl px-gutter bg-surface min-h-screen">
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-space-md max-w-sm w-full mx-auto mt-space-sm">
           <h1 className="font-headline-md text-headline-md text-on-surface">Crie seu perfil profissional</h1>

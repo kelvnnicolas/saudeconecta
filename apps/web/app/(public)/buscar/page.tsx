@@ -8,6 +8,7 @@ import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
 import { ListaEsqueleto } from "@/components/ui/Skeleton";
 import { NotificationBell } from "@/components/ui/NotificationBell";
+import { BotaoEntrar } from "@/components/ui/BotaoEntrar";
 import { ProfessionalCard } from "@/components/busca/ProfessionalCard";
 import { api } from "@/lib/api";
 import { useCurrentUser } from "@/lib/use-current-user";
@@ -76,6 +77,7 @@ export default function BuscarPage() {
         <div className="flex items-center justify-between">
           <Logo />
           <div className="flex items-center gap-space-xs">
+            <BotaoEntrar />
             <NotificationBell />
           </div>
         </div>

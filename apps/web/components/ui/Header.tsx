@@ -4,6 +4,7 @@ import Link from "next/link";
 import { MaterialIcon } from "./MaterialIcon";
 import { Logo } from "./Logo";
 import { NotificationBell } from "./NotificationBell";
+import { BotaoEntrar } from "./BotaoEntrar";
 
 export function Header({
   title,
@@ -11,6 +12,7 @@ export function Header({
   backHref,
   confirmarSaida,
   action,
+  semEntrar = false,
 }: {
   title: string;
   subtitle?: string;
@@ -18,9 +20,11 @@ export function Header({
   /** Quando definido, voltar pede confirmação com esta mensagem (ex.: dados não salvos). */
   confirmarSaida?: string;
   action?: { icon: string; label: string; onClick?: () => void; href?: string };
+  /** Esconde o "Entrar" (telas de cadastro, que já têm o caminho de volta ao login). */
+  semEntrar?: boolean;
 }) {
   return (
-    <header className="fixed top-0 w-full z-50 pt-safe bg-surface/90 backdrop-blur-xl border-b border-[color:var(--line)]">
+    <header className="vidro-topo fixed top-0 w-full z-50 pt-safe">
       <div className="h-16 px-gutter flex items-center gap-space-sm">
         {backHref && (
           <Link
@@ -65,6 +69,7 @@ export function Header({
               <MaterialIcon name={action.icon} />
             </button>
           ))}
+        {!semEntrar && <BotaoEntrar />}
         <NotificationBell />
       </div>
     </header>
