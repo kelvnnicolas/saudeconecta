@@ -329,12 +329,38 @@
   }
 }
 
-/* Ícone com tamanho fixo (1em). Enquanto a fonte de ícones não chega, o texto de reserva
-   ("search", "domain_add"...) não pode alargar o layout; sem isso, tudo salta quando ela
-   carrega (CLS medido de 0,046 nas caixas do hero). */
+/* Fonte de ícones hospedada no projeto (T-016): arquivo de public/fonts, só com os eixos que
+   o app usa (peso 400 e preenchimento 0..1). Antes vinha do Google Fonts com todos os eixos
+   (3,9 MB) e com CSS externo bloqueando o primeiro desenho. Licença Apache 2.0.
+   Para mudar eixos, baixe outro arquivo em fonts.googleapis.com/css2?family=Material+Symbols+Outlined
+   e meça de novo (Lighthouse). `font-display: block` esconde o texto de reserva até a fonte chegar. */
+@font-face {
+  font-family: "Material Symbols Outlined";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("/fonts/material-symbols-outlined.woff2") format("woff2");
+}
+
+/* Mesmas propriedades que o CSS do Google definia para a classe, mais o tamanho fixo (1em):
+   enquanto a fonte não chega, o texto de reserva ("search", "domain_add"...) não pode alargar
+   o layout; sem isso tudo salta quando ela carrega (CLS medido de 0,046 nas caixas do hero). */
 .material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
   display: inline-block;
   width: 1em;
   height: 1em;
   overflow: hidden;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: "liga";
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
 }
