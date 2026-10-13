@@ -57,6 +57,14 @@ async function carregar(session: Session | null) {
   }
   const papel: Papel =
     session.user.user_metadata?.papel === "empresa" ? "empresa" : "profissional";
+  // Na primeira carga publica a sessão antes do perfil: quem só precisa saber se há login
+  // (header da landing) não espera a API, que no plano gratuito do Render pode demorar a
+  // acordar. `loading` continua true até o perfil chegar, então as telas do painel seguem
+  // esperando como antes. Em recargas (refresh, renovação do token) não repete, para não
+  // desmontar a tela que está aberta.
+  if (estado.loading && geracao === minhaGeracao) {
+    emitir({ loading: true, session, papel, profissional: null, empresa: null });
+  }
   try {
     if (papel === "empresa") {
       const empresa = await api.getEmpresa(session.user.id);

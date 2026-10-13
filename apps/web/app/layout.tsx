@@ -29,9 +29,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `(function(){try{var s=localStorage.getItem("saudeconecta:theme");var t=(s==="dark"||s==="system")?s:"light";if(t!=="system")document.documentElement.setAttribute("data-theme",t);if(s!==t)localStorage.setItem("saudeconecta:theme",t);}catch(e){}})();`,
           }}
         />
+        {/* Fonte de ícones hospedada no projeto (ver app/globals.css e T-016). */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-          rel="stylesheet"
+          rel="preload"
+          href="/fonts/material-symbols-outlined.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
         />
         <meta
           name="viewport"

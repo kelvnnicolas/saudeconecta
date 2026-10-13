@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,6 +14,7 @@ import { type CadastroEmpresaInput, cadastroEmpresaSchema } from "@/lib/validati
 import { signUpAndEnsureSession } from "@/lib/supabase-client";
 import { api } from "@/lib/api";
 import type { TipoEmpresa } from "@/lib/types";
+import { consumirEmailCadastro } from "@/lib/cadastro-prefill";
 
 const TIPOS: { value: TipoEmpresa; label: string; icon: string }[] = [
   { value: "pessoa_fisica", label: "Pessoa Física / Família", icon: "family_restroom" },
@@ -37,6 +38,17 @@ export default function CadastroEmpresaPage() {
     defaultValues: { tipo: "pessoa_fisica", cidade: "", estado: "" },
   });
   const tipoSelecionado = watch("tipo");
+
+  // Vindo da landing: e-mail do cartão "comece pelo e-mail" (sessionStorage)
+  // e tipo de empresa dos cards por contratante (?tipo=clinica etc.). Lido no
+  // efeito, e não com useSearchParams, para a página continuar estática sem
+  // precisar de Suspense.
+  useEffect(() => {
+    const tipo = new URLSearchParams(window.location.search).get("tipo");
+    if (tipo && TIPOS.some((t) => t.value === tipo)) setValue("tipo", tipo as TipoEmpresa);
+    const email = consumirEmailCadastro();
+    if (email) setValue("email", email);
+  }, [setValue]);
 
   async function onSubmit(data: CadastroEmpresaInput) {
     setErro(null);
@@ -69,7 +81,7 @@ export default function CadastroEmpresaPage() {
 
   return (
     <>
-      <Header title="Cadastro de Empresa/Pessoa" backHref="/entrar" />
+      <Header title="Cadastro de Empresa/Pessoa" backHref="/entrar" semEntrar />
       <main className="flex-1 pt-16 pb-space-xl px-gutter bg-surface min-h-screen">
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-space-md max-w-sm w-full mx-auto mt-space-sm">
           <h1 className="font-headline-md text-headline-md text-on-surface">Cadastre-se para contratar</h1>
