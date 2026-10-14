@@ -39,7 +39,7 @@ function Iniciais({ texto }: { texto: string }) {
 
 function CartaoProfissional({ iniciais, nome, detalhe, preco }: { iniciais: string; nome: string; detalhe: string; preco: string }) {
   return (
-    <div className="flex items-center gap-space-sm rounded-2xl bg-surface-container-low p-space-sm">
+    <div className="flex items-center gap-space-sm rounded-2xl bg-on-surface/5 p-space-sm">
       <Iniciais texto={iniciais} />
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="font-label-md text-label-md text-on-surface">{nome}</span>
@@ -57,7 +57,7 @@ function Balao({ de, children }: { de: "empresa" | "profissional"; children: Rea
     <div className={`flex ${empresa ? "justify-end" : "justify-start"}`}>
       <p
         className={`max-w-[85%] rounded-2xl px-space-sm py-2 font-body-md text-body-md ${
-          empresa ? "rounded-br-md bg-primary text-on-primary" : "rounded-bl-md bg-surface-container-high text-on-surface"
+          empresa ? "rounded-br-md bg-primary text-on-primary" : "rounded-bl-md bg-on-surface/10 text-on-surface"
         }`}
       >
         {children}
@@ -69,7 +69,7 @@ function Balao({ de, children }: { de: "empresa" | "profissional"; children: Rea
 function PainelBusque() {
   return (
     <div className="flex flex-col gap-space-sm">
-      <div className="flex h-11 items-center gap-space-xs rounded-xl bg-surface-container-low px-space-sm text-on-surface-variant">
+      <div className="flex h-11 items-center gap-space-xs rounded-xl bg-on-surface/5 px-space-sm text-on-surface-variant">
         <MaterialIcon name="search" className="text-[20px]" />
         <span className="font-body-md text-body-md">Fisioterapia</span>
       </div>
@@ -85,7 +85,7 @@ function PainelConversa() {
       <Balao de="empresa">Preciso de um técnico de enfermagem para plantão noturno na sexta.</Balao>
       <Balao de="profissional">Tenho disponibilidade. Qual o endereço e o horário?</Balao>
       <Balao de="empresa">Clínica Vida, no centro. Das 19h às 7h.</Balao>
-      <div className="mt-space-xs flex flex-col gap-space-xs rounded-2xl bg-surface-container-low p-space-sm">
+      <div className="mt-space-xs flex flex-col gap-space-xs rounded-2xl bg-on-surface/5 p-space-sm">
         <span className="font-caption text-caption text-on-surface-variant">Demanda direta de Clínica Vida</span>
         <span className="flex h-11 items-center justify-center rounded-xl bg-primary font-label-md text-label-md text-on-primary">
           Aceitar
@@ -100,7 +100,7 @@ function PainelAvaliacao() {
     <div className="flex flex-col gap-space-sm">
       <span className="font-title-md text-title-md text-on-surface">Como foi a experiência com Mariana?</span>
       <StarRating nota={5} />
-      <p className="rounded-2xl bg-surface-container-low p-space-sm font-body-md text-body-md text-on-surface">
+      <p className="rounded-2xl bg-on-surface/5 p-space-sm font-body-md text-body-md text-on-surface">
         &ldquo;Pontual e muito atenciosa com os pacientes.&rdquo;
       </p>
       <span className="flex h-11 items-center justify-center rounded-xl bg-primary font-label-md text-label-md text-on-primary">
