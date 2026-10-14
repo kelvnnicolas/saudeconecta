@@ -157,7 +157,7 @@ export default function MeusContatosPage() {
         {papel === "empresa" && (
           <Link
             href="/buscar"
-            className="mt-space-sm w-full bg-gradient-to-br from-primary-fixed via-surface-container to-surface-container-low rounded-2xl p-space-md neu-surface flex items-center justify-between gap-space-md"
+            className="mt-space-sm w-full bg-gradient-to-br from-secondary-container via-surface-container to-surface-container-low rounded-2xl p-space-md neu-surface flex items-center justify-between gap-space-md"
           >
             <div className="flex items-center gap-space-sm">
               <div className="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center flex-shrink-0 neu-surface">

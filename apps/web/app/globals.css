@@ -18,14 +18,17 @@
   --ink-mute: #837e9c;
   --line: #cac5de;
 
-  --accent: #6d3fd1;
-  --accent-2: #5527b8;
-  --accent-soft: #ded4f7;
+  --accent: #642fd9;
+  --accent-2: #4e22b0;
+  --accent-soft: #dcd2f8;
   --accent-ink: #ffffff;
 
-  --secondary: #2f9e6e;
-  --secondary-soft: #d9f2e6;
-  --on-secondary-soft: #1f6b4c;
+  /* Teal da marca: --secondary serve a texto e ícone (4,4:1 sobre o fundo); o teal
+     puro #14b8a6 só aparece em preenchimento e indicador (--secondary-fill). */
+  --secondary: #0f766e;
+  --secondary-fill: #14b8a6;
+  --secondary-soft: #d3f0ec;
+  --on-secondary-soft: #0b4f4a;
 
   --tertiary: #f5a623;
   --tertiary-soft: #fdecc8;
@@ -43,6 +46,9 @@
   --vidro-borda: rgba(255, 255, 255, 0.7);
   --vidro-brilho: rgba(255, 255, 255, 0.95);
   --vidro-sombra: rgba(51, 47, 74, 0.2);
+  --vidro-reflexo: rgba(255, 255, 255, 0.45);
+  /* Curva de mola suave, no estilo das transições do iOS */
+  --mola: cubic-bezier(0.32, 0.72, 0, 1);
 
   color-scheme: light;
 }
@@ -60,9 +66,10 @@
     --accent-soft: #423a5c;
     --accent-ink: #211a3a;
 
-    --secondary: #6bcf9f;
-    --secondary-soft: #1f3a30;
-    --on-secondary-soft: #a9e8c8;
+    --secondary: #2dd4bf;
+    --secondary-fill: #2dd4bf;
+    --secondary-soft: #17393a;
+    --on-secondary-soft: #99f0e3;
 
     --tertiary: #f7bb5c;
     --tertiary-soft: #4a3a1f;
@@ -79,6 +86,7 @@
     --vidro-borda: rgba(255, 255, 255, 0.16);
     --vidro-brilho: rgba(255, 255, 255, 0.2);
     --vidro-sombra: rgba(0, 0, 0, 0.5);
+    --vidro-reflexo: rgba(255, 255, 255, 0.07);
 
     color-scheme: dark;
   }
@@ -96,9 +104,10 @@
   --accent-soft: #423a5c;
   --accent-ink: #211a3a;
 
-  --secondary: #6bcf9f;
-  --secondary-soft: #1f3a30;
-  --on-secondary-soft: #a9e8c8;
+  --secondary: #2dd4bf;
+  --secondary-fill: #2dd4bf;
+  --secondary-soft: #17393a;
+  --on-secondary-soft: #99f0e3;
 
   --tertiary: #f7bb5c;
   --tertiary-soft: #4a3a1f;
@@ -115,6 +124,7 @@
   --vidro-borda: rgba(255, 255, 255, 0.16);
   --vidro-brilho: rgba(255, 255, 255, 0.2);
   --vidro-sombra: rgba(0, 0, 0, 0.5);
+  --vidro-reflexo: rgba(255, 255, 255, 0.07);
 
   color-scheme: dark;
 }
@@ -169,7 +179,7 @@
     box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
   }
   .neu-pressable {
-    transition: box-shadow 0.15s ease, transform 0.15s ease;
+    transition: box-shadow 0.2s var(--mola), transform 0.3s var(--mola);
   }
   .neu-pressable:active {
     box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
@@ -198,6 +208,7 @@
     transition-duration: 0.01ms !important;
   }
   .neu-pressable:active,
+  .vidro-acento:active,
   [class*="active:scale"]:active {
     transform: none !important;
   }
@@ -223,7 +234,7 @@
   transform: translateY(24px);
   transition:
     opacity 0.5s ease,
-    transform 0.5s ease;
+    transform 0.7s var(--mola);
 }
 .revelar[data-visivel] {
   opacity: 1;
@@ -247,7 +258,9 @@
   .vidro,
   .vidro-topo,
   .vidro-base {
-    background: color-mix(in srgb, var(--vidro-tinta) var(--vidro-opacidade), transparent);
+    background:
+      linear-gradient(180deg, var(--vidro-reflexo), transparent 45%),
+      color-mix(in srgb, var(--vidro-tinta) var(--vidro-opacidade), transparent);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
     box-shadow:
@@ -286,13 +299,19 @@
   }
   .vidro-acento {
     color: var(--accent-ink);
-    background: color-mix(in srgb, var(--accent) 80%, transparent);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 55%),
+      color-mix(in srgb, var(--accent) 80%, transparent);
+    transition: transform 0.35s var(--mola), filter 0.2s ease;
     -webkit-backdrop-filter: blur(18px) saturate(180%);
     backdrop-filter: blur(18px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.4);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.5),
       0 10px 24px -8px color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+  .vidro-acento:active {
+    transform: scale(0.97);
   }
   /* Sem backdrop-filter o texto perderia contraste: cai para fundo quase opaco. */
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {

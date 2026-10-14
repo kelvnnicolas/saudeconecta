@@ -6,7 +6,7 @@ import { Revelar } from "./Revelar";
 export function ChamadaEmpresa() {
   return (
     <section className="px-gutter md:px-gutter-lg pb-space-xl md:pb-20">
-      <Revelar className="mx-auto flex max-w-6xl flex-col gap-space-md rounded-2xl bg-primary-fixed p-space-lg md:flex-row md:items-center md:justify-between md:p-space-xl">
+      <Revelar className="mx-auto flex max-w-6xl flex-col gap-space-md rounded-2xl vidro p-space-lg md:flex-row md:items-center md:justify-between md:p-space-xl">
         <div className="flex flex-col gap-1">
           <h2 className="font-title-md text-title-md md:text-[24px] md:leading-[32px] text-on-surface">
             Sua empresa precisa de profissionais de saúde?

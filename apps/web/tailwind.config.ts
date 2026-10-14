@@ -56,7 +56,7 @@ const config: Config = {
         secondary: "var(--secondary)",
         "secondary-container": "var(--secondary-soft)",
         "on-secondary-container": "var(--on-secondary-soft)",
-        "secondary-fixed": "var(--secondary-soft)",
+        "secondary-fixed": "var(--secondary-fill)",
         "secondary-fixed-dim": "var(--secondary-soft)",
         "on-secondary-fixed": "var(--secondary)",
         "on-secondary-fixed-variant": "var(--secondary)",

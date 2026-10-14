@@ -74,7 +74,7 @@ export default function PerfilPublicoProfissionalPage({ params }: { params: { id
         }}
       />
       <main className="flex-1 pt-16 pb-32 bg-surface min-h-screen">
-        <section className="w-full bg-gradient-to-b from-primary-fixed to-surface px-gutter pt-space-lg pb-space-md flex flex-col items-center text-center gap-space-sm">
+        <section className="w-full bg-gradient-to-b from-secondary-container to-surface px-gutter pt-space-lg pb-space-md flex flex-col items-center text-center gap-space-sm">
           <div className="relative">
             {profissional.avatar_url ? (
               <Image
