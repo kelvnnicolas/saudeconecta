@@ -32,6 +32,21 @@ const SERVICOS_SUGERIDOS = [
   "Curativos e cuidados com feridas",
 ];
 
+// Mesma aparência para todos os campos; as sugestões (turno, serviço) são botões de verdade,
+// com relevo, porque nesse tema o fundo dos "containers" é igual ao da página.
+const CAMPO =
+  "h-12 w-full min-w-0 px-space-md rounded-xl bg-surface-container-lowest text-on-surface placeholder:text-outline neu-inset-sm focus:outline-none focus:ring-2 focus:ring-primary";
+const SUGESTAO =
+  "min-h-9 px-space-sm py-1.5 rounded-full text-on-surface-variant font-caption text-caption shadow-[3px_3px_6px_var(--shadow-dark),-3px_-3px_6px_var(--shadow-light)] neu-pressable focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+
+// Data de hoje no fuso do aparelho (AAAA-MM-DD), para não oferecer dias que já passaram.
+function hojeIso() {
+  const agora = new Date();
+  const mes = String(agora.getMonth() + 1).padStart(2, "0");
+  const dia = String(agora.getDate()).padStart(2, "0");
+  return `${agora.getFullYear()}-${mes}-${dia}`;
+}
+
 export default function CriarNovaDemandaPage() {
   const router = useRouter();
   const [enviada, setEnviada] = useState(false);
@@ -122,7 +137,7 @@ export default function CriarNovaDemandaPage() {
             <select
               {...register("especialidadeId", { valueAsNumber: true })}
               defaultValue=""
-              className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm"
+              className={CAMPO}
             >
               <option value="" disabled>Selecione a especialidade</option>
               {MOCK_ESPECIALIDADES.map((e) => (
@@ -140,21 +155,26 @@ export default function CriarNovaDemandaPage() {
             />
           <label className="flex flex-col gap-1">
             <span className="font-label-md text-label-md text-on-surface">Bairro (opcional)</span>
-            <input {...register("bairro")} className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
+            <input {...register("bairro")} className={CAMPO} />
           </label>
 
           <label className="flex flex-col gap-1">
             <span className="font-label-md text-label-md text-on-surface">Data de início</span>
-            <input type="date" {...register("dataInicio")} className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
+            <input
+              type="date"
+              min={hojeIso()}
+              {...register("dataInicio")}
+              className={`${CAMPO} campo-data ${watch("dataInicio") ? "" : "text-outline"}`}
+            />
             {errors.dataInicio && <span className="font-caption text-caption text-error">{errors.dataInicio.message}</span>}
           </label>
 
           <label className="flex flex-col gap-1">
             <span className="font-label-md text-label-md text-on-surface">Turno / horário</span>
-            <input {...register("turno")} placeholder="Ex.: 07:00 - 19:00 (12h Dia)" className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
+            <input {...register("turno")} placeholder="Ex.: 07:00 - 19:00 (12h Dia)" className={CAMPO} />
             <div className="flex flex-wrap gap-space-xs mt-1">
               {TURNOS_SUGERIDOS.map((t) => (
-                <button type="button" key={t} onClick={() => setValue("turno", t, { shouldValidate: true })} className="px-space-sm py-1 rounded-full bg-surface-container-low text-on-surface-variant font-caption text-caption">
+                <button type="button" key={t} onClick={() => setValue("turno", t, { shouldValidate: true })} className={SUGESTAO}>
                   {t}
                 </button>
               ))}
@@ -172,11 +192,11 @@ export default function CriarNovaDemandaPage() {
               rows={4}
               maxLength={500}
               placeholder="Conte mais sobre o que você precisa..."
-              className="px-space-md py-space-sm rounded-xl bg-surface-container-lowest neu-inset-sm resize-none"
+              className="w-full min-w-0 px-space-md py-space-sm rounded-xl bg-surface-container-lowest text-on-surface placeholder:text-outline neu-inset-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <div className="flex flex-wrap gap-space-xs">
               {SERVICOS_SUGERIDOS.map((s) => (
-                <button type="button" key={s} onClick={() => aplicarServicoSugerido(s)} className="px-space-sm py-1 rounded-full bg-surface-container-low text-on-surface-variant font-caption text-caption">
+                <button type="button" key={s} onClick={() => aplicarServicoSugerido(s)} className={SUGESTAO}>
                   {s}
                 </button>
               ))}
@@ -186,7 +206,7 @@ export default function CriarNovaDemandaPage() {
 
           <label className="flex flex-col gap-1">
             <span className="font-label-md text-label-md text-on-surface">Remuneração oferecida (opcional)</span>
-            <input type="number" step="0.01" {...register("valorOferecido")} placeholder="Ex.: 180" className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
+            <input type="number" step="0.01" min="0" inputMode="decimal" {...register("valorOferecido")} placeholder="Ex.: 180" className={CAMPO} />
             {errors.valorOferecido && <span className="font-caption text-caption text-error">{errors.valorOferecido.message}</span>}
           </label>
 
@@ -207,7 +227,7 @@ export default function CriarNovaDemandaPage() {
             Publicar demanda
           </button>
           <span className="text-center font-caption text-caption text-on-surface-variant">
-            Sem taxas para publicação inicial &middot; cancele quando desejar
+            Publicar uma demanda usa 1 do limite mensal do seu plano.
           </span>
         </form>
       </main>

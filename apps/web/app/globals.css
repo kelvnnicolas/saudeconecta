@@ -364,3 +364,35 @@
   -webkit-font-feature-settings: "liga";
   -webkit-font-smoothing: antialiased;
 }
+
+/* Campo de data (nova demanda): o controle nativo varia entre navegadores. Aqui ele tem a
+   altura dos outros campos, o texto alinhado à esquerda (o iOS centraliza) e o ícone do
+   calendário com área de toque de 44 px e legível no tema escuro. */
+.campo-data {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 3rem;
+  text-align: left;
+  display: block;
+}
+.campo-data::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.5em;
+}
+.campo-data::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  box-sizing: content-box;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0.625rem;
+  margin: 0 -0.5rem 0 0;
+  opacity: 0.7;
+}
+:root[data-theme="dark"] .campo-data::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .campo-data::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+}
