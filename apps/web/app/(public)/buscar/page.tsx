@@ -73,7 +73,7 @@ export default function BuscarPage() {
 
   return (
     <>
-      <main className="flex-1 pt-space-md pb-24 px-gutter flex flex-col gap-space-md bg-surface min-h-screen">
+      <main className={`flex-1 pt-space-md ${session ? "pb-24" : "pb-space-xl"} px-gutter flex flex-col gap-space-md bg-surface min-h-screen`}>
         <div className="flex items-center justify-between">
           <Logo />
           <div className="flex items-center gap-space-xs">
@@ -162,7 +162,8 @@ export default function BuscarPage() {
           </div>
         </div>
       </main>
-      <BottomNav />
+      {/* Visitante tem "Entrar" no topo; a barra leva a telas que exigem login. */}
+      {session && <BottomNav />}
     </>
   );
 }
