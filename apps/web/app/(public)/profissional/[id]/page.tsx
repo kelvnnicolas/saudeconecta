@@ -186,7 +186,7 @@ export default function PerfilPublicoProfissionalPage({ params }: { params: { id
                   </span>
                 </div>
                 {a.comentario && <p className="font-body-md text-body-md text-on-surface">&quot;{a.comentario}&quot;</p>}
-                {/* GET /avaliacoes devolve autor_id, não o nome — rótulo genérico até o backend enriquecer. */}
+                {/* GET /avaliacoes não expõe quem avaliou (B-009) — rótulo genérico. */}
                 <p className="font-caption text-caption text-on-surface-variant">Contratante verificado</p>
               </article>
             ))}
