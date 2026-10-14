@@ -8,6 +8,7 @@ import { Header } from "@/components/ui/Header";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { type NovoContatoInput, novoContatoSchema } from "@/lib/validations/contato";
 import { UsoDaCota } from "@/components/ui/UsoDaCota";
+import { CamposDoFormulario } from "@/components/ui/CamposDoFormulario";
 import { useBloqueioDePlano } from "@/lib/use-bloqueio-de-plano";
 import { api } from "@/lib/api";
 import { useAvisoAoSair } from "@/lib/use-aviso-ao-sair";
@@ -72,19 +73,22 @@ export default function NovoContatoPage() {
             <span className="font-caption text-caption text-on-surface-variant">Enviando para</span>
             <h1 className="font-title-md text-title-md text-on-surface">{nome}</h1>
           </div>
-          <label className="flex flex-col gap-1">
-            <span className="font-label-md text-label-md text-on-surface">Mensagem</span>
-            <textarea
-              {...register("mensagem")}
-              rows={5}
-              maxLength={1000}
-              placeholder="Descreva a necessidade, cuidados requeridos, medicamentos ou tipo de procedimento..."
-              className="px-space-md py-space-sm rounded-xl bg-surface-container-lowest neu-inset-sm resize-none"
-            />
-            <span className="self-end font-caption text-caption text-on-surface-variant">{mensagem.length}/1000</span>
-            {errors.mensagem && <span className="font-caption text-caption text-error">{errors.mensagem.message}</span>}
-          </label>
+
           <UsoDaCota uso={uso} plano={plano} contexto="contato" pagamentoPendente={pagamentoPendente} />
+
+          <CamposDoFormulario bloqueado={bloqueado}>            <label className="flex flex-col gap-1">
+              <span className="font-label-md text-label-md text-on-surface">Mensagem</span>
+              <textarea
+                {...register("mensagem")}
+                rows={5}
+                maxLength={1000}
+                placeholder="Descreva a necessidade, cuidados requeridos, medicamentos ou tipo de procedimento..."
+                className="px-space-md py-space-sm rounded-xl bg-surface-container-lowest neu-inset-sm resize-none"
+              />
+              <span className="self-end font-caption text-caption text-on-surface-variant">{mensagem.length}/1000</span>
+              {errors.mensagem && <span className="font-caption text-caption text-error">{errors.mensagem.message}</span>}
+            </label>
+          </CamposDoFormulario>
           {erro && (
             <p role="alert" className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">
               {erro}
