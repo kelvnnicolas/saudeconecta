@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { Header } from "@/components/ui/Header";
 import { CidadeEstadoFields } from "@/components/ui/CidadeEstadoFields";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
-import { MOCK_ESPECIALIDADES } from "@/lib/mock-data";
+import { useEspecialidades } from "@/lib/use-especialidades";
 import { type CriarDemandaInput, criarDemandaSchema } from "@/lib/validations/demanda";
 import { UsoDaCota } from "@/components/ui/UsoDaCota";
 import { CamposDoFormulario } from "@/components/ui/CamposDoFormulario";
@@ -52,6 +52,7 @@ export default function CriarNovaDemandaPage() {
   const [enviada, setEnviada] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const { uso, plano, bloqueado, pagamentoPendente, tratarErro } = useBloqueioDePlano();
+  const { especialidades, carregando, erro: erroEspecialidades } = useEspecialidades();
   const {
     register,
     handleSubmit,
@@ -139,11 +140,16 @@ export default function CriarNovaDemandaPage() {
                 defaultValue=""
                 className={CAMPO}
               >
-                <option value="" disabled>Selecione a especialidade</option>
-                {MOCK_ESPECIALIDADES.map((e) => (
+                <option value="" disabled>{carregando ? "Carregando especialidades..." : "Selecione a especialidade"}</option>
+                {especialidades.map((e) => (
                   <option key={e.id} value={e.id}>{e.nome}</option>
                 ))}
               </select>
+              {erroEspecialidades && (
+                <span role="alert" className="font-caption text-caption text-error">
+                  Não foi possível carregar as especialidades. Recarregue a página.
+                </span>
+              )}
               {errors.especialidadeId && <span className="font-caption text-caption text-error">{errors.especialidadeId.message}</span>}
             </label>
 

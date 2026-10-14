@@ -11,12 +11,13 @@ import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { CampoSenha, ChecklistSenha } from "@/components/ui/CampoSenha";
 import { mensagemDeErroAuth } from "@/lib/erros-auth";
 import { type CadastroProfissionalInput, cadastroProfissionalSchema } from "@/lib/validations/auth";
-import { MOCK_ESPECIALIDADES } from "@/lib/mock-data";
+import { useEspecialidades } from "@/lib/use-especialidades";
 import { signUpAndEnsureSession } from "@/lib/supabase-client";
 import { api } from "@/lib/api";
 
 export default function CadastroProfissionalPage() {
   const router = useRouter();
+  const { especialidades, erro: erroEspecialidades } = useEspecialidades();
   const [especialidadeIds, setEspecialidadeIds] = useState<number[]>([]);
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -111,8 +112,13 @@ export default function CadastroProfissionalPage() {
               <h2 className="font-title-md text-title-md text-on-surface">Especialidade e registro</h2>
               <span className="font-caption text-caption text-on-surface-variant">{especialidadeIds.length} selec.</span>
             </div>
+            {erroEspecialidades && (
+              <p role="alert" className="font-caption text-caption text-error">
+                Não foi possível carregar as especialidades. Recarregue a página.
+              </p>
+            )}
             <div className="flex flex-wrap gap-space-xs">
-              {MOCK_ESPECIALIDADES.map((esp) => {
+              {especialidades.map((esp) => {
                 const ativo = especialidadeIds.includes(esp.id);
                 return (
                   <button

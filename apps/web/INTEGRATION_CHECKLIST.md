@@ -1,8 +1,8 @@
 # Checklist de integração — apps/web ↔ apps/api
 
 Todo formulário e toda listagem já chamam `lib/api.ts` de verdade — não há
-mais mock no caminho principal (só `lib/mock-data.ts` com a lista parcial de
-especialidades, prioridade adiada). Backend rodando com credenciais reais
+mais mock no caminho principal (as especialidades vêm de `GET /especialidades`
+por `lib/use-especialidades.ts`). Backend rodando com credenciais reais
 (Supabase + Stripe test mode) e testado ponta a ponta no browser com contas
 de teste reais — ver seção 4.
 
@@ -133,8 +133,7 @@ rede atrás de "modo de exemplo").
       Básico, não implementado no backend.
 - [ ] **Sem endpoint de detalhe de um único contato** — `contatos/[id]/page.tsx`
       busca a lista toda e filtra no cliente. Ok pra poucos contatos.
-- [ ] **Lista de especialidades incompleta** (prioridade adiada, combinada
-      com você) — `lib/mock-data.ts` ainda tem só 6 das 10 reais.
+- [x] **Lista de especialidades** vem da API (`lib/use-especialidades.ts`), as 10 reais.
 
 ## 4. Teste manual fim a fim
 
