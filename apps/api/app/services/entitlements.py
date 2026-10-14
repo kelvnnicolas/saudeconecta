@@ -9,10 +9,9 @@ from app.core.errors import PERFIL_NAO_CONCLUIDO, erro_negocio
 from app.models.assinatura import STATUS_ENCERRADOS, Assinatura, StatusAssinatura
 from app.models.contato import Contato, OrigemContato
 from app.models.demanda import Demanda
-from app.models.empresa import Empresa, TipoEmpresa
+from app.models.empresa import Empresa
 from app.models.profile import Papel, Profile
 
-TIPOS_ELEGIVEIS = (TipoEmpresa.clinica, TipoEmpresa.hospital, TipoEmpresa.homecare)
 STATUS_LIBERADOS = (StatusAssinatura.active, StatusAssinatura.trialing)
 
 NAO_ELEGIVEL = "nao_elegivel"
@@ -27,12 +26,14 @@ LIMITE_GRATUITO = 5
 def obter_empresa_elegivel(db: Session, user_id: uuid.UUID) -> Empresa:
     profile = db.get(Profile, user_id)
     empresa = db.get(Empresa, user_id) if profile and profile.papel == Papel.empresa else None
-    if empresa is None or empresa.tipo not in TIPOS_ELEGIVEIS:
+    # Todo perfil de empresa com cadastro completo vale, inclusive pessoa física e família:
+    # publicam e assinam sob as mesmas regras de plano (cota mensal).
+    if empresa is None:
         raise erro_negocio(
             status.HTTP_403_FORBIDDEN,
             NAO_ELEGIVEL,
-            "Só empresas do tipo clínica, hospital ou homecare, com cadastro completo, "
-            "podem assinar e publicar demandas",
+            "Só perfis de empresa ou pessoa, com cadastro completo, "
+            "podem assinar e publicar demandas.",
         )
     return empresa
 

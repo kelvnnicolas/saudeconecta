@@ -33,16 +33,36 @@ def test_perfil_que_nao_e_empresa_recebe_403_nao_elegivel(client, db_session):
     assert response.json()["detail"]["code"] == "nao_elegivel"
 
 
-def test_empresa_pessoa_fisica_recebe_403_nao_elegivel(client, db_session):
+def test_pessoa_fisica_publica_no_plano_gratis(client, db_session):
     empresa_id = criar_empresa(db_session, tipo=TipoEmpresa.pessoa_fisica)
-    criar_assinatura(db_session, empresa_id)
+    db_session.commit()
+    autenticar(empresa_id)
+
+    assert _publicar(client, db_session).status_code == 201
+
+
+def test_pessoa_fisica_respeita_o_limite_do_plano_gratis(client, db_session):
+    empresa_id = criar_empresa(db_session, tipo=TipoEmpresa.pessoa_fisica)
+    for _ in range(5):
+        criar_demanda(db_session, empresa_id)
     db_session.commit()
     autenticar(empresa_id)
 
     response = _publicar(client, db_session)
 
-    assert response.status_code == 403
-    assert response.json()["detail"]["code"] == "nao_elegivel"
+    assert response.status_code == 409
+    assert response.json()["detail"]["code"] == "limite_atingido"
+
+
+def test_nao_elegivel_explica_sem_citar_tipo_de_empresa(client, db_session):
+    profissional_id = criar_profissional(db_session)
+    db_session.commit()
+    autenticar(profissional_id)
+
+    mensagem = _publicar(client, db_session).json()["detail"]["mensagem"]
+
+    assert "clínica" not in mensagem.lower()
+    assert "hospital" not in mensagem.lower()
 
 
 def test_empresa_sem_assinatura_publica_no_plano_gratis(client, db_session):

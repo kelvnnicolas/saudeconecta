@@ -53,16 +53,15 @@ def test_checkout_exige_autenticacao(client):
     assert client.post("/assinaturas/checkout", json={"plano_codigo": "pro"}).status_code == 401
 
 
-def test_checkout_recusa_empresa_pessoa_fisica(client, db_session, stripe_mock):
+def test_checkout_aceita_pessoa_fisica(client, db_session, stripe_mock):
     empresa_id = criar_empresa(db_session, tipo=TipoEmpresa.pessoa_fisica)
     db_session.commit()
     autenticar(empresa_id)
 
     response = client.post("/assinaturas/checkout", json={"plano_codigo": "pro"})
 
-    assert response.status_code == 403
-    assert response.json()["detail"]["code"] == "nao_elegivel"
-    stripe_mock[1].assert_not_called()
+    assert response.status_code == 200
+    stripe_mock[1].assert_called_once()
 
 
 def test_checkout_recusa_profissional(client, db_session, stripe_mock):
