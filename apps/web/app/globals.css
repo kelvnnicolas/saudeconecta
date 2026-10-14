@@ -396,3 +396,26 @@
     filter: invert(1);
   }
 }
+
+/* Cadeado do aviso de limite (components/ui/AvisoLimite.tsx): entra com um pequeno "pop". */
+@keyframes cadeado-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.cadeado-pop {
+  animation: cadeado-pop 0.4s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cadeado-pop {
+    animation: none;
+  }
+}

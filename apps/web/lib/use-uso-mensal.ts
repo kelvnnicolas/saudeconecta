@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "./api";
+import type { PlanoResumo } from "./limite-plano";
 import type { UsoMensal } from "./types";
 
 /** Fração da cota a partir da qual avisamos que está acabando. */
@@ -15,21 +16,33 @@ export function estadoDaCota(uso: UsoMensal | null): EstadoDaCota {
   return uso.usado / uso.limite >= FRACAO_DE_AVISO ? "perto" : "livre";
 }
 
+export interface Cota {
+  uso: UsoMensal | null;
+  plano: PlanoResumo | null;
+}
+
 /**
- * Uso do mês (contatos iniciados + demandas publicadas). Se a consulta falhar devolve
- * null e a tela segue normal: quem decide é sempre o servidor, isto é só um aviso.
+ * Uso do mês (contatos iniciados + demandas publicadas) e o plano atual (null = gratuito).
+ * Se a consulta falhar devolve nulos e a tela segue normal: quem decide é sempre o servidor,
+ * isto é só um aviso. `ativo=false` não consulta (telas que também são vistas por quem não é
+ * empresa).
  */
-export function useUsoMensal(): UsoMensal | null {
-  const [uso, setUso] = useState<UsoMensal | null>(null);
+export function useCota(ativo = true): Cota {
+  const [cota, setCota] = useState<Cota>({ uso: null, plano: null });
   useEffect(() => {
-    let ativo = true;
+    if (!ativo) return;
+    let vivo = true;
     api
       .minhaAssinatura()
-      .then((resposta) => ativo && setUso(resposta.uso))
+      .then((resposta) => vivo && setCota({ uso: resposta.uso, plano: resposta.plano }))
       .catch(() => undefined);
     return () => {
-      ativo = false;
+      vivo = false;
     };
-  }, []);
-  return uso;
+  }, [ativo]);
+  return cota;
+}
+
+export function useUsoMensal(): UsoMensal | null {
+  return useCota().uso;
 }

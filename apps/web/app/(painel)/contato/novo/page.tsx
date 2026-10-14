@@ -7,10 +7,9 @@ import { useForm } from "react-hook-form";
 import { Header } from "@/components/ui/Header";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { type NovoContatoInput, novoContatoSchema } from "@/lib/validations/contato";
-import { AcaoDoErro } from "@/components/ui/AcaoDoErro";
 import { UsoDaCota } from "@/components/ui/UsoDaCota";
-import { estadoDaCota, useUsoMensal } from "@/lib/use-uso-mensal";
-import { api, ApiError } from "@/lib/api";
+import { useBloqueioDePlano } from "@/lib/use-bloqueio-de-plano";
+import { api } from "@/lib/api";
 import { useAvisoAoSair } from "@/lib/use-aviso-ao-sair";
 
 export default function NovoContatoPage() {
@@ -20,9 +19,7 @@ export default function NovoContatoPage() {
   const nome = searchParams.get("nome") ?? "o profissional";
   const [enviado, setEnviado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [codigoErro, setCodigoErro] = useState<string | null>(null);
-  const uso = useUsoMensal();
-  const cotaEsgotada = estadoDaCota(uso) === "esgotada";
+  const { uso, plano, bloqueado, pagamentoPendente, tratarErro } = useBloqueioDePlano();
   const {
     register,
     handleSubmit,
@@ -35,13 +32,12 @@ export default function NovoContatoPage() {
 
   async function onSubmit(data: NovoContatoInput) {
     setErro(null);
-    setCodigoErro(null);
     try {
       await api.createContato({ profissional_id: profissionalId, mensagem: data.mensagem });
       setEnviado(true);
     } catch (e) {
+      if (tratarErro(e)) return;
       setErro(e instanceof Error ? e.message : "Não foi possível enviar. Tente novamente.");
-      setCodigoErro(e instanceof ApiError ? e.code : null);
     }
   }
 
@@ -88,20 +84,19 @@ export default function NovoContatoPage() {
             <span className="self-end font-caption text-caption text-on-surface-variant">{mensagem.length}/1000</span>
             {errors.mensagem && <span className="font-caption text-caption text-error">{errors.mensagem.message}</span>}
           </label>
-          <UsoDaCota uso={uso} />
+          <UsoDaCota uso={uso} plano={plano} contexto="contato" pagamentoPendente={pagamentoPendente} />
           {erro && (
-            <div className="flex flex-col gap-space-xs bg-error-container rounded-lg p-space-sm">
-              <p className="font-caption text-caption text-error">{erro}</p>
-              <AcaoDoErro codigo={codigoErro} />
-            </div>
+            <p role="alert" className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">
+              {erro}
+            </p>
           )}
           <button
             type="submit"
-            disabled={isSubmitting || cotaEsgotada}
+            disabled={isSubmitting || bloqueado}
             className="h-12 rounded-xl neu-surface neu-pressable bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center gap-space-xs disabled:opacity-60"
           >
-            <MaterialIcon name="send" className="text-[18px]" />
-            Enviar proposta
+            <MaterialIcon name={bloqueado ? "lock" : "send"} className="text-[18px]" />
+            {bloqueado ? (pagamentoPendente ? "Pagamento pendente" : "Limite do mês atingido") : "Enviar proposta"}
           </button>
         </form>
       </main>
