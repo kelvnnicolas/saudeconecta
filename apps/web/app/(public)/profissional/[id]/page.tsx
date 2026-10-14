@@ -9,6 +9,7 @@ import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { StarRating } from "@/components/ui/StarRating";
 import { api } from "@/lib/api";
 import { useCurrentUser } from "@/lib/use-current-user";
+import { estadoDaCota, useCota } from "@/lib/use-uso-mensal";
 import type { AvaliacaoRead, ProfissionalRead } from "@/lib/types";
 
 export default function PerfilPublicoProfissionalPage({ params }: { params: { id: string } }) {
@@ -20,6 +21,9 @@ export default function PerfilPublicoProfissionalPage({ params }: { params: { id
   const { papel, session } = useCurrentUser();
   // Profissionais não iniciam contato com outros profissionais; visitantes veem o botão e caem no login.
   const podeContatar = !session || papel === "empresa";
+  // Só empresas logadas têm cota; para visitante e profissional não há o que consultar.
+  const { uso, plano } = useCota(!!session && papel === "empresa");
+  const limiteAtingido = estadoDaCota(uso) === "esgotada";
 
   useEffect(() => {
     Promise.all([api.getProfissional(params.id), api.listAvaliacoes(params.id)])
@@ -70,7 +74,7 @@ export default function PerfilPublicoProfissionalPage({ params }: { params: { id
         }}
       />
       <main className="flex-1 pt-16 pb-32 bg-surface min-h-screen">
-        <section className="w-full bg-gradient-to-b from-primary-fixed to-surface px-gutter pt-space-lg pb-space-md flex flex-col items-center text-center gap-space-sm">
+        <section className="w-full bg-gradient-to-b from-secondary-container to-surface px-gutter pt-space-lg pb-space-md flex flex-col items-center text-center gap-space-sm">
           <div className="relative">
             {profissional.avatar_url ? (
               <Image
@@ -189,7 +193,31 @@ export default function PerfilPublicoProfissionalPage({ params }: { params: { id
           </section>
         </div>
       </main>
-      {podeContatar && (
+      {podeContatar && limiteAtingido && uso && (
+        <div className="vidro-base fixed bottom-0 z-50 w-full pb-safe px-gutter py-space-sm">
+          <div role="status" className="flex items-center gap-space-sm">
+            <span
+              aria-hidden="true"
+              className="cadeado-pop flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-primary-fixed text-primary"
+            >
+              <MaterialIcon name="lock" filled />
+            </span>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <span className="font-label-md text-label-md text-on-surface">Limite do mês atingido</span>
+              <span className="font-caption text-caption text-on-surface-variant">
+                {uso.usado} de {uso.limite} usos do mês. Para contatar, conheça os planos.
+              </span>
+            </div>
+            <Link
+              href={plano ? "/assinatura" : "/empresa/planos"}
+              className="vidro-acento inline-flex h-11 flex-shrink-0 items-center rounded-full px-space-md font-label-md text-label-md transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              {plano ? "Gerenciar" : "Ver planos"}
+            </Link>
+          </div>
+        </div>
+      )}
+      {podeContatar && !limiteAtingido && (
       <div className="fixed bottom-0 w-full z-50 pb-safe bg-surface/95 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.06)] px-gutter py-space-sm">
         <Link
           href={`/contato/novo?profissional_id=${profissional.user_id}&nome=${encodeURIComponent(profissional.nome)}`}

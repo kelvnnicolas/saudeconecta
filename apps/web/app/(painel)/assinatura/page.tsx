@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Header } from "@/components/ui/Header";
 import { PaginaEsqueleto } from "@/components/ui/Skeleton";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
+import { AvisoLimite } from "@/components/ui/AvisoLimite";
+import { estadoDaCota } from "@/lib/use-uso-mensal";
 import { assinaturaStatusLabel } from "@/components/ui/StatusBadge";
 import { api, ApiError } from "@/lib/api";
 import type { MinhaAssinaturaResponse } from "@/lib/types";
@@ -117,6 +119,10 @@ export default function MinhaAssinaturaPage() {
             <div className="h-full bg-primary" style={{ width: `${percentualUso}%` }} />
           </div>
         </section>
+
+        {estadoDaCota(assinatura.uso) === "esgotada" && (
+          <AvisoLimite uso={assinatura.uso} plano={plano} contexto="geral" />
+        )}
 
         {plano && (
           <section className="bg-surface-container-lowest rounded-2xl neu-surface p-space-md flex flex-col gap-space-sm">

@@ -102,7 +102,7 @@ export function PerfisContratante() {
                 className="w-[85%] flex-shrink-0 snap-start sm:w-auto"
               >
                 <article className="flex h-full flex-col gap-space-sm rounded-2xl bg-surface-container-lowest neu-surface p-space-lg">
-                  <div className="w-11 h-11 rounded-xl bg-primary-fixed text-primary flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-xl bg-secondary-container text-on-secondary-container flex items-center justify-center">
                     <MaterialIcon name={p.icon} />
                   </div>
                   <h3 className="font-title-md text-title-md text-on-surface">{p.titulo}</h3>

@@ -9,7 +9,9 @@ import { Logo } from "@/components/ui/Logo";
 import { ListaEsqueleto } from "@/components/ui/Skeleton";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { DemandaStatusBadge } from "@/components/ui/StatusBadge";
+import { ModalLimite } from "@/components/ui/ModalLimite";
 import { api, ApiError } from "@/lib/api";
+import { estadoDaCota, useCota } from "@/lib/use-uso-mensal";
 import type { DemandaDetalheEmpresa, InteressadoRead, MinhaDemandaRead, StatusDemanda } from "@/lib/types";
 
 const ABAS: { value: "todas" | StatusDemanda; label: string }[] = [
@@ -20,6 +22,9 @@ const ABAS: { value: "todas" | StatusDemanda; label: string }[] = [
 ];
 
 export default function MinhasDemandasPage() {
+  const { uso, plano } = useCota();
+  const limiteAtingido = estadoDaCota(uso) === "esgotada";
+  const [limiteAberto, setLimiteAberto] = useState(false);
   const [demandas, setDemandas] = useState<MinhaDemandaRead[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -80,13 +85,25 @@ export default function MinhasDemandasPage() {
           </div>
           <div className="flex items-center gap-space-xs">
             <NotificationBell />
-            <Link
-              href="/demandas/nova"
-              aria-label="Nova demanda"
-              className="w-11 h-11 flex items-center justify-center rounded-full bg-primary text-on-primary neu-surface"
-            >
-              <MaterialIcon name="add" />
-            </Link>
+            {limiteAtingido && uso ? (
+              <button
+                type="button"
+                onClick={() => setLimiteAberto(true)}
+                aria-haspopup="dialog"
+                aria-label="Nova demanda (limite do mês atingido)"
+                className="w-11 h-11 flex items-center justify-center rounded-full bg-primary text-on-primary neu-surface"
+              >
+                <MaterialIcon name="lock" />
+              </button>
+            ) : (
+              <Link
+                href="/demandas/nova"
+                aria-label="Nova demanda"
+                className="w-11 h-11 flex items-center justify-center rounded-full bg-primary text-on-primary neu-surface"
+              >
+                <MaterialIcon name="add" />
+              </Link>
+            )}
           </div>
         </div>
 
@@ -189,6 +206,9 @@ export default function MinhasDemandasPage() {
           )}
         </div>
       </main>
+      {uso && (
+        <ModalLimite aberto={limiteAberto} onFechar={() => setLimiteAberto(false)} uso={uso} plano={plano} contexto="demanda" />
+      )}
       <BottomNav />
     </>
   );

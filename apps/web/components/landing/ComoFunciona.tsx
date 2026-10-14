@@ -31,7 +31,7 @@ const PASSOS = [
 
 function Iniciais({ texto }: { texto: string }) {
   return (
-    <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-primary-fixed font-label-md text-label-md text-primary">
+    <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-secondary-container font-label-md text-label-md text-on-secondary-container">
       {texto}
     </span>
   );
