@@ -89,10 +89,12 @@ def test_search_filters_by_cidade_and_estado(client, db_session):
 def test_search_computes_nota_media(client, db_session):
     alvo_id = _make_empresa(db_session, "Clínica Vida", TipoEmpresa.clinica, "Recife", "PE")
     autor_id = uuid.uuid4()
+    outro_autor_id = uuid.uuid4()
     db_session.add(Profile(id=autor_id, papel=Papel.profissional, nome="Maria"))
+    db_session.add(Profile(id=outro_autor_id, papel=Papel.profissional, nome="João"))
     db_session.flush()
     db_session.add(Avaliacao(autor_id=autor_id, alvo_id=alvo_id, nota=4))
-    db_session.add(Avaliacao(autor_id=autor_id, alvo_id=alvo_id, nota=2))
+    db_session.add(Avaliacao(autor_id=outro_autor_id, alvo_id=alvo_id, nota=2))
     db_session.commit()
 
     response = client.get("/empresas")
