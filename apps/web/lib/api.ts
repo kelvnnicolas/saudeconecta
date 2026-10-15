@@ -246,4 +246,10 @@ export const api = {
 
   marcarTodasNotificacoesLidas: () =>
     request<{ marcadas: number }>("/notificacoes/marcar-todas-lidas", { method: "POST" }),
+
+  marcarNotificacoesLidasDoLink: (link: string) =>
+    request<{ marcadas: number }>("/notificacoes/marcar-lidas-do-link", {
+      method: "POST",
+      body: JSON.stringify({ link }),
+    }),
 };

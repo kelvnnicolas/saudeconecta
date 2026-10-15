@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.notificacao import TipoNotificacao
 
@@ -27,3 +27,7 @@ class ListaNotificacoesResponse(BaseModel):
 
 class MarcarTodasLidasResponse(BaseModel):
     marcadas: int
+
+
+class MarcarLidasDoLinkRequest(BaseModel):
+    link: str = Field(min_length=1, max_length=255)
