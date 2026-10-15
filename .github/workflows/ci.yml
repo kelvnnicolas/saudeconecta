@@ -39,3 +39,20 @@ jobs:
       # tests/conftest.py forces dummy Stripe/app settings and an empty SENTRY_DSN,
       # so no secrets are needed here and no test can reach a real external service.
       - run: python -m pytest -q
+
+  frontend:
+    name: Frontend (lint + tipos)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck

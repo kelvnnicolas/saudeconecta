@@ -2,7 +2,7 @@ import uuid
 from datetime import UTC, datetime
 
 from fastapi import HTTPException, status
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, update
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -128,11 +128,21 @@ def aceitar_demanda_direta(db: Session, user_id: uuid.UUID, contato_id: int) -> 
             "apenas_profissional_aceita",
             "Só o profissional pode aceitar a demanda direta",
         )
-    if contato.aceito_em is None:
-        contato.aceito_em = datetime.now(UTC)
-        db.commit()
-        db.refresh(contato)
+    # Um único UPDATE condicional decide quem aceitou: se duas requisições chegam juntas,
+    # só uma encontra aceito_em vazio e só ela notifica (a outra recebe o estado atual).
+    aceitou_agora = (
+        db.execute(
+            update(Contato)
+            .where(Contato.id == contato.id, Contato.aceito_em.is_(None))
+            .values(aceito_em=datetime.now(UTC))
+            .execution_options(synchronize_session=False)
+        ).rowcount
+        == 1
+    )
+    db.commit()
+    db.refresh(contato)
 
+    if aceitou_agora:
         registrar_notificacao(
             db,
             destinatario_id=contato.solicitante_id,

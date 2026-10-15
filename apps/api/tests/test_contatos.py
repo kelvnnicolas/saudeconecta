@@ -1,12 +1,15 @@
 import uuid
 from unittest.mock import patch
 
+from sqlalchemy.orm.attributes import set_committed_value
+
 from app.core.auth import CurrentUser, get_current_user
 from app.main import app
 from app.models.contato import Contato
 from app.models.empresa import Empresa, TipoEmpresa
 from app.models.profile import Papel, Profile
 from app.models.profissional import Profissional
+from app.services import contato_service
 from tests.fabrica import autenticar, criar_contato, criar_empresa, criar_profissional
 
 
@@ -502,6 +505,38 @@ def test_aceitar_gera_notificacao_para_solicitante_so_na_primeira_vez(client, db
     notificacoes = client.get("/notificacoes")
     assert notificacoes.json()["total"] == 1
     assert notificacoes.json()["items"][0]["tipo"] == "aceite_demanda"
+
+
+def test_aceite_simultaneo_notifica_so_uma_vez(client, db_session):
+    """Duas requisições leem o contato como "não aceito" antes de qualquer uma gravar.
+
+    Simulado com uma leitura desatualizada: a segunda chamada recebe o contato com
+    aceito_em vazio na memória, embora o banco já tenha o aceite da primeira.
+    """
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(profissional_id)
+    primeira = client.post(f"/contatos/{contato.id}/aceitar")
+    aceito_original = primeira.json()["aceito_em"]
+
+    leitura_original = contato_service._contato_das_partes
+
+    def leitura_desatualizada(db, contato_id, user_id):
+        encontrado = leitura_original(db, contato_id, user_id)
+        set_committed_value(encontrado, "aceito_em", None)
+        return encontrado
+
+    with patch.object(contato_service, "_contato_das_partes", leitura_desatualizada):
+        segunda = client.post(f"/contatos/{contato.id}/aceitar")
+
+    assert segunda.status_code == 200
+    assert segunda.json()["aceito_em"] == aceito_original
+    autenticar(solicitante_id)
+    notificacoes = client.get("/notificacoes")
+    assert notificacoes.json()["total"] == 1
 
 
 def test_aceitar_comita_apos_registrar_notificacao(client, db_session):

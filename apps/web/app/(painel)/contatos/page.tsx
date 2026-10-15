@@ -72,8 +72,9 @@ export default function MeusContatosPage() {
       const bateFiltro = filtro === "todos" || c.status === filtro;
       const bateBusca = !busca || nome.includes(busca.toLowerCase()) || c.mensagem.toLowerCase().includes(busca.toLowerCase());
       return bateFiltro && bateBusca;
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     });
+    // nomeDaOutraParte só lê `nomes` e `papel`, que já estão na lista.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contatos, filtro, busca, nomes, papel]);
 
   return (
