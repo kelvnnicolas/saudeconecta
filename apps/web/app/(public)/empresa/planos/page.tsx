@@ -20,7 +20,7 @@ const BENEFICIOS: Record<string, { preco: string; itens: string[]; destaque?: bo
     preco: "R$ 249/mês",
     itens: [
       "50 desbloqueios de contatos diretos/mês",
-      "Filtros por especialidade e registro ativo",
+      "Busca por nome e especialidade",
       "1 usuário recrutador",
     ],
   },
