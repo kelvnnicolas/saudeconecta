@@ -1,5 +1,10 @@
 import type { UsoMensal } from "./types";
 
+/** Usos gratuitos por mês. Espelha `LIMITE_GRATUITO` em apps/api/app/services/entitlements.py:
+ *  `GET /planos` só lista os planos pagos, então só a vitrine de planos usa esta constante.
+ *  Os avisos de limite leem o número da API (`uso.limite`). Ver T-020 no nextmove. */
+export const LIMITE_GRATUITO_MENSAL = 5;
+
 export type ContextoLimite = "demanda" | "contato" | "geral";
 
 export interface PlanoResumo {
