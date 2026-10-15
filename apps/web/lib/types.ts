@@ -141,7 +141,6 @@ export interface MensagemContatoCreateRequest {
 
 export interface AvaliacaoRead {
   id: number;
-  autor_id: string;
   alvo_id: string;
   nota: number;
   comentario: string | null;
