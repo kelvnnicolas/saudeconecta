@@ -5,6 +5,7 @@ import { Header } from "@/components/ui/Header";
 import { ListaEsqueleto } from "@/components/ui/Skeleton";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { api, ApiError } from "@/lib/api";
+import { LIMITE_GRATUITO_MENSAL } from "@/lib/limite-plano";
 import type { PlanoRead } from "@/lib/types";
 
 // Corrigido em relação ao mockup original do Stitch (checkout_corporativo_b2b):
@@ -84,9 +85,33 @@ export default function PlanosEmpresaPage() {
           </p>
         </section>
 
-        {carregandoPlanos && <ListaEsqueleto quantidade={2} />}
-
         <div className="flex flex-col gap-space-sm">
+          {/* O gratuito não vem de GET /planos e não tem checkout: aparece primeiro, sem seleção. */}
+          <section aria-label="Plano Gratuito" className="rounded-2xl p-space-md neu-surface bg-surface-container-lowest flex flex-col gap-space-sm">
+            <div className="flex items-center justify-between">
+              <span className="font-title-md text-title-md text-on-surface">Gratuito</span>
+              <span className="rounded-full bg-secondary-container px-space-sm py-1 font-label-sm text-label-sm text-on-secondary-container">
+                Já incluído
+              </span>
+            </div>
+            <span className="font-headline-md text-headline-md text-on-surface">R$ 0</span>
+            <ul className="flex flex-col gap-1">
+              {[
+                `Até ${LIMITE_GRATUITO_MENSAL} contatos e demandas por mês, somados`,
+                "Busca e perfis de profissionais",
+                "Sem cartão de crédito",
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-1 font-body-md text-body-md text-on-surface-variant">
+                  <MaterialIcon name="check_circle" className="text-[16px] text-secondary" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <span className="font-caption text-caption text-on-surface-variant">
+              Passou do limite do mês? Os planos abaixo liberam mais usos.
+            </span>
+          </section>
+          {carregandoPlanos && <ListaEsqueleto quantidade={2} />}
           {planos.map((plano) => {
             const info = BENEFICIOS[plano.codigo];
             const ativo = selecionado === plano.codigo;

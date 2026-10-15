@@ -70,12 +70,14 @@ def test_get_relatorio_counts_profissionais_por_especialidade(client, db_session
 
 def test_get_relatorio_calculates_nota_media_geral(client, db_session):
     autor_id = uuid.uuid4()
+    outro_autor_id = uuid.uuid4()
     alvo_id = uuid.uuid4()
     db_session.add(Profile(id=autor_id, papel=Papel.empresa, nome="Empresa"))
+    db_session.add(Profile(id=outro_autor_id, papel=Papel.empresa, nome="Outra empresa"))
     db_session.add(Profile(id=alvo_id, papel=Papel.profissional, nome="Profissional"))
     db_session.flush()
     db_session.add(Avaliacao(autor_id=autor_id, alvo_id=alvo_id, nota=5))
-    db_session.add(Avaliacao(autor_id=autor_id, alvo_id=alvo_id, nota=3))
+    db_session.add(Avaliacao(autor_id=outro_autor_id, alvo_id=alvo_id, nota=3))
     db_session.commit()
 
     response = client.get(

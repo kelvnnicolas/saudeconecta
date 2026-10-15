@@ -56,12 +56,13 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
       .finally(() => setCarregando(false));
   }, [params.id, papel]);
 
+  const contatoId = contato?.id;
   useEffect(() => {
-    if (!contato) return;
+    if (contatoId === undefined) return;
     let cancelado = false;
     async function buscarMensagens() {
       try {
-        const lista = await api.listarMensagensContato(contato!.id);
+        const lista = await api.listarMensagensContato(contatoId!);
         if (!cancelado) setMensagens(lista);
       } catch {
         // poll silencioso — próxima tentativa em 7s
@@ -73,7 +74,7 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
       cancelado = true;
       clearInterval(intervalo);
     };
-  }, [contato?.id]);
+  }, [contatoId]);
 
   useEffect(() => {
     const el = listaMensagensRef.current;
