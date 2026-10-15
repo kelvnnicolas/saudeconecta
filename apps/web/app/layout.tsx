@@ -15,8 +15,15 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // suppressHydrationWarning em <html>: o script do tema grava `data-theme` antes de o React
+  // hidratar; sem isso o React avisa "Extra attributes from the server" em toda página (T-015).
+  // Vale só para os atributos deste elemento, não para os filhos.
   return (
-    <html lang="pt-BR" className={`${inter.variable} ${quicksand.variable}`}>
+    <html
+      lang="pt-BR"
+      className={`${inter.variable} ${quicksand.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         {/* Roda antes da hidratação/pintura pra aplicar o tema salvo (ou o
             padrão "light") sem flash. A UI de escolha mora só em /perfil
