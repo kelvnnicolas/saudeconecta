@@ -166,3 +166,21 @@ def test_list_avaliacoes_by_alvo_is_public(client, db_session):
     body = response.json()
     assert len(body) == 1
     assert body[0]["nota"] == 4
+
+
+def test_list_avaliacoes_nao_expoe_autor_id(client, db_session):
+    autor_id = uuid.uuid4()
+    alvo_id = uuid.uuid4()
+    db_session.add(Profile(id=autor_id, papel=Papel.empresa, nome="Clínica X"))
+    db_session.add(Profile(id=alvo_id, papel=Papel.profissional, nome="Maria"))
+    db_session.flush()
+    db_session.add(Profissional(user_id=alvo_id))
+    db_session.commit()
+    db_session.add(Avaliacao(autor_id=autor_id, alvo_id=alvo_id, nota=4, comentario="Bom"))
+    db_session.commit()
+
+    response = client.get(f"/avaliacoes?alvo_id={alvo_id}")
+
+    assert response.status_code == 200
+    assert "autor_id" not in response.json()[0]
+    assert str(autor_id) not in response.text

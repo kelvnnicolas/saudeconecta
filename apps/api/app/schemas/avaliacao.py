@@ -14,7 +14,6 @@ class AvaliacaoRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    autor_id: uuid.UUID
     alvo_id: uuid.UUID
     nota: int
     comentario: str | None
