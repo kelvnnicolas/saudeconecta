@@ -71,6 +71,9 @@
 
 Mais recente primeiro. Uma linha por entrega; IDs referem-se ao `nextmove.md`.
 
+### 2026-10-15
+- **Aceite de demanda direta sem corrida** (T-002, branch `fix/aceite-idempotente`, sem push): duas requisições de aceite do mesmo profissional ao mesmo tempo podiam sobrescrever a data do aceite e mandar duas notificações e dois e-mails à empresa. O aceite agora é um único `UPDATE ... WHERE aceito_em IS NULL`; só quem grava notifica, e a outra recebe o estado atual. Teste novo `test_aceite_simultaneo_notifica_so_uma_vez` (simula a leitura desatualizada; viu falhar antes da correção), 288 testes do backend passam, `ruff` e `black` limpos. Só backend, sem migration. **Não provado com concorrência real** (threads contra o Postgres): a garantia vem da atomicidade do `UPDATE`.
+
 ### 2026-10-14
 - **Texto do plano Essencial** (T-011, branch `fix/texto-planos-registro`, sem push): em `/empresa/planos`, "Filtros por especialidade e registro ativo" virou "Busca por nome e especialidade", porque o registro profissional é opcional e não validado. A sugestão do `nextmove.md` ("região") não valia: o filtro de cidade existe na API, mas não há campo na tela de busca. Conferi a página renderizada num navegador isolado e o `typecheck`. As outras frases dos cartões ficaram como estavam e viraram o T-022 (decisão sua).
 - **Aviso de hidratação do tema** (T-015, branch `fix/aviso-hidratacao-tema`, sem push): `suppressHydrationWarning` no `<html>`, porque o script do tema grava `data-theme` antes de o React hidratar. Medido num navegador isolado: o erro "Extra attributes from the server" aparecia no console de `/entrar` e some depois da correção (0 erros); o tema claro e o escuro salvo continuam sendo aplicados. `typecheck` e `build` passam. Achado à parte: o app não tem favicon (404), registrado como T-021.
