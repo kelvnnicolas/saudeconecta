@@ -18,6 +18,8 @@ class TipoNotificacao(str, enum.Enum):
     novo_interesse = "novo_interesse"
     falha_pagamento = "falha_pagamento"
     nova_oportunidade = "nova_oportunidade"
+    cota_quase_no_limite = "cota_quase_no_limite"
+    cota_esgotada = "cota_esgotada"
 
 
 class Notificacao(Base):

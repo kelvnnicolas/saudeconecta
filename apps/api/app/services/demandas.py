@@ -25,6 +25,7 @@ from app.schemas.demanda import (
     MinhaDemandaRead,
 )
 from app.services import email_templates
+from app.services.aviso_cota import avisar_cota_se_preciso
 from app.services.email_service import enviar_email
 from app.services.entitlements import verificar_publicacao_demanda
 from app.services.notificacao_service import registrar_notificacao
@@ -114,6 +115,8 @@ def criar_demanda(db: Session, user_id: uuid.UUID, data: DemandaCreate) -> Deman
     db.add(demanda)
     db.commit()
     db.refresh(demanda)
+    # O aviso de cota só dá flush; o commit do laço de notificações abaixo grava os dois.
+    avisar_cota_se_preciso(db, empresa.user_id)
     _notificar_profissionais_compativeis(db, demanda)
     return DemandaRead(**_campos_leitura(demanda, empresa.nome_fantasia))
 
