@@ -5,8 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
-import { signOut } from "@/lib/supabase-client";
-import { useCurrentUser } from "@/lib/use-current-user";
+import { ehChaveDeSessao, lerSessaoLeve, type SessaoLeve } from "@/lib/sessao-leve";
 
 /**
  * Header flutuante em vidro (docs/decisions/0001-regra-de-vidro.md). Só marca,
@@ -16,12 +15,24 @@ import { useCurrentUser } from "@/lib/use-current-user";
  */
 export function HeaderLanding() {
   const router = useRouter();
-  const { loading, session, papel } = useCurrentUser();
+  // `undefined` = ainda não leu o localStorage (no servidor e no primeiro render).
+  const [sessao, setSessao] = useState<SessaoLeve | null | undefined>(undefined);
   const [aberto, setAberto] = useState(false);
   const [sobreFoto, setSobreFoto] = useState(true);
   const raiz = useRef<HTMLDivElement>(null);
   const botaoMenu = useRef<HTMLButtonElement>(null);
   const primeiroLink = useRef<HTMLAnchorElement>(null);
+
+  // Leitura leve da sessão (sem `supabase-js`, que pesa na landing: T-014). Também acompanha
+  // login e logout em outras abas.
+  useEffect(() => {
+    setSessao(lerSessaoLeve());
+    function aoMudarOStorage(evento: StorageEvent) {
+      if (evento.key === null || ehChaveDeSessao(evento.key)) setSessao(lerSessaoLeve());
+    }
+    window.addEventListener("storage", aoMudarOStorage);
+    return () => window.removeEventListener("storage", aoMudarOStorage);
+  }, []);
 
   // Um observer no hero, em vez de um listener de scroll a cada frame.
   useEffect(() => {
@@ -54,7 +65,9 @@ export function HeaderLanding() {
     };
   }, [aberto]);
 
-  const logado = !!session;
+  const carregando = sessao === undefined;
+  const logado = !!sessao;
+  const papel = sessao?.papel ?? "profissional";
   const itensMenu = [
     { href: "/buscar", rotulo: "Buscar profissionais", icone: "explore" },
     papel === "profissional"
@@ -66,7 +79,10 @@ export function HeaderLanding() {
 
   async function sair() {
     setAberto(false);
+    // O cliente completo só é baixado aqui, quando a pessoa realmente sai.
+    const { signOut } = await import("@/lib/supabase-client");
     await signOut();
+    setSessao(null);
     router.refresh();
   }
 
@@ -95,7 +111,7 @@ export function HeaderLanding() {
               <span className="hidden sm:inline">Como funciona?</span>
             </a>
 
-            {loading && !session ? (
+            {carregando ? (
               <span
                 aria-hidden="true"
                 className="invisible flex h-10 items-center whitespace-nowrap px-3 text-[13px] sm:px-space-md sm:text-label-md font-label-md"
@@ -115,7 +131,7 @@ export function HeaderLanding() {
                 <MaterialIcon name={aberto ? "close" : "menu"} />
               </button>
             ) : (
-              <Link
+              <Link prefetch={false}
                 href="/entrar"
                 className="vidro-acento h-10 px-3 sm:px-space-md rounded-full flex items-center whitespace-nowrap text-[13px] sm:text-label-md font-label-md transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
@@ -131,7 +147,7 @@ export function HeaderLanding() {
             className={`${sobreFoto ? "vidro-midia-denso" : "vidro"} absolute right-0 top-full mt-2 w-full sm:w-72 flex flex-col rounded-3xl p-space-sm`}
           >
             {itensMenu.map((item, i) => (
-              <Link
+              <Link prefetch={false}
                 key={item.href}
                 ref={i === 0 ? primeiroLink : undefined}
                 href={item.href}
