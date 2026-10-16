@@ -131,7 +131,7 @@ export function HeaderLanding() {
                 <MaterialIcon name={aberto ? "close" : "menu"} />
               </button>
             ) : (
-              <Link
+              <Link prefetch={false}
                 href="/entrar"
                 className="vidro-acento h-10 px-3 sm:px-space-md rounded-full flex items-center whitespace-nowrap text-[13px] sm:text-label-md font-label-md transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
@@ -147,7 +147,7 @@ export function HeaderLanding() {
             className={`${sobreFoto ? "vidro-midia-denso" : "vidro"} absolute right-0 top-full mt-2 w-full sm:w-72 flex flex-col rounded-3xl p-space-sm`}
           >
             {itensMenu.map((item, i) => (
-              <Link
+              <Link prefetch={false}
                 key={item.href}
                 ref={i === 0 ? primeiroLink : undefined}
                 href={item.href}
