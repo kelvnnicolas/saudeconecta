@@ -5,7 +5,6 @@ import { Header } from "@/components/ui/Header";
 import { ListaEsqueleto } from "@/components/ui/Skeleton";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { api, ApiError } from "@/lib/api";
-import { LIMITE_GRATUITO_MENSAL } from "@/lib/limite-plano";
 import type { PlanoRead } from "@/lib/types";
 
 // Corrigido em relação ao mockup original do Stitch (checkout_corporativo_b2b):
@@ -37,6 +36,7 @@ const BENEFICIOS: Record<string, { preco: string; itens: string[]; destaque?: bo
 
 export default function PlanosEmpresaPage() {
   const [planos, setPlanos] = useState<PlanoRead[]>([]);
+  const [limiteGratuito, setLimiteGratuito] = useState<number | null>(null);
   const [carregandoPlanos, setCarregandoPlanos] = useState(true);
   const [selecionado, setSelecionado] = useState<string | undefined>();
   const [carregando, setCarregando] = useState(false);
@@ -51,6 +51,15 @@ export default function PlanosEmpresaPage() {
       })
       .catch((e) => setErro(e instanceof Error ? e.message : "Não foi possível carregar os planos."))
       .finally(() => setCarregandoPlanos(false));
+  }, []);
+
+  // O limite gratuito vem da API (mesma regra que o backend aplica); se falhar, o cartão
+  // continua aparecendo, só sem o número.
+  useEffect(() => {
+    api
+      .getPlanoGratuito()
+      .then((gratuito) => setLimiteGratuito(gratuito.limite_mensal))
+      .catch(() => setLimiteGratuito(null));
   }, []);
 
   async function assinar() {
@@ -97,7 +106,9 @@ export default function PlanosEmpresaPage() {
             <span className="font-headline-md text-headline-md text-on-surface">R$ 0</span>
             <ul className="flex flex-col gap-1">
               {[
-                `Até ${LIMITE_GRATUITO_MENSAL} contatos e demandas por mês, somados`,
+                limiteGratuito != null
+                  ? `Até ${limiteGratuito} contatos e demandas por mês, somados`
+                  : "Uma cota mensal de contatos e demandas, somados",
                 "Busca e perfis de profissionais",
                 "Sem cartão de crédito",
               ].map((item) => (
