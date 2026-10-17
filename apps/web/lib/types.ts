@@ -271,7 +271,9 @@ export type TipoNotificacao =
   | "aceite_demanda"
   | "novo_interesse"
   | "falha_pagamento"
-  | "nova_oportunidade";
+  | "nova_oportunidade"
+  | "cota_quase_no_limite"
+  | "cota_esgotada";
 
 export interface NotificacaoRead {
   id: number;
