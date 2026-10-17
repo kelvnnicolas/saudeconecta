@@ -71,6 +71,9 @@
 
 Mais recente primeiro. Uma linha por entrega; IDs referem-se ao `nextmove.md`.
 
+### 2026-10-17
+- **Favicon do projeto** (T-021, branch `feat/favicon`, sem push): o app respondia 404 em `/favicon.ico`. Agora há `apps/web/app/favicon.ico` (16, 32 e 48 px, PNG embutido), `app/icon.svg` (a marca de 4 pétalas recortada justa, sem a margem da arte original) e `app/apple-icon.png` (180 px, fundo branco opaco, porque o iOS não aceita transparência). O Next serve cada um na raiz e injeta os `<link>` sozinho. Gerei os PNGs renderizando o SVG no Chrome headless e montei o `.ico` à mão (não há ImageMagick nem Pillow aqui). **Verificado:** build de produção; `/favicon.ico` responde 200 como `image/x-icon` com os mesmos bytes do arquivo; o navegador decodifica o `.ico` (48 px), o SVG e o ícone da Apple; legível em 16 px em aba clara e escura; 0 erros no console. **Não verificado:** a aparência na aba real de Chrome, Safari e Firefox, e o ícone na tela inicial de um iPhone. Navegadores guardam favicon em cache por muito tempo: pode ser preciso recarregar com cache limpo para ver o novo.
+
 ### 2026-10-15
 - **Aceite de demanda direta sem corrida** (T-002, branch `fix/aceite-idempotente`, sem push): duas requisições de aceite do mesmo profissional ao mesmo tempo podiam sobrescrever a data do aceite e mandar duas notificações e dois e-mails à empresa. O aceite agora é um único `UPDATE ... WHERE aceito_em IS NULL`; só quem grava notifica, e a outra recebe o estado atual. Teste novo `test_aceite_simultaneo_notifica_so_uma_vez` (simula a leitura desatualizada; viu falhar antes da correção), 288 testes do backend passam, `ruff` e `black` limpos. Só backend, sem migration. **Não provado com concorrência real** (threads contra o Postgres): a garantia vem da atomicidade do `UPDATE`.
 
