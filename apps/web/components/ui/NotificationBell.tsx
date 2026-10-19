@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MaterialIcon } from "./MaterialIcon";
 import { useCurrentUser } from "@/lib/use-current-user";
 import { api } from "@/lib/api";
+import { EVENTO_NOTIFICACOES_MUDARAM } from "@/lib/use-notificacoes-lidas-ao-abrir";
 import type { NotificacaoRead } from "@/lib/types";
 
 export function NotificationBell() {
@@ -46,9 +47,11 @@ export function NotificationBell() {
     }
     buscar();
     const intervalo = setInterval(buscar, 20000);
+    window.addEventListener(EVENTO_NOTIFICACOES_MUDARAM, buscar);
     return () => {
       cancelado = true;
       clearInterval(intervalo);
+      window.removeEventListener(EVENTO_NOTIFICACOES_MUDARAM, buscar);
     };
   }, [session]);
 

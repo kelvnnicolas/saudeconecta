@@ -25,9 +25,13 @@ from app.schemas.demanda import (
     MinhaDemandaRead,
 )
 from app.services import email_templates
+from app.services.aviso_cota import avisar_cota_se_preciso
 from app.services.email_service import enviar_email
 from app.services.entitlements import verificar_publicacao_demanda
-from app.services.notificacao_service import registrar_notificacao
+from app.services.notificacao_service import (
+    registrar_notificacao,
+    registrar_notificacoes_em_lote,
+)
 
 MENSAGEM_INTERESSE_PADRAO = "Tenho interesse na sua demanda."
 TRANSICOES_PERMITIDAS = (StatusDemanda.preenchida, StatusDemanda.encerrada)
@@ -92,15 +96,14 @@ def _notificar_profissionais_compativeis(db: Session, demanda: Demanda) -> None:
             func.lower(func.trim(Profile.cidade)) == demanda.cidade.strip().lower(),
         )
     ).all()
-    for profissional_id in profissional_ids:
-        registrar_notificacao(
-            db,
-            destinatario_id=profissional_id,
-            tipo=TipoNotificacao.nova_oportunidade,
-            titulo="Nova oportunidade compatível",
-            corpo=f"Uma nova demanda em {demanda.cidade} bate com sua especialidade.",
-            link="/oportunidades",
-        )
+    registrar_notificacoes_em_lote(
+        db,
+        destinatarios_ids=list(profissional_ids),
+        tipo=TipoNotificacao.nova_oportunidade,
+        titulo="Nova oportunidade compatível",
+        corpo=f"Uma nova demanda em {demanda.cidade} bate com sua especialidade.",
+        link="/oportunidades",
+    )
     db.commit()
 
 
@@ -114,6 +117,8 @@ def criar_demanda(db: Session, user_id: uuid.UUID, data: DemandaCreate) -> Deman
     db.add(demanda)
     db.commit()
     db.refresh(demanda)
+    # O aviso de cota só dá flush; o commit do laço de notificações abaixo grava os dois.
+    avisar_cota_se_preciso(db, empresa.user_id)
     _notificar_profissionais_compativeis(db, demanda)
     return DemandaRead(**_campos_leitura(demanda, empresa.nome_fantasia))
 

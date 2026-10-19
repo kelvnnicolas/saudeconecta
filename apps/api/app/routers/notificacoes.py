@@ -6,10 +6,16 @@ from app.core.database import get_db
 from app.core.rate_limit import limiter
 from app.schemas.notificacao import (
     ListaNotificacoesResponse,
+    MarcarLidasDoLinkRequest,
     MarcarTodasLidasResponse,
     NotificacaoRead,
 )
-from app.services.notificacao_service import listar_notificacoes, marcar_lida, marcar_todas_lidas
+from app.services.notificacao_service import (
+    listar_notificacoes,
+    marcar_lida,
+    marcar_lidas_do_link,
+    marcar_todas_lidas,
+)
 
 router = APIRouter(prefix="/notificacoes", tags=["notificacoes"])
 
@@ -53,3 +59,14 @@ def marcar_todas_lidas_route(
 ) -> MarcarTodasLidasResponse:
     marcadas = marcar_todas_lidas(db, current_user.id)
     return MarcarTodasLidasResponse(marcadas=marcadas)
+
+
+@router.post("/marcar-lidas-do-link", response_model=MarcarTodasLidasResponse)
+@limiter.limit("60/minute")
+def marcar_lidas_do_link_route(
+    request: Request,
+    data: MarcarLidasDoLinkRequest,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> MarcarTodasLidasResponse:
+    return MarcarTodasLidasResponse(marcadas=marcar_lidas_do_link(db, current_user.id, data.link))

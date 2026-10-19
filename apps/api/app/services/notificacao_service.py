@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 
 import sentry_sdk
 from fastapi import status
-from sqlalchemy import func, select, update
+from sqlalchemy import func, insert, select, update
 from sqlalchemy.orm import Session
 
 from app.core.errors import erro_negocio
@@ -97,3 +97,57 @@ def marcar_todas_lidas(db: Session, user_id: uuid.UUID) -> int:
     )
     db.commit()
     return resultado.rowcount
+
+
+def marcar_lidas_do_link(db: Session, user_id: uuid.UUID, link: str) -> int:
+    """Marca como lidas as notificações da própria pessoa que apontam para `link`.
+
+    Chamado quando ela abre a tela de destino por qualquer caminho, não só pelo sino.
+    """
+    resultado = db.execute(
+        update(Notificacao)
+        .where(
+            Notificacao.destinatario_id == user_id,
+            Notificacao.link == link,
+            Notificacao.lida_em.is_(None),
+        )
+        .values(lida_em=datetime.now(UTC))
+    )
+    db.commit()
+    return resultado.rowcount
+
+
+def registrar_notificacoes_em_lote(
+    db: Session,
+    destinatarios_ids: list[uuid.UUID],
+    tipo: TipoNotificacao,
+    titulo: str,
+    corpo: str,
+    link: str,
+) -> int:
+    """Mesma notificação para vários destinatários, num único INSERT.
+
+    Mesmas garantias de `registrar_notificacao`: savepoint próprio, falha só vai ao Sentry
+    (nunca derruba a ação que disparou) e nenhum commit. Devolve quantas foram gravadas.
+    """
+    if not destinatarios_ids:
+        return 0
+    try:
+        with db.begin_nested():
+            db.execute(
+                insert(Notificacao),
+                [
+                    {
+                        "destinatario_id": destinatario_id,
+                        "tipo": tipo,
+                        "titulo": titulo,
+                        "corpo": corpo,
+                        "link": link,
+                    }
+                    for destinatario_id in destinatarios_ids
+                ],
+            )
+    except Exception as exc:
+        sentry_sdk.capture_exception(exc)
+        return 0
+    return len(destinatarios_ids)

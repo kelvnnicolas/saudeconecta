@@ -8,10 +8,12 @@ import { Logo } from "@/components/ui/Logo";
 import { ListaEsqueleto } from "@/components/ui/Skeleton";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { DemandCard } from "@/components/demandas/DemandCard";
+import { useNotificacoesLidasAoAbrir } from "@/lib/use-notificacoes-lidas-ao-abrir";
 import { api, ApiError } from "@/lib/api";
 import type { DemandaRead } from "@/lib/types";
 
 export default function OportunidadesPage() {
+  useNotificacoesLidasAoAbrir("/oportunidades");
   const [oportunidades, setOportunidades] = useState<DemandaRead[]>([]);
   const [carregando, setCarregando] = useState(true);
   // GET /demandas/oportunidades não devolve ja_demonstrei_interesse por item —
