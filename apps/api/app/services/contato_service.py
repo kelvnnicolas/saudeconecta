@@ -14,6 +14,7 @@ from app.models.profile import Profile
 from app.models.profissional import Profissional
 from app.schemas.contato import ContatoCreateRequest
 from app.services import email_templates
+from app.services.aviso_cota import avisar_cota_se_preciso
 from app.services.email_service import enviar_email, send_contact_notification_email
 from app.services.entitlements import verificar_contato_direto
 from app.services.notificacao_service import registrar_notificacao
@@ -56,6 +57,7 @@ def create_contato(db: Session, solicitante_id: uuid.UUID, data: ContatoCreateRe
         corpo=f"{solicitante.nome} enviou uma mensagem.",
         link=f"/contatos/{contato.id}",
     )
+    avisar_cota_se_preciso(db, solicitante_id)
     db.commit()
 
     return contato
