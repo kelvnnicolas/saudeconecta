@@ -21,9 +21,12 @@ import {
 
 type PapelEntrada = "profissional" | "empresa";
 
-// LinkedIn no lugar do Facebook. Fica desligado até o app existir no LinkedIn Developers e o
-// provider estar ativo no Supabase; ligue com NEXT_PUBLIC_LINKEDIN_LOGIN=true na Vercel.
+// Botões de login social além do Google. Os dois ficam escondidos por padrão porque o provedor
+// ainda não está ativo no Supabase (clicar levaria a "Unsupported provider", B-014).
+// LinkedIn: ligue com NEXT_PUBLIC_LINKEDIN_LOGIN=true quando o app existir no LinkedIn Developers
+// e o provider "LinkedIn (OIDC)" estiver ativo. Facebook: NEXT_PUBLIC_FACEBOOK_LOGIN=true, idem.
 const LOGIN_LINKEDIN = process.env.NEXT_PUBLIC_LINKEDIN_LOGIN === "true";
+const LOGIN_FACEBOOK = process.env.NEXT_PUBLIC_FACEBOOK_LOGIN === "true";
 
 const PAPEIS: { valor: PapelEntrada; rotulo: string; criar: string; href: string }[] = [
   { valor: "empresa", rotulo: "Empresa ou pessoa", criar: "Criar conta de empresa", href: "/cadastro/empresa" },
@@ -229,7 +232,7 @@ export default function EntrarPage() {
           {provedorSocial === "google" ? "Conectando..." : "Continuar com Google"}
         </button>
 
-        {LOGIN_LINKEDIN ? (
+        {LOGIN_LINKEDIN && (
           <button
             type="button"
             onClick={entrarComLinkedIn}
@@ -245,7 +248,9 @@ export default function EntrarPage() {
             </svg>
             {provedorSocial === "linkedin" ? "Conectando..." : "Continuar com LinkedIn"}
           </button>
-        ) : (
+        )}
+
+        {LOGIN_FACEBOOK && (
           <button
             type="button"
             onClick={entrarComFacebook}
