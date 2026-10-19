@@ -99,6 +99,24 @@ def marcar_todas_lidas(db: Session, user_id: uuid.UUID) -> int:
     return resultado.rowcount
 
 
+def marcar_lidas_do_link(db: Session, user_id: uuid.UUID, link: str) -> int:
+    """Marca como lidas as notificações da própria pessoa que apontam para `link`.
+
+    Chamado quando ela abre a tela de destino por qualquer caminho, não só pelo sino.
+    """
+    resultado = db.execute(
+        update(Notificacao)
+        .where(
+            Notificacao.destinatario_id == user_id,
+            Notificacao.link == link,
+            Notificacao.lida_em.is_(None),
+        )
+        .values(lida_em=datetime.now(UTC))
+    )
+    db.commit()
+    return resultado.rowcount
+
+
 def registrar_notificacoes_em_lote(
     db: Session,
     destinatarios_ids: list[uuid.UUID],

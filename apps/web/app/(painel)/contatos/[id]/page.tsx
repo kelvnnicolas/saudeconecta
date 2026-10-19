@@ -8,12 +8,14 @@ import { PaginaEsqueleto } from "@/components/ui/Skeleton";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { useCurrentUser } from "@/lib/use-current-user";
 import { type AvaliacaoInput, avaliacaoSchema } from "@/lib/validations/contato";
+import { useNotificacoesLidasAoAbrir } from "@/lib/use-notificacoes-lidas-ao-abrir";
 import { api } from "@/lib/api";
 import type { ContatoRead, MensagemContatoRead } from "@/lib/types";
 
 export default function DetalheContatoPage({ params }: { params: { id: string } }) {
   const { papel, session } = useCurrentUser();
   const [contato, setContato] = useState<ContatoRead | null>(null);
+  useNotificacoesLidasAoAbrir(contato ? `/contatos/${contato.id}` : null);
   const [nomeOutraParte, setNomeOutraParte] = useState("...");
   const [carregando, setCarregando] = useState(true);
   const [erroCarregar, setErroCarregar] = useState<string | null>(null);
