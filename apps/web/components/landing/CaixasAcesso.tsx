@@ -34,7 +34,7 @@ export function CaixasAcesso() {
     <ul className="grid gap-space-sm md:grid-cols-3 md:gap-space-md">
       {CAIXAS.map((caixa) => (
         <li key={caixa.titulo}>
-          <Link
+          <Link prefetch={false}
             href={caixa.href}
             className={`vidro-midia group flex h-full min-h-16 items-center gap-space-sm rounded-2xl p-space-sm lg:p-space-md transition ${SO_COM_MOUSE}:hover:-translate-y-0.5 ${SO_COM_MOUSE}:hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white`}
           >
