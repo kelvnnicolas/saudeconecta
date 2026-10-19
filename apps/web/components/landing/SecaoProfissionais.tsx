@@ -26,14 +26,14 @@ export function SecaoProfissionais() {
             publicadas pelas empresas.
           </p>
           <div className="flex flex-col sm:flex-row gap-space-sm pt-1">
-            <Link
+            <Link prefetch={false}
               href="/cadastro/profissional"
               className="vidro-midia bg-white/25 inline-flex items-center justify-center gap-space-xs h-12 px-space-lg rounded-full font-label-md text-label-md transition hover:bg-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               Criar meu perfil grátis
               <MaterialIcon name="arrow_forward" className="text-[18px]" />
             </Link>
-            <Link
+            <Link prefetch={false}
               href="/buscar"
               className="vidro-midia inline-flex items-center justify-center gap-space-xs h-12 px-space-lg rounded-full font-label-md text-label-md transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >

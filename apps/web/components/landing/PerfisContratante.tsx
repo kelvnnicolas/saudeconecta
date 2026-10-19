@@ -115,7 +115,7 @@ export function PerfisContratante() {
                       </li>
                     ))}
                   </ul>
-                  <Link
+                  <Link prefetch={false}
                     href={p.href}
                     className="mt-auto pt-space-sm inline-flex items-center gap-1 font-label-md text-label-md text-primary hover:gap-2 transition-all"
                   >
