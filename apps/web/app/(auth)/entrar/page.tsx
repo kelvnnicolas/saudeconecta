@@ -14,6 +14,7 @@ import {
   getSession,
   signInWithFacebook,
   signInWithGoogle,
+  provedorSocialAtivo,
   signInWithLinkedIn,
   signInWithPassword,
   signOut,
@@ -21,9 +22,17 @@ import {
 
 type PapelEntrada = "profissional" | "empresa";
 
-// LinkedIn no lugar do Facebook. Fica desligado até o app existir no LinkedIn Developers e o
-// provider estar ativo no Supabase; ligue com NEXT_PUBLIC_LINKEDIN_LOGIN=true na Vercel.
-const LOGIN_LINKEDIN = process.env.NEXT_PUBLIC_LINKEDIN_LOGIN === "true";
+// LinkedIn: o botão aparece sempre e pergunta ao Supabase se o provedor está ativo. Enquanto o app
+// não existir no LinkedIn Developers e o provider "LinkedIn (OIDC)" não estiver ligado no painel do
+// Supabase, mostra "Em breve" e uma mensagem em vez de levar a uma página de erro. Quando o
+// provedor for ativado, o botão passa a funcionar sozinho, sem mudar código nem redeployar.
+const PROVEDOR_LINKEDIN = "linkedin_oidc";
+const MSG_LINKEDIN_INDISPONIVEL =
+  "O login com LinkedIn ainda não está disponível. Entre com e-mail e senha ou com o Google.";
+
+// Facebook: escondido porque o provedor está desativado no Supabase (B-014). Para trazê-lo de
+// volta, ative o provedor e defina NEXT_PUBLIC_FACEBOOK_LOGIN=true.
+const LOGIN_FACEBOOK = process.env.NEXT_PUBLIC_FACEBOOK_LOGIN === "true";
 
 const PAPEIS: { valor: PapelEntrada; rotulo: string; criar: string; href: string }[] = [
   { valor: "empresa", rotulo: "Empresa ou pessoa", criar: "Criar conta de empresa", href: "/cadastro/empresa" },
@@ -39,6 +48,18 @@ export default function EntrarPage() {
   const [provedorSocial, setProvedorSocial] = useState<"google" | "facebook" | "linkedin" | null>(null);
   const [papelEscolhido, setPapelEscolhido] = useState<PapelEntrada>("empresa");
   const [semCadastro, setSemCadastro] = useState(false);
+  // null = ainda não sabemos (carregando ou sem resposta do Supabase).
+  const [linkedinAtivo, setLinkedinAtivo] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let ativo = true;
+    provedorSocialAtivo(PROVEDOR_LINKEDIN).then((resposta) => {
+      if (ativo) setLinkedinAtivo(resposta);
+    });
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   // O tipo de conta vem de ?papel= (links), senão do último usado neste aparelho.
   useEffect(() => {
@@ -118,6 +139,12 @@ export default function EntrarPage() {
     setErro(null);
     setProvedorSocial("linkedin");
     try {
+      // Pergunta de novo no clique: se o provedor foi ativado depois de a tela abrir, funciona.
+      if ((await provedorSocialAtivo(PROVEDOR_LINKEDIN)) === false) {
+        setLinkedinAtivo(false);
+        setErro(MSG_LINKEDIN_INDISPONIVEL);
+        return;
+      }
       await signInWithLinkedIn();
     } catch (e) {
       setErro(mensagemDeErroAuth(e, "Não foi possível entrar com o LinkedIn."));
@@ -229,23 +256,28 @@ export default function EntrarPage() {
           {provedorSocial === "google" ? "Conectando..." : "Continuar com Google"}
         </button>
 
-        {LOGIN_LINKEDIN ? (
-          <button
-            type="button"
-            onClick={entrarComLinkedIn}
-            disabled={provedorSocial !== null}
-            className="h-12 rounded-xl bg-surface-container-lowest text-on-surface font-label-md text-label-md flex items-center justify-center gap-space-xs neu-surface neu-pressable disabled:opacity-60"
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" className="flex-shrink-0">
-              <rect width="20" height="20" rx="4" fill="#0A66C2" />
-              <path
-                d="M6.94 7.5H4.56V15.5H6.94V7.5ZM5.75 6.44C6.54 6.44 7.06 5.9 7.06 5.22C7.06 4.53 6.55 4 5.77 4C4.99 4 4.46 4.53 4.46 5.22C4.46 5.9 4.98 6.44 5.74 6.44H5.75ZM8.36 15.5H10.74V11.09C10.74 10.85 10.76 10.61 10.83 10.44C11.02 9.96 11.46 9.46 12.2 9.46C13.17 9.46 13.56 10.2 13.56 11.28V15.5H15.94V11C15.94 8.8 14.77 7.78 13.21 7.78C11.93 7.78 11.37 8.49 11.05 8.98H11.07V7.9L8.36 7.9C8.4 8.75 8.36 15.5 8.36 15.5Z"
-                fill="#fff"
-              />
-            </svg>
-            {provedorSocial === "linkedin" ? "Conectando..." : "Continuar com LinkedIn"}
-          </button>
-        ) : (
+        <button
+          type="button"
+          onClick={entrarComLinkedIn}
+          disabled={provedorSocial !== null}
+          className="h-12 rounded-xl bg-surface-container-lowest text-on-surface font-label-md text-label-md flex items-center justify-center gap-space-xs neu-surface neu-pressable disabled:opacity-60"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" className="flex-shrink-0">
+            <rect width="20" height="20" rx="4" fill="#0A66C2" />
+            <path
+              d="M6.94 7.5H4.56V15.5H6.94V7.5ZM5.75 6.44C6.54 6.44 7.06 5.9 7.06 5.22C7.06 4.53 6.55 4 5.77 4C4.99 4 4.46 4.53 4.46 5.22C4.46 5.9 4.98 6.44 5.74 6.44H5.75ZM8.36 15.5H10.74V11.09C10.74 10.85 10.76 10.61 10.83 10.44C11.02 9.96 11.46 9.46 12.2 9.46C13.17 9.46 13.56 10.2 13.56 11.28V15.5H15.94V11C15.94 8.8 14.77 7.78 13.21 7.78C11.93 7.78 11.37 8.49 11.05 8.98H11.07V7.9L8.36 7.9C8.4 8.75 8.36 15.5 8.36 15.5Z"
+              fill="#fff"
+            />
+          </svg>
+          {provedorSocial === "linkedin" ? "Conectando..." : "Continuar com LinkedIn"}
+          {linkedinAtivo === false && provedorSocial !== "linkedin" && (
+            <span className="rounded-full bg-on-surface/10 px-2 py-0.5 font-label-sm text-label-sm text-on-surface-variant">
+              Em breve
+            </span>
+          )}
+        </button>
+
+        {LOGIN_FACEBOOK && (
           <button
             type="button"
             onClick={entrarComFacebook}
