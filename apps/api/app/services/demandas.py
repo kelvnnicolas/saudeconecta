@@ -28,7 +28,10 @@ from app.services import email_templates
 from app.services.aviso_cota import avisar_cota_se_preciso
 from app.services.email_service import enviar_email
 from app.services.entitlements import verificar_publicacao_demanda
-from app.services.notificacao_service import registrar_notificacao
+from app.services.notificacao_service import (
+    registrar_notificacao,
+    registrar_notificacoes_em_lote,
+)
 
 MENSAGEM_INTERESSE_PADRAO = "Tenho interesse na sua demanda."
 TRANSICOES_PERMITIDAS = (StatusDemanda.preenchida, StatusDemanda.encerrada)
@@ -93,15 +96,14 @@ def _notificar_profissionais_compativeis(db: Session, demanda: Demanda) -> None:
             func.lower(func.trim(Profile.cidade)) == demanda.cidade.strip().lower(),
         )
     ).all()
-    for profissional_id in profissional_ids:
-        registrar_notificacao(
-            db,
-            destinatario_id=profissional_id,
-            tipo=TipoNotificacao.nova_oportunidade,
-            titulo="Nova oportunidade compatível",
-            corpo=f"Uma nova demanda em {demanda.cidade} bate com sua especialidade.",
-            link="/oportunidades",
-        )
+    registrar_notificacoes_em_lote(
+        db,
+        destinatarios_ids=list(profissional_ids),
+        tipo=TipoNotificacao.nova_oportunidade,
+        titulo="Nova oportunidade compatível",
+        corpo=f"Uma nova demanda em {demanda.cidade} bate com sua especialidade.",
+        link="/oportunidades",
+    )
     db.commit()
 
 

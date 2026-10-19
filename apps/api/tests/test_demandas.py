@@ -2,8 +2,10 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
 import pytest
+from sqlalchemy import event
 from sqlalchemy.exc import IntegrityError
 
+from app.core.database import engine
 from app.models.contato import Contato, OrigemContato
 from app.models.demanda import Demanda, StatusDemanda
 from tests.fabrica import (
@@ -412,6 +414,52 @@ def test_criar_demanda_notifica_profissional_compativel(client, db_session):
     notificacoes = client.get("/notificacoes")
     assert notificacoes.json()["total"] == 1
     assert notificacoes.json()["items"][0]["tipo"] == "nova_oportunidade"
+
+
+def test_criar_demanda_notifica_varios_profissionais_com_um_so_insert(client, db_session):
+    empresa_id = criar_empresa(db_session, email="rh@clinica.com")
+    criar_assinatura(db_session, empresa_id)
+    profissionais = [
+        criar_profissional(db_session, especialidades=("Enfermagem",), cidade="São Paulo")
+        for _ in range(5)
+    ]
+    db_session.commit()
+
+    inserts = []
+
+    def contar_insert(conn, cursor, statement, parameters, context, executemany):
+        if statement.lstrip().upper().startswith("INSERT INTO NOTIFICACOES"):
+            inserts.append(statement)
+
+    event.listen(engine, "before_cursor_execute", contar_insert)
+    try:
+        autenticar(empresa_id)
+        resposta = client.post("/demandas", json=payload_demanda(db_session))
+    finally:
+        event.remove(engine, "before_cursor_execute", contar_insert)
+
+    assert resposta.status_code == 201
+    assert len(inserts) == 1, f"esperado 1 INSERT em lote, vieram {len(inserts)}"
+    for profissional_id in profissionais:
+        autenticar(profissional_id)
+        assert client.get("/notificacoes").json()["total"] == 1
+
+
+def test_criar_demanda_publica_mesmo_se_o_lote_de_notificacoes_falhar(client, db_session):
+    empresa_id = criar_empresa(db_session, email="rh@clinica.com")
+    criar_assinatura(db_session, empresa_id)
+    criar_profissional(db_session, especialidades=("Enfermagem",), cidade="São Paulo")
+    db_session.commit()
+
+    autenticar(empresa_id)
+    with (
+        patch("app.services.notificacao_service.insert", side_effect=RuntimeError("falha")),
+        patch("app.services.notificacao_service.sentry_sdk.capture_exception") as sentry,
+    ):
+        resposta = client.post("/demandas", json=payload_demanda(db_session))
+
+    assert resposta.status_code == 201
+    sentry.assert_called_once()
 
 
 def test_criar_demanda_notifica_mesmo_com_espaco_sobrando_na_cidade_do_perfil(client, db_session):

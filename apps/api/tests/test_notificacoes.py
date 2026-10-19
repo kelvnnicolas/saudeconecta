@@ -147,3 +147,40 @@ def test_marcar_todas_lidas_marca_so_as_proprias_nao_lidas(client, db_session):
     autenticar(outro)
     listagem_outro = client.get("/notificacoes")
     assert listagem_outro.json()["total_nao_lidas"] == 1
+
+
+def test_marcar_lidas_do_link_marca_so_as_proprias_daquele_link(client, db_session):
+    user_id = criar_profissional(db_session)
+    outro = criar_profissional(db_session, nome="Outro")
+    criar_notificacao(db_session, destinatario_id=user_id, link="/contatos/5")
+    criar_notificacao(db_session, destinatario_id=user_id, link="/contatos/5")
+    criar_notificacao(db_session, destinatario_id=user_id, link="/contatos/6")
+    criar_notificacao(db_session, destinatario_id=outro, link="/contatos/5")
+    db_session.commit()
+
+    autenticar(user_id)
+    resposta = client.post("/notificacoes/marcar-lidas-do-link", json={"link": "/contatos/5"})
+
+    assert resposta.status_code == 200
+    assert resposta.json()["marcadas"] == 2
+    assert client.get("/notificacoes").json()["total_nao_lidas"] == 1  # a de /contatos/6
+
+    autenticar(outro)
+    assert client.get("/notificacoes").json()["total_nao_lidas"] == 1
+
+
+def test_marcar_lidas_do_link_sem_notificacao_devolve_zero(client, db_session):
+    user_id = criar_profissional(db_session)
+    db_session.commit()
+
+    autenticar(user_id)
+    resposta = client.post("/notificacoes/marcar-lidas-do-link", json={"link": "/contatos/99"})
+
+    assert resposta.status_code == 200
+    assert resposta.json()["marcadas"] == 0
+
+
+def test_marcar_lidas_do_link_exige_autenticacao(client):
+    resposta = client.post("/notificacoes/marcar-lidas-do-link", json={"link": "/contatos/5"})
+
+    assert resposta.status_code == 401

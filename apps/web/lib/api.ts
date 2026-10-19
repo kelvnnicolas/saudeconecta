@@ -226,6 +226,7 @@ export const api = {
 
   // Assinatura B2B
   listPlanos: () => request<PlanoRead[]>("/planos", { auth: false }),
+  getPlanoGratuito: () => request<PlanoRead>("/planos/gratuito", { auth: false }),
 
   iniciarCheckout: (planoCodigo: string) =>
     request<CheckoutResponse>("/assinaturas/checkout", {
@@ -246,4 +247,10 @@ export const api = {
 
   marcarTodasNotificacoesLidas: () =>
     request<{ marcadas: number }>("/notificacoes/marcar-todas-lidas", { method: "POST" }),
+
+  marcarNotificacoesLidasDoLink: (link: string) =>
+    request<{ marcadas: number }>("/notificacoes/marcar-lidas-do-link", {
+      method: "POST",
+      body: JSON.stringify({ link }),
+    }),
 };

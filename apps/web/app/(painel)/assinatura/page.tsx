@@ -8,10 +8,12 @@ import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { AvisoLimite } from "@/components/ui/AvisoLimite";
 import { estadoDaCota } from "@/lib/use-uso-mensal";
 import { assinaturaStatusLabel } from "@/components/ui/StatusBadge";
+import { useNotificacoesLidasAoAbrir } from "@/lib/use-notificacoes-lidas-ao-abrir";
 import { api, ApiError } from "@/lib/api";
 import type { MinhaAssinaturaResponse } from "@/lib/types";
 
 export default function MinhaAssinaturaPage() {
+  useNotificacoesLidasAoAbrir("/assinatura");
   const [assinatura, setAssinatura] = useState<MinhaAssinaturaResponse | null>(null);
   const [carregandoAssinatura, setCarregandoAssinatura] = useState(true);
   const [carregando, setCarregando] = useState(false);
