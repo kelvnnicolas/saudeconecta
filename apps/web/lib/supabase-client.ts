@@ -48,6 +48,25 @@ export async function signInWithGoogle() {
   return data;
 }
 
+/**
+ * Pergunta ao Supabase se o login social de um provedor está ativo (`/auth/v1/settings`, rota
+ * pública). Evita mandar a pessoa a uma página de erro quando o provedor ainda não foi ativado
+ * no painel. `true` = ativo, `false` = desativado, `null` = não deu para saber (sem
+ * configuração ou rede): nesse caso quem chama deve tentar o login normalmente.
+ */
+export async function provedorSocialAtivo(provider: string): Promise<boolean | null> {
+  if (!url || !anonKey) return null;
+  try {
+    const resposta = await fetch(`${url}/auth/v1/settings`, { headers: { apikey: anonKey } });
+    if (!resposta.ok) return null;
+    const dados = (await resposta.json()) as { external?: Record<string, boolean> };
+    if (!dados.external || typeof dados.external[provider] !== "boolean") return null;
+    return dados.external[provider];
+  } catch {
+    return null;
+  }
+}
+
 export async function signInWithLinkedIn() {
   if (!supabase) throw new Error("Supabase não configurado (ver .env.example)");
   // O Supabase usa "linkedin_oidc" (OpenID Connect); o provider "linkedin" antigo foi descontinuado.
