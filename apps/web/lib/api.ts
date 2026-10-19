@@ -10,13 +10,16 @@ import type {
   DemandaDetalheEmpresa,
   DemandaDetalheProfissional,
   DemandaRead,
+  EmpresaDiretorioResponse,
   EmpresaRead,
   EmpresaUpdateRequest,
   Especialidade,
   InteresseResponse,
+  ListaNotificacoesResponse,
   MensagemContatoRead,
   MinhaAssinaturaResponse,
   MinhaDemandaRead,
+  NotificacaoRead,
   OportunidadesResponse,
   PlanoRead,
   PortalResponse,
@@ -26,9 +29,41 @@ import type {
   ProfissionalSearchResponse,
   ProfissionalUpdateRequest,
   StatusDemanda,
+  TipoEmpresa,
 } from "./types";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+// Mensagens do backend que não devem chegar ao usuário como estão (inglês do
+// Pydantic/slowapi, "Internal Server Error", "Erro HTTP 500"). Regras de negócio
+// {code, mensagem} e validadores próprios já vêm em português e passam direto.
+const MSG_GENERICA = "Não foi possível concluir a ação. Tente novamente.";
+const MSG_SESSAO = "Sua sessão expirou. Entre novamente para continuar.";
+const MSG_SERVIDOR = "Algo deu errado do nosso lado. Tente novamente em instantes.";
+const MSG_LIMITE = "Muitas tentativas em pouco tempo. Aguarde um instante e tente de novo.";
+const MSG_REDE = "Não foi possível conectar ao servidor. Verifique sua conexão e tente de novo.";
+const MSG_DADOS_INVALIDOS = "Alguns dados estão inválidos. Revise os campos e tente de novo.";
+const MSG_CAMPOS_OBRIGATORIOS = "Preencha todos os campos obrigatórios.";
+
+function mensagemDeValidacao(itens: unknown[]): string | null {
+  const primeiro = itens[0];
+  if (typeof primeiro !== "object" || primeiro === null || !("msg" in primeiro)) return null;
+  const { msg, type } = primeiro as Record<string, unknown>;
+  // Validadores próprios do backend (type "value_error") escrevem em português;
+  // o prefixo "Value error, " é do Pydantic. Os demais tipos são texto em inglês.
+  if (type === "value_error") return String(msg).replace(/^Value error, /, "");
+  if (type === "missing") return MSG_CAMPOS_OBRIGATORIOS;
+  return MSG_DADOS_INVALIDOS;
+}
+
+function mensagemAmigavel(status: number, mensagem: string | null): string {
+  if (status === 401) return MSG_SESSAO;
+  if (status === 429) return MSG_LIMITE;
+  if (status >= 500) return MSG_SERVIDOR;
+  if (mensagem === null) return MSG_GENERICA;
+  // Regras de negócio e validações próprias já têm frase pronta.
+  return mensagem;
+}
 
 export class ApiError extends Error {
   status: number;
@@ -41,15 +76,20 @@ export class ApiError extends Error {
     // negócio). Sem isso, `message` virava o `code` cru ("nao_elegivel"),
     // que telas sem tratamento especial (ex.: criar demanda) mostravam
     // direto pro usuário em vez da frase explicativa que o backend já manda.
-    const isObjectDetail = typeof detail === "object" && detail !== null;
+    // Terceira forma: erro de validação do FastAPI/Pydantic (422), uma lista
+    // [{loc, msg, type}] — sem tratar, caía em "Erro HTTP 422".
+    const isObjectDetail = typeof detail === "object" && detail !== null && !Array.isArray(detail);
     const code = isObjectDetail && "code" in detail ? String((detail as Record<string, unknown>).code) : null;
+    const mensagemValidacao = Array.isArray(detail) ? mensagemDeValidacao(detail) : null;
     const mensagem =
       typeof detail === "string"
         ? detail
-        : isObjectDetail && "mensagem" in detail
-          ? String((detail as Record<string, unknown>).mensagem)
-          : null;
-    super(mensagem ?? code ?? `Erro HTTP ${status}`);
+        : mensagemValidacao
+          ? mensagemValidacao
+          : isObjectDetail && "mensagem" in detail
+            ? String((detail as Record<string, unknown>).mensagem)
+            : null;
+    super(status === 0 ? (mensagem ?? MSG_REDE) : mensagemAmigavel(status, mensagem));
     this.status = status;
     this.code = code;
     this.detail = detail;
@@ -70,7 +110,13 @@ async function request<T>(
     if (token) finalHeaders.set("Authorization", `Bearer ${token}`);
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, { ...rest, headers: finalHeaders });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, { ...rest, headers: finalHeaders });
+  } catch {
+    // Sem rede, servidor fora do ar ou bloqueio de CORS: o navegador só diz "Failed to fetch".
+    throw new ApiError(0, MSG_REDE);
+  }
   if (!res.ok) {
     let body: unknown = null;
     try {
@@ -156,6 +202,10 @@ export const api = {
 
   minhasDemandas: () => request<MinhaDemandaRead[]>("/demandas/minhas"),
 
+  diretorioEmpresas: (
+    params: { q?: string; tipo?: TipoEmpresa; estado?: string; cidade?: string; limit?: number; offset?: number } = {},
+  ) => request<EmpresaDiretorioResponse>(`/empresas/diretorio${qs(params)}`),
+
   oportunidades: (params: { especialidade_id?: number; cidade?: string; limit?: number; offset?: number } = {}) =>
     request<OportunidadesResponse>(`/demandas/oportunidades${qs(params)}`),
 
@@ -176,6 +226,7 @@ export const api = {
 
   // Assinatura B2B
   listPlanos: () => request<PlanoRead[]>("/planos", { auth: false }),
+  getPlanoGratuito: () => request<PlanoRead>("/planos/gratuito", { auth: false }),
 
   iniciarCheckout: (planoCodigo: string) =>
     request<CheckoutResponse>("/assinaturas/checkout", {
@@ -186,4 +237,20 @@ export const api = {
   abrirPortal: () => request<PortalResponse>("/assinaturas/portal", { method: "POST" }),
 
   minhaAssinatura: () => request<MinhaAssinaturaResponse>("/assinaturas/me"),
+
+  // Notificações
+  listarNotificacoes: (params: { limit?: number; offset?: number } = {}) =>
+    request<ListaNotificacoesResponse>(`/notificacoes${qs(params)}`),
+
+  marcarNotificacaoLida: (id: number) =>
+    request<NotificacaoRead>(`/notificacoes/${id}/marcar-lida`, { method: "POST" }),
+
+  marcarTodasNotificacoesLidas: () =>
+    request<{ marcadas: number }>("/notificacoes/marcar-todas-lidas", { method: "POST" }),
+
+  marcarNotificacoesLidasDoLink: (link: string) =>
+    request<{ marcadas: number }>("/notificacoes/marcar-lidas-do-link", {
+      method: "POST",
+      body: JSON.stringify({ link }),
+    }),
 };

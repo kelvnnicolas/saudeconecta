@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 import { ThemeSettings } from "@/components/ui/ThemeSettings";
 import { useCurrentUser } from "@/lib/use-current-user";
 import { signOut } from "@/lib/supabase-client";
@@ -55,9 +56,12 @@ export default function MeuPerfilPage() {
             <Logo compact />
             <span className="font-headline-md text-headline-md text-on-surface">Meu Perfil</span>
           </div>
-          <button onClick={sair} aria-label="Sair" className="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant">
-            <MaterialIcon name="logout" />
-          </button>
+          <div className="flex items-center gap-space-xs">
+            <NotificationBell />
+            <button onClick={sair} aria-label="Sair" className="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant">
+              <MaterialIcon name="logout" />
+            </button>
+          </div>
         </div>
 
         <section className="flex flex-col items-center gap-space-sm bg-surface-container-lowest rounded-2xl p-space-md neu-surface">
@@ -84,7 +88,9 @@ export default function MeuPerfilPage() {
         {profissional && (
           <section className="bg-surface-container-lowest rounded-2xl p-space-md neu-surface flex flex-col gap-space-xs">
             <h2 className="font-title-md text-title-md text-on-surface">Dados profissionais</h2>
-            <p className="font-body-md text-body-md text-on-surface-variant">{profissional.registro_profissional}</p>
+            {profissional.registro_profissional && (
+              <p className="font-body-md text-body-md text-on-surface-variant">{profissional.registro_profissional}</p>
+            )}
             <p className="font-body-md text-body-md text-on-surface-variant">
               {profissional.especialidades.map((e) => e.nome).join(", ")}
             </p>
@@ -112,9 +118,8 @@ export default function MeuPerfilPage() {
           <section className="rounded-2xl p-space-md bg-secondary-container/40 border border-secondary-container flex items-start gap-space-xs">
             <MaterialIcon name="info" className="text-[18px] text-on-secondary-container mt-0.5" />
             <p className="font-caption text-caption text-on-secondary-container">
-              Seu perfil ainda não foi sincronizado com a API (falta um{" "}
-              <code>PUT /profissionais/me</code> ou <code>PUT /empresas/me</code> — normalmente
-              feito no cadastro).
+              Não conseguimos carregar os dados do seu perfil. Saia e entre novamente; se o problema
+              continuar, conclua o cadastro para liberar todas as telas.
             </p>
           </section>
         )}

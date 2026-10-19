@@ -2,16 +2,22 @@ import uuid
 from datetime import UTC, datetime
 
 from fastapi import HTTPException, status
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, update
 from sqlalchemy.orm import Session
 
-from app.core.errors import erro_negocio
+from app.core.config import get_settings
+from app.core.errors import PERFIL_NAO_CONCLUIDO, erro_negocio
 from app.models.contato import Contato
 from app.models.mensagem_contato import MensagemContato
+from app.models.notificacao import TipoNotificacao
 from app.models.profile import Profile
 from app.models.profissional import Profissional
 from app.schemas.contato import ContatoCreateRequest
-from app.services.email_service import send_contact_notification_email
+from app.services import email_templates
+from app.services.aviso_cota import avisar_cota_se_preciso
+from app.services.email_service import enviar_email, send_contact_notification_email
+from app.services.entitlements import verificar_contato_direto
+from app.services.notificacao_service import registrar_notificacao
 
 
 def create_contato(db: Session, solicitante_id: uuid.UUID, data: ContatoCreateRequest) -> Contato:
@@ -19,7 +25,7 @@ def create_contato(db: Session, solicitante_id: uuid.UUID, data: ContatoCreateRe
     if solicitante is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Sincronize seu perfil primeiro via POST /auth/sync",
+            detail=PERFIL_NAO_CONCLUIDO,
         )
 
     profissional = db.get(Profissional, data.profissional_id)
@@ -27,6 +33,9 @@ def create_contato(db: Session, solicitante_id: uuid.UUID, data: ContatoCreateRe
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profissional não encontrado"
         )
+
+    # Só empresas iniciam contato (profissionais só respondem), dentro da cota mensal.
+    verificar_contato_direto(db, solicitante_id)
 
     contato = Contato(
         solicitante_id=solicitante_id,
@@ -39,6 +48,17 @@ def create_contato(db: Session, solicitante_id: uuid.UUID, data: ContatoCreateRe
 
     if profissional.profile.email:
         send_contact_notification_email(profissional.profile.email, solicitante.nome, data.mensagem)
+
+    registrar_notificacao(
+        db,
+        destinatario_id=data.profissional_id,
+        tipo=TipoNotificacao.novo_contato,
+        titulo="Novo contato recebido",
+        corpo=f"{solicitante.nome} enviou uma mensagem.",
+        link=f"/contatos/{contato.id}",
+    )
+    avisar_cota_se_preciso(db, solicitante_id)
+    db.commit()
 
     return contato
 
@@ -55,13 +75,11 @@ def list_own_contatos(db: Session, user_id: uuid.UUID) -> list[Contato]:
 
 def _contato_das_partes(db: Session, contato_id: int, user_id: uuid.UUID) -> Contato:
     contato = db.get(Contato, contato_id)
-    if contato is None:
+    # Quem não é parte recebe a mesma resposta de um contato que não existe: os IDs
+    # são sequenciais e um 403 diferente revelaria quais contatos existem.
+    if contato is None or user_id not in (contato.solicitante_id, contato.profissional_id):
         raise erro_negocio(
             status.HTTP_404_NOT_FOUND, "contato_inexistente", "Contato não encontrado"
-        )
-    if user_id not in (contato.solicitante_id, contato.profissional_id):
-        raise erro_negocio(
-            status.HTTP_403_FORBIDDEN, "nao_participante", "Você não faz parte deste contato"
         )
     return contato
 
@@ -78,11 +96,29 @@ def listar_mensagens(db: Session, user_id: uuid.UUID, contato_id: int) -> list[M
 
 
 def criar_mensagem(db: Session, user_id: uuid.UUID, contato_id: int, corpo: str) -> MensagemContato:
-    _contato_das_partes(db, contato_id, user_id)
+    contato = _contato_das_partes(db, contato_id, user_id)
     mensagem = MensagemContato(contato_id=contato_id, autor_id=user_id, corpo=corpo)
     db.add(mensagem)
     db.commit()
     db.refresh(mensagem)
+
+    destinatario_id = (
+        contato.profissional_id if user_id == contato.solicitante_id else contato.solicitante_id
+    )
+    registrar_notificacao(
+        db,
+        destinatario_id=destinatario_id,
+        tipo=TipoNotificacao.nova_mensagem,
+        titulo="Nova mensagem recebida",
+        corpo=corpo[:200],
+        link=f"/contatos/{contato_id}",
+    )
+    db.commit()
+    destinatario_profile = db.get(Profile, destinatario_id)
+    if destinatario_profile is not None and destinatario_profile.email:
+        link = f"{get_settings().app_url}/contatos/{contato_id}"
+        enviar_email(destinatario_profile.email, *email_templates.nova_mensagem_recebida(link))
+
     return mensagem
 
 
@@ -94,8 +130,33 @@ def aceitar_demanda_direta(db: Session, user_id: uuid.UUID, contato_id: int) -> 
             "apenas_profissional_aceita",
             "Só o profissional pode aceitar a demanda direta",
         )
-    if contato.aceito_em is None:
-        contato.aceito_em = datetime.now(UTC)
+    # Um único UPDATE condicional decide quem aceitou: se duas requisições chegam juntas,
+    # só uma encontra aceito_em vazio e só ela notifica (a outra recebe o estado atual).
+    aceitou_agora = (
+        db.execute(
+            update(Contato)
+            .where(Contato.id == contato.id, Contato.aceito_em.is_(None))
+            .values(aceito_em=datetime.now(UTC))
+            .execution_options(synchronize_session=False)
+        ).rowcount
+        == 1
+    )
+    db.commit()
+    db.refresh(contato)
+
+    if aceitou_agora:
+        registrar_notificacao(
+            db,
+            destinatario_id=contato.solicitante_id,
+            tipo=TipoNotificacao.aceite_demanda,
+            titulo="Demanda direta aceita",
+            corpo="O profissional aceitou atender sua demanda direta.",
+            link=f"/contatos/{contato_id}",
+        )
         db.commit()
-        db.refresh(contato)
+        solicitante_profile = db.get(Profile, contato.solicitante_id)
+        if solicitante_profile is not None and solicitante_profile.email:
+            link = f"{get_settings().app_url}/contatos/{contato_id}"
+            enviar_email(solicitante_profile.email, *email_templates.aceite_demanda_direta(link))
+
     return contato

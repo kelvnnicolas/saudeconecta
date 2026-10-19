@@ -4,10 +4,14 @@ from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core.errors import PERFIL_NAO_CONCLUIDO
 from app.models.avaliacao import Avaliacao
+from app.models.demanda import Demanda, StatusDemanda
 from app.models.empresa import Empresa, TipoEmpresa
-from app.models.profile import Profile
+from app.models.profile import Papel, Profile
+from app.schemas.busca import EmpresaDiretorioResult
 from app.schemas.empresa import EmpresaRead, EmpresaUpdateRequest
+from app.services.demandas import exigir_papel
 
 
 def get_empresa_by_id(db: Session, user_id: uuid.UUID) -> Empresa | None:
@@ -58,6 +62,49 @@ def search_empresas(
     return [(row[0], row[1]) for row in rows], total
 
 
+def contar_demandas_abertas(db: Session, empresa_ids: list[uuid.UUID]) -> dict[uuid.UUID, int]:
+    if not empresa_ids:
+        return {}
+    linhas = db.execute(
+        select(Demanda.empresa_id, func.count())
+        .where(
+            Demanda.empresa_id.in_(empresa_ids),
+            Demanda.status == StatusDemanda.aberta,
+            Demanda.expira_em > func.now(),
+        )
+        .group_by(Demanda.empresa_id)
+    ).all()
+    return {empresa_id: total for empresa_id, total in linhas}
+
+
+def listar_diretorio(
+    db: Session,
+    user_id: uuid.UUID,
+    q: str | None,
+    tipo: TipoEmpresa | None,
+    cidade: str | None,
+    estado: str | None,
+    limit: int,
+    offset: int,
+) -> tuple[list[EmpresaDiretorioResult], int]:
+    exigir_papel(db, user_id, Papel.profissional)
+    resultados, total = search_empresas(db, q, tipo, cidade, estado, limit, offset)
+    contagens = contar_demandas_abertas(db, [empresa.user_id for empresa, _ in resultados])
+    itens = [
+        EmpresaDiretorioResult(
+            user_id=empresa.user_id,
+            nome_fantasia=empresa.nome_fantasia,
+            tipo=empresa.tipo,
+            cidade=empresa.cidade,
+            estado=empresa.estado,
+            avatar_url=empresa.profile.avatar_url,
+            demandas_abertas=contagens.get(empresa.user_id, 0),
+        )
+        for empresa, _ in resultados
+    ]
+    return itens, total
+
+
 def to_empresa_read(empresa: Empresa) -> EmpresaRead:
     return EmpresaRead(
         user_id=empresa.user_id,
@@ -75,7 +122,7 @@ def upsert_empresa(db: Session, user_id: uuid.UUID, data: EmpresaUpdateRequest) 
     if profile is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Sincronize seu perfil primeiro via POST /auth/sync",
+            detail=PERFIL_NAO_CONCLUIDO,
         )
     if profile.papel != "empresa":
         raise HTTPException(

@@ -67,7 +67,7 @@ lib/
 ├── api.ts               # cliente HTTP tipado, uma função por endpoint
 ├── supabase-client.ts    # Supabase Auth (signIn/signUp/signOut/onAuthStateChange)
 ├── use-current-user.ts   # sessão real + GET /profissionais|empresas/{id}
-├── mock-data.ts           # só a lista parcial de especialidades (prioridade adiada)
+├── use-especialidades.ts  # lista de especialidades (GET /especialidades, com cache)
 └── validations/           # schemas Zod dos formulários
 ```
 
@@ -84,8 +84,6 @@ completa. Resumo:
 3. Gaps de dados que dependem do backend (nome de quem avaliou, preço dos
    planos, link de pagamento por contato) — documentados por página no
    checklist, nenhum bloqueia o resto de funcionar.
-4. Lista de especialidades em `lib/mock-data.ts` incompleta (6 das 10 reais,
-   prioridade adiada).
 
 ## Testado manualmente
 

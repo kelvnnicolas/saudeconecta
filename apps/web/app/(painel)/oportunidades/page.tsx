@@ -1,14 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
+import { ListaEsqueleto } from "@/components/ui/Skeleton";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 import { DemandCard } from "@/components/demandas/DemandCard";
+import { useNotificacoesLidasAoAbrir } from "@/lib/use-notificacoes-lidas-ao-abrir";
 import { api, ApiError } from "@/lib/api";
 import type { DemandaRead } from "@/lib/types";
 
 export default function OportunidadesPage() {
+  useNotificacoesLidasAoAbrir("/oportunidades");
   const [oportunidades, setOportunidades] = useState<DemandaRead[]>([]);
   const [carregando, setCarregando] = useState(true);
   // GET /demandas/oportunidades não devolve ja_demonstrei_interesse por item —
@@ -46,21 +51,28 @@ export default function OportunidadesPage() {
   return (
     <>
       <main className="flex-1 pt-space-md pb-24 px-gutter bg-surface min-h-screen flex flex-col gap-space-md">
-        <div>
-          <div className="flex items-center gap-1.5">
-            <Logo compact />
-            <h1 className="font-headline-md text-headline-md text-on-surface">Oportunidades</h1>
+        <div className="flex items-start justify-between gap-space-sm">
+          <div>
+            <div className="flex items-center gap-1.5">
+              <Logo compact />
+              <h1 className="font-headline-md text-headline-md text-on-surface">Oportunidades</h1>
+            </div>
+            <p className="font-body-md text-body-md text-on-surface-variant">
+              Demandas abertas por empresas compatíveis com suas especialidades e cidade.
+            </p>
           </div>
-          <p className="font-body-md text-body-md text-on-surface-variant">
-            Demandas abertas por empresas compatíveis com suas especialidades e cidade.
-          </p>
+          <NotificationBell />
         </div>
 
-        {carregando && (
-          <div className="flex justify-center py-space-lg">
-            <MaterialIcon name="progress_activity" className="text-[28px] text-primary animate-spin" />
-          </div>
-        )}
+        <Link
+          href="/empresas"
+          className="inline-flex items-center gap-1 self-start font-label-md text-label-md text-primary"
+        >
+          <MaterialIcon name="apartment" className="text-[18px]" />
+          Ver empresas
+        </Link>
+
+        {carregando && <ListaEsqueleto />}
         {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">{erro}</p>}
 
         <div className="flex flex-col gap-space-sm">

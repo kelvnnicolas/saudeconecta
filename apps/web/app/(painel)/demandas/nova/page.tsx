@@ -5,10 +5,15 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Header } from "@/components/ui/Header";
+import { CidadeEstadoFields } from "@/components/ui/CidadeEstadoFields";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
-import { MOCK_ESPECIALIDADES } from "@/lib/mock-data";
+import { useEspecialidades } from "@/lib/use-especialidades";
 import { type CriarDemandaInput, criarDemandaSchema } from "@/lib/validations/demanda";
+import { UsoDaCota } from "@/components/ui/UsoDaCota";
+import { CamposDoFormulario } from "@/components/ui/CamposDoFormulario";
+import { useBloqueioDePlano } from "@/lib/use-bloqueio-de-plano";
 import { api } from "@/lib/api";
+import { useAvisoAoSair } from "@/lib/use-aviso-ao-sair";
 
 const TURNOS_SUGERIDOS = [
   "08:00 - 18:00 (10h)",
@@ -27,18 +32,46 @@ const SERVICOS_SUGERIDOS = [
   "Curativos e cuidados com feridas",
 ];
 
+// Mesma aparência para todos os campos; as sugestões (turno, serviço) são botões de verdade,
+// com relevo, porque nesse tema o fundo dos "containers" é igual ao da página.
+const CAMPO =
+  "h-12 w-full min-w-0 px-space-md rounded-xl bg-surface-container-lowest text-on-surface placeholder:text-outline neu-inset-sm focus:outline-none focus:ring-2 focus:ring-primary";
+const SUGESTAO =
+  "min-h-9 px-space-sm py-1.5 rounded-full text-on-surface-variant font-caption text-caption shadow-[3px_3px_6px_var(--shadow-dark),-3px_-3px_6px_var(--shadow-light)] neu-pressable focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+
+// Data de hoje no fuso do aparelho (AAAA-MM-DD), para não oferecer dias que já passaram.
+function hojeIso() {
+  const agora = new Date();
+  const mes = String(agora.getMonth() + 1).padStart(2, "0");
+  const dia = String(agora.getDate()).padStart(2, "0");
+  return `${agora.getFullYear()}-${mes}-${dia}`;
+}
+
 export default function CriarNovaDemandaPage() {
   const router = useRouter();
   const [enviada, setEnviada] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const { uso, plano, bloqueado, pagamentoPendente, tratarErro } = useBloqueioDePlano();
+  const { especialidades, carregando, erro: erroEspecialidades } = useEspecialidades();
   const {
     register,
     handleSubmit,
     setValue,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<CriarDemandaInput>({ resolver: zodResolver(criarDemandaSchema) });
+  } = useForm<CriarDemandaInput>({
+    resolver: zodResolver(criarDemandaSchema),
+    defaultValues: { cidade: "", estado: "" },
+  });
   const descricao = watch("descricao") ?? "";
+  // isDirty do RHF começa true aqui (select com valueAsNumber vira NaN), então
+  // olhamos direto se algum campo tem conteúdo.
+  const algumCampoPreenchido = Object.values(watch()).some(
+    (v) => v !== undefined && v !== null && v !== "" && !(typeof v === "number" && Number.isNaN(v)),
+  );
+  const temAlteracoesNaoSalvas = algumCampoPreenchido && !isSubmitting && !enviada;
+
+  useAvisoAoSair(temAlteracoesNaoSalvas);
 
   function aplicarServicoSugerido(servico: string) {
     const atual = descricao.trim();
@@ -61,6 +94,7 @@ export default function CriarNovaDemandaPage() {
       });
       setEnviada(true);
     } catch (e) {
+      if (tratarErro(e)) return;
       setErro(e instanceof Error ? e.message : "Não foi possível publicar a demanda.");
     }
   }
@@ -82,7 +116,11 @@ export default function CriarNovaDemandaPage() {
 
   return (
     <>
-      <Header title="Criar Nova Demanda" backHref="/demandas" />
+      <Header
+        title="Criar Nova Demanda"
+        backHref="/demandas"
+        confirmarSaida={temAlteracoesNaoSalvas ? "Sair sem publicar? Os dados preenchidos serão perdidos." : undefined}
+      />
       <main className="flex-1 pt-16 pb-space-xl px-gutter bg-surface min-h-screen">
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-space-md max-w-sm w-full mx-auto mt-space-sm">
           <div className="flex flex-col gap-1">
@@ -92,99 +130,111 @@ export default function CriarNovaDemandaPage() {
             </p>
           </div>
 
-          <label className="flex flex-col gap-1">
-            <span className="font-label-md text-label-md text-on-surface">Qual profissional?</span>
-            <select
-              {...register("especialidadeId", { valueAsNumber: true })}
-              defaultValue=""
-              className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm"
-            >
-              <option value="" disabled>Selecione a especialidade</option>
-              {MOCK_ESPECIALIDADES.map((e) => (
-                <option key={e.id} value={e.id}>{e.nome}</option>
-              ))}
-            </select>
-            {errors.especialidadeId && <span className="font-caption text-caption text-error">{errors.especialidadeId.message}</span>}
-          </label>
+          <UsoDaCota uso={uso} plano={plano} contexto="demanda" pagamentoPendente={pagamentoPendente} />
 
-          <div className="flex gap-space-sm">
-            <label className="flex-1 flex flex-col gap-1">
-              <span className="font-label-md text-label-md text-on-surface">Cidade</span>
-              <input {...register("cidade")} className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
+          <CamposDoFormulario bloqueado={bloqueado}>
+            <label className="flex flex-col gap-1">
+              <span className="font-label-md text-label-md text-on-surface">Qual profissional?</span>
+              <select
+                {...register("especialidadeId", { valueAsNumber: true })}
+                defaultValue=""
+                className={CAMPO}
+              >
+                <option value="" disabled>{carregando ? "Carregando especialidades..." : "Selecione a especialidade"}</option>
+                {especialidades.map((e) => (
+                  <option key={e.id} value={e.id}>{e.nome}</option>
+                ))}
+              </select>
+              {erroEspecialidades && (
+                <span role="alert" className="font-caption text-caption text-error">
+                  Não foi possível carregar as especialidades. Recarregue a página.
+                </span>
+              )}
+              {errors.especialidadeId && <span className="font-caption text-caption text-error">{errors.especialidadeId.message}</span>}
             </label>
-            <label className="w-20 flex flex-col gap-1">
-              <span className="font-label-md text-label-md text-on-surface">UF</span>
-              <input {...register("estado")} maxLength={2} className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm uppercase" />
+
+            <CidadeEstadoFields
+              estado={watch("estado") ?? ""}
+              cidade={watch("cidade") ?? ""}
+              onChange={(campo, valor) => setValue(campo, valor, { shouldValidate: valor !== "", shouldDirty: true })}
+              erro={errors.cidade?.message ?? errors.estado?.message}
+              />
+            <label className="flex flex-col gap-1">
+              <span className="font-label-md text-label-md text-on-surface">Bairro (opcional)</span>
+              <input {...register("bairro")} className={CAMPO} />
             </label>
-          </div>
-          <label className="flex flex-col gap-1">
-            <span className="font-label-md text-label-md text-on-surface">Bairro (opcional)</span>
-            <input {...register("bairro")} className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
-          </label>
-          {(errors.cidade || errors.estado) && (
-            <span className="font-caption text-caption text-error">{errors.cidade?.message ?? errors.estado?.message}</span>
+
+            <label className="flex flex-col gap-1">
+              <span className="font-label-md text-label-md text-on-surface">Data de início</span>
+              <input
+                type="date"
+                min={hojeIso()}
+                {...register("dataInicio")}
+                className={`${CAMPO} campo-data ${watch("dataInicio") ? "" : "text-outline"}`}
+              />
+              {errors.dataInicio && <span className="font-caption text-caption text-error">{errors.dataInicio.message}</span>}
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span className="font-label-md text-label-md text-on-surface">Turno / horário</span>
+              <input {...register("turno")} placeholder="Ex.: 07:00 - 19:00 (12h Dia)" className={CAMPO} />
+              <div className="flex flex-wrap gap-space-xs mt-1">
+                {TURNOS_SUGERIDOS.map((t) => (
+                  <button type="button" key={t} onClick={() => setValue("turno", t, { shouldValidate: true })} className={SUGESTAO}>
+                    {t}
+                  </button>
+                ))}
+              </div>
+              {errors.turno && <span className="font-caption text-caption text-error">{errors.turno.message}</span>}
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="font-label-md text-label-md text-on-surface">Descrição da necessidade</span>
+                <span className="font-caption text-caption text-on-surface-variant">{descricao.length}/500</span>
+              </div>
+              <textarea
+                {...register("descricao")}
+                rows={4}
+                maxLength={500}
+                placeholder="Conte mais sobre o que você precisa..."
+                className="w-full min-w-0 px-space-md py-space-sm rounded-xl bg-surface-container-lowest text-on-surface placeholder:text-outline neu-inset-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <div className="flex flex-wrap gap-space-xs">
+                {SERVICOS_SUGERIDOS.map((s) => (
+                  <button type="button" key={s} onClick={() => aplicarServicoSugerido(s)} className={SUGESTAO}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+              {errors.descricao && <span className="font-caption text-caption text-error">{errors.descricao.message}</span>}
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span className="font-label-md text-label-md text-on-surface">Remuneração oferecida (opcional)</span>
+              <input type="number" step="0.01" min="0" inputMode="decimal" {...register("valorOferecido")} placeholder="Ex.: 180" className={CAMPO} />
+              {errors.valorOferecido && <span className="font-caption text-caption text-error">{errors.valorOferecido.message}</span>}
+            </label>
+          </CamposDoFormulario>
+          {erro && (
+            <p role="alert" className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">
+              {erro}
+            </p>
           )}
-
-          <label className="flex flex-col gap-1">
-            <span className="font-label-md text-label-md text-on-surface">Data de início</span>
-            <input type="date" {...register("dataInicio")} className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
-            {errors.dataInicio && <span className="font-caption text-caption text-error">{errors.dataInicio.message}</span>}
-          </label>
-
-          <label className="flex flex-col gap-1">
-            <span className="font-label-md text-label-md text-on-surface">Turno / horário</span>
-            <input {...register("turno")} placeholder="Ex.: 07:00 - 19:00 (12h Dia)" className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
-            <div className="flex flex-wrap gap-space-xs mt-1">
-              {TURNOS_SUGERIDOS.map((t) => (
-                <button type="button" key={t} onClick={() => setValue("turno", t, { shouldValidate: true })} className="px-space-sm py-1 rounded-full bg-surface-container-low text-on-surface-variant font-caption text-caption">
-                  {t}
-                </button>
-              ))}
-            </div>
-            {errors.turno && <span className="font-caption text-caption text-error">{errors.turno.message}</span>}
-          </label>
-
-          <label className="flex flex-col gap-1">
-            <div className="flex items-center justify-between">
-              <span className="font-label-md text-label-md text-on-surface">Descrição da necessidade</span>
-              <span className="font-caption text-caption text-on-surface-variant">{descricao.length}/500</span>
-            </div>
-            <textarea
-              {...register("descricao")}
-              rows={4}
-              maxLength={500}
-              placeholder="Conte mais sobre o que você precisa..."
-              className="px-space-md py-space-sm rounded-xl bg-surface-container-lowest neu-inset-sm resize-none"
-            />
-            <div className="flex flex-wrap gap-space-xs">
-              {SERVICOS_SUGERIDOS.map((s) => (
-                <button type="button" key={s} onClick={() => aplicarServicoSugerido(s)} className="px-space-sm py-1 rounded-full bg-surface-container-low text-on-surface-variant font-caption text-caption">
-                  {s}
-                </button>
-              ))}
-            </div>
-            {errors.descricao && <span className="font-caption text-caption text-error">{errors.descricao.message}</span>}
-          </label>
-
-          <label className="flex flex-col gap-1">
-            <span className="font-label-md text-label-md text-on-surface">Remuneração oferecida (opcional)</span>
-            <input type="number" step="0.01" {...register("valorOferecido")} placeholder="Ex.: 180" className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
-            {errors.valorOferecido && <span className="font-caption text-caption text-error">{errors.valorOferecido.message}</span>}
-          </label>
-
-          {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">{erro}</p>}
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || bloqueado}
             className="h-12 rounded-xl neu-surface neu-pressable bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center gap-space-xs disabled:opacity-60"
           >
-            <MaterialIcon name="send" className="text-[18px]" />
-            Publicar demanda
+            <MaterialIcon name={bloqueado ? "lock" : "send"} className="text-[18px]" />
+            {bloqueado ? (pagamentoPendente ? "Pagamento pendente" : "Limite do mês atingido") : "Publicar demanda"}
           </button>
-          <span className="text-center font-caption text-caption text-on-surface-variant">
-            Sem taxas para publicação inicial &middot; cancele quando desejar
-          </span>
+          {!bloqueado && (
+            <span className="text-center font-caption text-caption text-on-surface-variant">
+              Publicar uma demanda usa 1 do limite mensal do seu plano.
+            </span>
+          )}
         </form>
       </main>
     </>

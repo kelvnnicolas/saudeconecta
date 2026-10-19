@@ -2,8 +2,10 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
 import pytest
+from sqlalchemy import event
 from sqlalchemy.exc import IntegrityError
 
+from app.core.database import engine
 from app.models.contato import Contato, OrigemContato
 from app.models.demanda import Demanda, StatusDemanda
 from tests.fabrica import (
@@ -342,6 +344,169 @@ def test_interesse_cria_contato_de_origem_demanda_e_avisa_empresa(client, db_ses
     assert assunto == "Um profissional demonstrou interesse na sua demanda"
     assert f"http://localhost:3000/contatos/{contato.id}" in texto
     assert DESCRICAO_SENSIVEL not in texto + html + assunto
+
+
+def test_interesse_gera_notificacao_para_empresa(client, db_session, cenario):
+    empresa_id, demanda, profissional_id = cenario
+    autenticar(profissional_id)
+    response, _ = _interesse(client, demanda.id)
+    assert response.status_code == 201
+
+    autenticar(empresa_id)
+    notificacoes = client.get("/notificacoes")
+    assert notificacoes.json()["total"] == 1
+    assert notificacoes.json()["items"][0]["tipo"] == "novo_interesse"
+
+
+def test_interesse_comita_apos_registrar_notificacao(client, db_session, cenario):
+    # registrar_notificacao() só dá flush, nunca commit (a própria função
+    # participaria de um savepoint aberto por um caller como o webhook do
+    # Stripe se também commitasse) — quem chama é responsável por commitar.
+    # O db_session da suíte é compartilhado entre a requisição (que roda numa
+    # thread do threadpool do FastAPI) e o teste, o que torna um rollback
+    # no meio do teste um jeito não confiável de provar que um commit real
+    # aconteceu; espiar Session.commit não depende de threads.
+    _, demanda, profissional_id = cenario
+    autenticar(profissional_id)
+
+    with patch.object(db_session, "commit", wraps=db_session.commit) as commit_espiao:
+        response, _ = _interesse(client, demanda.id)
+
+    assert response.status_code == 201
+    assert commit_espiao.call_count == 2, (
+        "demonstrar_interesse deve commitar o contato e, separadamente, "
+        "a notificação — um commit só significa que a notificação ficou "
+        "apenas flushed e nunca foi persistida de verdade"
+    )
+
+
+def test_criar_demanda_comita_apos_notificar_profissionais(client, db_session):
+    empresa_id = criar_empresa(db_session, email="rh@clinica.com")
+    criar_assinatura(db_session, empresa_id)
+    criar_profissional(db_session, especialidades=("Enfermagem",), cidade="São Paulo")
+    db_session.commit()
+
+    autenticar(empresa_id)
+    with patch.object(db_session, "commit", wraps=db_session.commit) as commit_espiao:
+        resposta = client.post("/demandas", json=payload_demanda(db_session))
+
+    assert resposta.status_code == 201
+    assert commit_espiao.call_count == 2, (
+        "criar_demanda deve commitar a demanda e, separadamente, o laço de "
+        "notificações em _notificar_profissionais_compativeis — um commit só "
+        "significa que as notificações ficaram apenas flushed"
+    )
+
+
+def test_criar_demanda_notifica_profissional_compativel(client, db_session):
+    empresa_id = criar_empresa(db_session, email="rh@clinica.com")
+    criar_assinatura(db_session, empresa_id)
+    profissional_id = criar_profissional(
+        db_session, especialidades=("Enfermagem",), cidade="São Paulo"
+    )
+    db_session.commit()
+
+    autenticar(empresa_id)
+    resposta = client.post("/demandas", json=payload_demanda(db_session))
+    assert resposta.status_code == 201
+
+    autenticar(profissional_id)
+    notificacoes = client.get("/notificacoes")
+    assert notificacoes.json()["total"] == 1
+    assert notificacoes.json()["items"][0]["tipo"] == "nova_oportunidade"
+
+
+def test_criar_demanda_notifica_varios_profissionais_com_um_so_insert(client, db_session):
+    empresa_id = criar_empresa(db_session, email="rh@clinica.com")
+    criar_assinatura(db_session, empresa_id)
+    profissionais = [
+        criar_profissional(db_session, especialidades=("Enfermagem",), cidade="São Paulo")
+        for _ in range(5)
+    ]
+    db_session.commit()
+
+    inserts = []
+
+    def contar_insert(conn, cursor, statement, parameters, context, executemany):
+        if statement.lstrip().upper().startswith("INSERT INTO NOTIFICACOES"):
+            inserts.append(statement)
+
+    event.listen(engine, "before_cursor_execute", contar_insert)
+    try:
+        autenticar(empresa_id)
+        resposta = client.post("/demandas", json=payload_demanda(db_session))
+    finally:
+        event.remove(engine, "before_cursor_execute", contar_insert)
+
+    assert resposta.status_code == 201
+    assert len(inserts) == 1, f"esperado 1 INSERT em lote, vieram {len(inserts)}"
+    for profissional_id in profissionais:
+        autenticar(profissional_id)
+        assert client.get("/notificacoes").json()["total"] == 1
+
+
+def test_criar_demanda_publica_mesmo_se_o_lote_de_notificacoes_falhar(client, db_session):
+    empresa_id = criar_empresa(db_session, email="rh@clinica.com")
+    criar_assinatura(db_session, empresa_id)
+    criar_profissional(db_session, especialidades=("Enfermagem",), cidade="São Paulo")
+    db_session.commit()
+
+    autenticar(empresa_id)
+    with (
+        patch("app.services.notificacao_service.insert", side_effect=RuntimeError("falha")),
+        patch("app.services.notificacao_service.sentry_sdk.capture_exception") as sentry,
+    ):
+        resposta = client.post("/demandas", json=payload_demanda(db_session))
+
+    assert resposta.status_code == 201
+    sentry.assert_called_once()
+
+
+def test_criar_demanda_notifica_mesmo_com_espaco_sobrando_na_cidade_do_perfil(client, db_session):
+    empresa_id = criar_empresa(db_session, email="rh@clinica.com")
+    criar_assinatura(db_session, empresa_id)
+    profissional_id = criar_profissional(
+        db_session, especialidades=("Enfermagem",), cidade="  São Paulo "
+    )
+    db_session.commit()
+
+    autenticar(empresa_id)
+    assert client.post("/demandas", json=payload_demanda(db_session)).status_code == 201
+
+    autenticar(profissional_id)
+    assert client.get("/notificacoes").json()["total"] == 1
+
+
+def test_criar_demanda_nao_notifica_profissional_de_outra_especialidade(client, db_session):
+    empresa_id = criar_empresa(db_session, email="rh@clinica.com")
+    criar_assinatura(db_session, empresa_id)
+    profissional_id = criar_profissional(
+        db_session, especialidades=("Fisioterapia",), cidade="São Paulo"
+    )
+    db_session.commit()
+
+    autenticar(empresa_id)
+    client.post("/demandas", json=payload_demanda(db_session))
+
+    autenticar(profissional_id)
+    notificacoes = client.get("/notificacoes")
+    assert notificacoes.json()["total"] == 0
+
+
+def test_criar_demanda_nao_notifica_profissional_de_outra_cidade(client, db_session):
+    empresa_id = criar_empresa(db_session, email="rh@clinica.com")
+    criar_assinatura(db_session, empresa_id)
+    profissional_id = criar_profissional(
+        db_session, especialidades=("Enfermagem",), cidade="Curitiba"
+    )
+    db_session.commit()
+
+    autenticar(empresa_id)
+    client.post("/demandas", json=payload_demanda(db_session))
+
+    autenticar(profissional_id)
+    notificacoes = client.get("/notificacoes")
+    assert notificacoes.json()["total"] == 0
 
 
 def test_interesse_guarda_mensagem_opcional_do_profissional(client, db_session, cenario):

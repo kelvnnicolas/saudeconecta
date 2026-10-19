@@ -1,20 +1,59 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
+import { CampoSenha } from "@/components/ui/CampoSenha";
+import { mensagemDeErroAuth } from "@/lib/erros-auth";
 import { type LoginInput, loginSchema } from "@/lib/validations/auth";
-import { signInWithFacebook, signInWithGoogle, signInWithPassword } from "@/lib/supabase-client";
+import { getSession, signInWithFacebook, signInWithGoogle, signInWithPassword, signOut } from "@/lib/supabase-client";
+
+type PapelEntrada = "profissional" | "empresa";
+
+const PAPEIS: { valor: PapelEntrada; rotulo: string; criar: string; href: string }[] = [
+  { valor: "empresa", rotulo: "Empresa ou pessoa", criar: "Criar conta de empresa", href: "/cadastro/empresa" },
+  { valor: "profissional", rotulo: "Profissional", criar: "Criar conta de profissional", href: "/cadastro/profissional" },
+];
+
+const CHAVE_PAPEL = "saudeconecta:entrar-papel";
 
 export default function EntrarPage() {
   const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [provedorSocial, setProvedorSocial] = useState<"google" | "facebook" | null>(null);
+  const [papelEscolhido, setPapelEscolhido] = useState<PapelEntrada>("empresa");
+  const [semCadastro, setSemCadastro] = useState(false);
+
+  // O tipo de conta vem de ?papel= (links), senão do último usado neste aparelho.
+  useEffect(() => {
+    const doLink = new URLSearchParams(window.location.search).get("papel");
+    let guardado: string | null = null;
+    try {
+      guardado = localStorage.getItem(CHAVE_PAPEL);
+    } catch {
+      // storage bloqueado: segue com o padrão
+    }
+    const inicial = [doLink, guardado].find((v) => v === "profissional" || v === "empresa");
+    if (inicial) setPapelEscolhido(inicial as PapelEntrada);
+  }, []);
+
+  const papelAtual = PAPEIS.find((p) => p.valor === papelEscolhido) ?? PAPEIS[0]!;
+
+  function escolherPapel(papel: PapelEntrada) {
+    setPapelEscolhido(papel);
+    setErro(null);
+    setSemCadastro(false);
+    try {
+      localStorage.setItem(CHAVE_PAPEL, papel);
+    } catch {
+      // sem storage, só não lembra a escolha
+    }
+  }
   const {
     register,
     handleSubmit,
@@ -23,15 +62,30 @@ export default function EntrarPage() {
 
   async function onSubmit(data: LoginInput) {
     setErro(null);
+    setSemCadastro(false);
     setEnviando(true);
     try {
-      // TODO(integração): depois do login, chamar api.syncProfile só se for um
-      // usuário novo (profile ainda não existe) — normalmente é a própria tela
-      // de cadastro que faz o /auth/sync inicial.
       await signInWithPassword(data.email, data.password);
+      // A conta tem um tipo (profissional ou empresa) gravado no cadastro. Se não for o
+      // escolhido aqui, não deixa entrar por engano e leva para o lado certo.
+      const sessao = await getSession();
+      const papelDaConta = sessao?.user.user_metadata?.papel;
+      if ((papelDaConta === "empresa" || papelDaConta === "profissional") && papelDaConta !== papelEscolhido) {
+        await signOut();
+        escolherPapel(papelDaConta);
+        setErro(
+          papelDaConta === "empresa"
+            ? "Esta conta é de empresa ou pessoa. Ajustamos a opção acima: entre de novo."
+            : "Esta conta é de profissional. Ajustamos a opção acima: entre de novo.",
+        );
+        return;
+      }
       router.push("/buscar");
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não foi possível entrar. Verifique os dados.");
+      const mensagem = mensagemDeErroAuth(e, "Não foi possível entrar. Verifique os dados.");
+      setErro(mensagem);
+      // Credencial recusada: pode ser senha errada ou falta de cadastro (o Supabase não diz qual).
+      setSemCadastro(mensagem.startsWith("E-mail ou senha incorretos"));
     } finally {
       setEnviando(false);
     }
@@ -43,7 +97,7 @@ export default function EntrarPage() {
     try {
       await signInWithGoogle();
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não foi possível entrar com o Google.");
+      setErro(mensagemDeErroAuth(e, "Não foi possível entrar com o Google."));
     } finally {
       setProvedorSocial(null);
     }
@@ -55,7 +109,7 @@ export default function EntrarPage() {
     try {
       await signInWithFacebook();
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não foi possível entrar com o Facebook.");
+      setErro(mensagemDeErroAuth(e, "Não foi possível entrar com o Facebook."));
     } finally {
       setProvedorSocial(null);
     }
@@ -65,10 +119,30 @@ export default function EntrarPage() {
     <main className="relative flex-1 flex flex-col justify-center px-gutter py-space-xl bg-surface min-h-screen gap-space-lg">
       <div className="flex flex-col items-center gap-space-xs">
         <Logo />
-        <h1 className="font-headline-lg text-headline-lg text-on-surface">Acesse sua conta</h1>
+        <h1 className="font-headline-lg text-headline-lg text-on-surface">Entre para começar</h1>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-space-sm max-w-sm w-full mx-auto">
+        <div role="radiogroup" aria-label="Tipo de conta" className="vidro flex rounded-full p-1">
+          {PAPEIS.map((papel) => {
+            const ativo = papelEscolhido === papel.valor;
+            return (
+              <button
+                key={papel.valor}
+                type="button"
+                role="radio"
+                aria-checked={ativo}
+                onClick={() => escolherPapel(papel.valor)}
+                className={`flex-1 h-11 rounded-full font-label-md text-label-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                  ativo ? "vidro-acento" : "text-on-surface-variant hover:text-on-surface"
+                }`}
+              >
+                {papel.rotulo}
+              </button>
+            );
+          })}
+        </div>
+
         <label className="flex flex-col gap-1">
           <span className="font-label-md text-label-md text-on-surface">E-mail</span>
           <input
@@ -78,25 +152,40 @@ export default function EntrarPage() {
           />
           {errors.email && <span className="font-caption text-caption text-error">{errors.email.message}</span>}
         </label>
-        <label className="flex flex-col gap-1">
-          <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-1">
+          <label className="flex flex-col gap-1">
             <span className="font-label-md text-label-md text-on-surface">Senha</span>
-            <Link href="/entrar/esqueci-senha" className="font-caption text-caption text-primary">Esqueci</Link>
-          </div>
-          <input
-            type="password"
-            {...register("password")}
-            className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-          {errors.password && <span className="font-caption text-caption text-error">{errors.password.message}</span>}
-        </label>
+            <CampoSenha autoComplete="current-password" {...register("password")} />
+            {errors.password && <span className="font-caption text-caption text-error">{errors.password.message}</span>}
+          </label>
+          <Link
+            href="/entrar/esqueci-senha"
+            className="self-start inline-flex items-center gap-1 min-h-[44px] -mt-1 font-label-md text-label-md text-primary underline underline-offset-4"
+          >
+            <MaterialIcon name="lock_reset" className="text-[18px]" />
+            Esqueceu a senha?
+          </Link>
+        </div>
 
-        {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">{erro}</p>}
+        {erro && (
+          <div role="alert" className="flex flex-col gap-space-xs rounded-lg bg-error-container p-space-sm">
+            <p className="font-caption text-caption text-error">{erro}</p>
+            {semCadastro && (
+              <p className="font-caption text-caption text-on-surface-variant">
+                Se ainda não tem cadastro,{" "}
+                <Link href={papelAtual.href} className="font-label-md text-label-md text-primary underline underline-offset-2">
+                  {papelAtual.criar.toLowerCase()}
+                </Link>
+                .
+              </p>
+            )}
+          </div>
+        )}
 
         <button
           type="submit"
           disabled={enviando}
-          className="h-12 rounded-xl neu-surface neu-pressable bg-primary text-on-primary font-label-md text-label-md disabled:opacity-60"
+          className="vidro-acento h-12 rounded-full font-label-md text-label-md transition hover:brightness-110 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           {enviando ? "Entrando..." : "Entrar"}
         </button>
@@ -135,12 +224,10 @@ export default function EntrarPage() {
       </form>
 
       <div className="flex flex-col items-center gap-space-xs">
-        <span className="font-body-md text-body-md text-on-surface-variant">Ainda não tem conta?</span>
-        <div className="flex items-center gap-space-sm">
-          <Link href="/cadastro/profissional" className="font-label-md text-label-md text-primary">Sou profissional</Link>
-          <span className="text-outline-variant">&middot;</span>
-          <Link href="/cadastro/empresa" className="font-label-md text-label-md text-primary">Sou empresa/pessoa</Link>
-        </div>
+        <span className="font-body-md text-body-md text-on-surface-variant">Ainda não tem cadastro?</span>
+        <Link href={papelAtual.href} className="min-h-11 inline-flex items-center font-label-md text-label-md text-primary underline underline-offset-4">
+          {papelAtual.criar}
+        </Link>
       </div>
     </main>
   );

@@ -29,3 +29,25 @@ def falha_pagamento_assinatura(link_assinatura: str) -> tuple[str, str, str]:
         f'<p><a href="{escape(link_assinatura)}">Atualizar forma de pagamento</a></p>'
     )
     return assunto, texto, html
+
+
+def nova_mensagem_recebida(link_contato: str) -> tuple[str, str, str]:
+    assunto = "Você recebeu uma nova mensagem no SaúdeConecta"
+    texto = f"Você recebeu uma nova mensagem.\n\nVeja a conversa: {link_contato}\n"
+    html = (
+        "<p>Você recebeu uma nova mensagem.</p>"
+        f'<p><a href="{escape(link_contato)}">Ver a conversa</a></p>'
+    )
+    return assunto, texto, html
+
+
+def aceite_demanda_direta(link_contato: str) -> tuple[str, str, str]:
+    assunto = "O profissional aceitou sua demanda direta"
+    texto = (
+        "O profissional aceitou atender sua demanda direta.\n\n" f"Veja o contato: {link_contato}\n"
+    )
+    html = (
+        "<p>O profissional aceitou atender sua demanda direta.</p>"
+        f'<p><a href="{escape(link_contato)}">Ver o contato</a></p>'
+    )
+    return assunto, texto, html

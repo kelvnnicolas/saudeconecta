@@ -4,15 +4,18 @@ import { useEffect, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Header } from "@/components/ui/Header";
+import { PaginaEsqueleto } from "@/components/ui/Skeleton";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { useCurrentUser } from "@/lib/use-current-user";
 import { type AvaliacaoInput, avaliacaoSchema } from "@/lib/validations/contato";
+import { useNotificacoesLidasAoAbrir } from "@/lib/use-notificacoes-lidas-ao-abrir";
 import { api } from "@/lib/api";
 import type { ContatoRead, MensagemContatoRead } from "@/lib/types";
 
 export default function DetalheContatoPage({ params }: { params: { id: string } }) {
   const { papel, session } = useCurrentUser();
   const [contato, setContato] = useState<ContatoRead | null>(null);
+  useNotificacoesLidasAoAbrir(contato ? `/contatos/${contato.id}` : null);
   const [nomeOutraParte, setNomeOutraParte] = useState("...");
   const [carregando, setCarregando] = useState(true);
   const [erroCarregar, setErroCarregar] = useState<string | null>(null);
@@ -55,12 +58,13 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
       .finally(() => setCarregando(false));
   }, [params.id, papel]);
 
+  const contatoId = contato?.id;
   useEffect(() => {
-    if (!contato) return;
+    if (contatoId === undefined) return;
     let cancelado = false;
     async function buscarMensagens() {
       try {
-        const lista = await api.listarMensagensContato(contato!.id);
+        const lista = await api.listarMensagensContato(contatoId!);
         if (!cancelado) setMensagens(lista);
       } catch {
         // poll silencioso — próxima tentativa em 7s
@@ -72,7 +76,7 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
       cancelado = true;
       clearInterval(intervalo);
     };
-  }, [contato?.id]);
+  }, [contatoId]);
 
   useEffect(() => {
     const el = listaMensagensRef.current;
@@ -124,8 +128,8 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
     return (
       <>
         <Header title="Detalhes do Contato" backHref="/contatos" />
-        <main className="flex-1 pt-16 flex items-center justify-center bg-surface min-h-screen">
-          <MaterialIcon name="progress_activity" className="text-[32px] text-primary animate-spin" />
+        <main className="flex-1 pt-20 px-gutter pb-space-lg bg-surface min-h-screen">
+          <PaginaEsqueleto comTitulo={false} />
         </main>
       </>
     );

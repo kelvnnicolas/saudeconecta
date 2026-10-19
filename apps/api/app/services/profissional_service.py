@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
+from app.core.errors import PERFIL_NAO_CONCLUIDO
 from app.models.avaliacao import Avaliacao
 from app.models.especialidade import Especialidade
 from app.models.profile import Profile
@@ -39,7 +40,7 @@ def upsert_profissional(
     if profile is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Sincronize seu perfil primeiro via POST /auth/sync",
+            detail=PERFIL_NAO_CONCLUIDO,
         )
     if profile.papel != "profissional":
         raise HTTPException(
@@ -57,7 +58,10 @@ def upsert_profissional(
         if missing_ids:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Especialidade(s) inexistente(s): {sorted(missing_ids)}",
+                detail=(
+                    "Alguma especialidade escolhida não existe mais. "
+                    "Atualize a página e tente de novo."
+                ),
             )
 
     profissional = db.get(Profissional, user_id)

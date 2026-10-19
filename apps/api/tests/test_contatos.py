@@ -1,11 +1,15 @@
 import uuid
 from unittest.mock import patch
 
+from sqlalchemy.orm.attributes import set_committed_value
+
 from app.core.auth import CurrentUser, get_current_user
 from app.main import app
 from app.models.contato import Contato
+from app.models.empresa import Empresa, TipoEmpresa
 from app.models.profile import Papel, Profile
 from app.models.profissional import Profissional
+from app.services import contato_service
 from tests.fabrica import autenticar, criar_contato, criar_empresa, criar_profissional
 
 
@@ -30,6 +34,10 @@ def test_create_contato_requires_synced_profile(client):
 def test_create_contato_returns_404_for_unknown_profissional(client, db_session):
     solicitante_id = uuid.uuid4()
     db_session.add(Profile(id=solicitante_id, papel=Papel.empresa, nome="Clínica X"))
+    db_session.flush()
+    db_session.add(
+        Empresa(user_id=solicitante_id, nome_fantasia="Clínica X", tipo=TipoEmpresa.clinica)
+    )
     db_session.commit()
 
     app.dependency_overrides[get_current_user] = lambda: CurrentUser(
@@ -46,6 +54,10 @@ def test_create_contato_returns_404_for_unknown_profissional(client, db_session)
 def test_create_contato_persists_and_notifies_by_email(mock_send_email, client, db_session):
     solicitante_id = uuid.uuid4()
     db_session.add(Profile(id=solicitante_id, papel=Papel.empresa, nome="Clínica X"))
+    db_session.flush()
+    db_session.add(
+        Empresa(user_id=solicitante_id, nome_fantasia="Clínica X", tipo=TipoEmpresa.clinica)
+    )
 
     profissional_id = uuid.uuid4()
     db_session.add(
@@ -137,7 +149,7 @@ def test_listar_mensagens_ambas_partes_conseguem_ler(client, db_session):
     assert resposta.status_code == 200
 
 
-def test_listar_mensagens_terceiro_recebe_403(client, db_session):
+def test_listar_mensagens_terceiro_recebe_404(client, db_session):
     solicitante_id = criar_empresa(db_session)
     profissional_id = criar_profissional(db_session)
     contato = criar_contato(db_session, solicitante_id, profissional_id)
@@ -146,8 +158,8 @@ def test_listar_mensagens_terceiro_recebe_403(client, db_session):
 
     autenticar(outro_usuario)
     resposta = client.get(f"/contatos/{contato.id}/mensagens")
-    assert resposta.status_code == 403
-    assert resposta.json()["detail"]["code"] == "nao_participante"
+    assert resposta.status_code == 404
+    assert resposta.json()["detail"]["code"] == "contato_inexistente"
 
 
 def test_listar_mensagens_contato_inexistente_404(client, db_session):
@@ -207,7 +219,7 @@ def test_criar_mensagem_ignora_autor_id_do_body(client, db_session):
     assert resposta.json()["autor_id"] == str(solicitante_id)
 
 
-def test_criar_mensagem_terceiro_recebe_403(client, db_session):
+def test_criar_mensagem_terceiro_recebe_404(client, db_session):
     solicitante_id = criar_empresa(db_session)
     profissional_id = criar_profissional(db_session)
     contato = criar_contato(db_session, solicitante_id, profissional_id)
@@ -216,8 +228,8 @@ def test_criar_mensagem_terceiro_recebe_403(client, db_session):
 
     autenticar(outro_usuario)
     resposta = client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": "Oi"})
-    assert resposta.status_code == 403
-    assert resposta.json()["detail"]["code"] == "nao_participante"
+    assert resposta.status_code == 404
+    assert resposta.json()["detail"]["code"] == "contato_inexistente"
 
 
 def test_aceitar_profissional_com_sucesso(client, db_session):
@@ -259,7 +271,7 @@ def test_aceitar_duas_vezes_e_idempotente(client, db_session):
     assert segunda.json()["aceito_em"] == timestamp_original
 
 
-def test_aceitar_terceiro_recebe_403(client, db_session):
+def test_aceitar_terceiro_recebe_404(client, db_session):
     solicitante_id = criar_empresa(db_session)
     profissional_id = criar_profissional(db_session)
     contato = criar_contato(db_session, solicitante_id, profissional_id)
@@ -268,8 +280,8 @@ def test_aceitar_terceiro_recebe_403(client, db_session):
 
     autenticar(outro_usuario)
     resposta = client.post(f"/contatos/{contato.id}/aceitar")
-    assert resposta.status_code == 403
-    assert resposta.json()["detail"]["code"] == "nao_participante"
+    assert resposta.status_code == 404
+    assert resposta.json()["detail"]["code"] == "contato_inexistente"
 
 
 def test_criar_mensagem_corpo_muito_longo_e_rejeitado(client, db_session):
@@ -281,3 +293,264 @@ def test_criar_mensagem_corpo_muito_longo_e_rejeitado(client, db_session):
     autenticar(solicitante_id)
     resposta = client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": "a" * 2001})
     assert resposta.status_code == 422
+
+
+def test_create_contato_gera_notificacao_para_profissional(client, db_session):
+    solicitante_id = uuid.uuid4()
+    db_session.add(Profile(id=solicitante_id, papel=Papel.empresa, nome="Clínica X"))
+    db_session.flush()
+    db_session.add(
+        Empresa(user_id=solicitante_id, nome_fantasia="Clínica X", tipo=TipoEmpresa.clinica)
+    )
+
+    profissional_id = uuid.uuid4()
+    db_session.add(
+        Profile(
+            id=profissional_id,
+            papel=Papel.profissional,
+            nome="Maria Silva",
+            email="maria@example.com",
+        )
+    )
+    db_session.flush()
+    db_session.add(Profissional(user_id=profissional_id))
+    db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: CurrentUser(
+        id=solicitante_id, email="x@example.com", role="authenticated"
+    )
+
+    resposta = client.post(
+        "/contatos", json={"profissional_id": str(profissional_id), "mensagem": "Oi"}
+    )
+    assert resposta.status_code == 200
+
+    autenticar(profissional_id)
+    notificacoes = client.get("/notificacoes")
+    assert notificacoes.json()["total"] == 1
+    assert notificacoes.json()["items"][0]["tipo"] == "novo_contato"
+
+
+def test_create_contato_comita_apos_registrar_notificacao(client, db_session):
+    # registrar_notificacao() só dá flush, nunca commit — quem chama é
+    # responsável por commitar. Um spy em Session.commit prova isso sem
+    # depender de rollback (não confiável aqui: o handler roda numa thread
+    # do threadpool do FastAPI, diferente da thread do teste).
+    solicitante_id = uuid.uuid4()
+    db_session.add(Profile(id=solicitante_id, papel=Papel.empresa, nome="Clínica X"))
+    db_session.flush()
+    db_session.add(
+        Empresa(user_id=solicitante_id, nome_fantasia="Clínica X", tipo=TipoEmpresa.clinica)
+    )
+
+    profissional_id = uuid.uuid4()
+    db_session.add(
+        Profile(
+            id=profissional_id,
+            papel=Papel.profissional,
+            nome="Maria Silva",
+            email="maria@example.com",
+        )
+    )
+    db_session.flush()
+    db_session.add(Profissional(user_id=profissional_id))
+    db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: CurrentUser(
+        id=solicitante_id, email="x@example.com", role="authenticated"
+    )
+
+    with patch.object(db_session, "commit", wraps=db_session.commit) as commit_espiao:
+        resposta = client.post(
+            "/contatos", json={"profissional_id": str(profissional_id), "mensagem": "Oi"}
+        )
+
+    assert resposta.status_code == 200
+    assert commit_espiao.call_count == 2, (
+        "create_contato deve commitar o contato e, separadamente, a "
+        "notificação — um commit só significa que ficou apenas flushed"
+    )
+
+
+@patch("app.services.notificacao_service.sentry_sdk.capture_exception")
+@patch("app.services.contato_service.send_contact_notification_email")
+def test_create_contato_sobrevive_a_falha_de_notificacao(
+    mock_send_email, mock_capture, client, db_session
+):
+    solicitante_id = uuid.uuid4()
+    db_session.add(Profile(id=solicitante_id, papel=Papel.empresa, nome="Clínica X"))
+    db_session.flush()
+    db_session.add(
+        Empresa(user_id=solicitante_id, nome_fantasia="Clínica X", tipo=TipoEmpresa.clinica)
+    )
+
+    profissional_id = uuid.uuid4()
+    db_session.add(
+        Profile(
+            id=profissional_id,
+            papel=Papel.profissional,
+            nome="Maria Silva",
+            email="maria@example.com",
+        )
+    )
+    db_session.flush()
+    db_session.add(Profissional(user_id=profissional_id))
+    db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: CurrentUser(
+        id=solicitante_id, email="x@example.com", role="authenticated"
+    )
+
+    with patch("app.services.notificacao_service.Notificacao", side_effect=RuntimeError("boom")):
+        resposta = client.post(
+            "/contatos", json={"profissional_id": str(profissional_id), "mensagem": "Oi"}
+        )
+
+    assert resposta.status_code == 200
+    mock_send_email.assert_called_once()
+    mock_capture.assert_called_once()
+
+
+def test_create_contato_notifica_depois_do_email_existente(client, db_session):
+    solicitante_id = uuid.uuid4()
+    db_session.add(Profile(id=solicitante_id, papel=Papel.empresa, nome="Clínica X"))
+    db_session.flush()
+    db_session.add(
+        Empresa(user_id=solicitante_id, nome_fantasia="Clínica X", tipo=TipoEmpresa.clinica)
+    )
+
+    profissional_id = uuid.uuid4()
+    db_session.add(
+        Profile(
+            id=profissional_id,
+            papel=Papel.profissional,
+            nome="Maria Silva",
+            email="maria@example.com",
+        )
+    )
+    db_session.flush()
+    db_session.add(Profissional(user_id=profissional_id))
+    db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: CurrentUser(
+        id=solicitante_id, email="x@example.com", role="authenticated"
+    )
+
+    ordem = []
+    with (
+        patch(
+            "app.services.contato_service.send_contact_notification_email",
+            side_effect=lambda *a, **kw: ordem.append("email"),
+        ),
+        patch(
+            "app.services.contato_service.registrar_notificacao",
+            side_effect=lambda *a, **kw: ordem.append("notificacao"),
+        ),
+    ):
+        resposta = client.post(
+            "/contatos", json={"profissional_id": str(profissional_id), "mensagem": "Oi"}
+        )
+
+    assert resposta.status_code == 200
+    assert ordem == ["email", "notificacao"]
+
+
+def test_criar_mensagem_notifica_a_outra_parte_nao_o_autor(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(solicitante_id)
+    client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": "Oi"})
+
+    autenticar(profissional_id)
+    notificacoes_profissional = client.get("/notificacoes")
+    assert notificacoes_profissional.json()["total"] == 1
+    assert notificacoes_profissional.json()["items"][0]["tipo"] == "nova_mensagem"
+
+    autenticar(solicitante_id)
+    notificacoes_solicitante = client.get("/notificacoes")
+    assert notificacoes_solicitante.json()["total"] == 0
+
+
+def test_criar_mensagem_comita_apos_registrar_notificacao(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(solicitante_id)
+    with patch.object(db_session, "commit", wraps=db_session.commit) as commit_espiao:
+        resposta = client.post(f"/contatos/{contato.id}/mensagens", json={"corpo": "Oi"})
+
+    assert resposta.status_code == 201
+    assert commit_espiao.call_count == 2, (
+        "criar_mensagem deve commitar a mensagem e, separadamente, a "
+        "notificação — um commit só significa que ficou apenas flushed"
+    )
+
+
+def test_aceitar_gera_notificacao_para_solicitante_so_na_primeira_vez(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(profissional_id)
+    client.post(f"/contatos/{contato.id}/aceitar")
+    client.post(f"/contatos/{contato.id}/aceitar")  # re-aceite idempotente
+
+    autenticar(solicitante_id)
+    notificacoes = client.get("/notificacoes")
+    assert notificacoes.json()["total"] == 1
+    assert notificacoes.json()["items"][0]["tipo"] == "aceite_demanda"
+
+
+def test_aceite_simultaneo_notifica_so_uma_vez(client, db_session):
+    """Duas requisições leem o contato como "não aceito" antes de qualquer uma gravar.
+
+    Simulado com uma leitura desatualizada: a segunda chamada recebe o contato com
+    aceito_em vazio na memória, embora o banco já tenha o aceite da primeira.
+    """
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(profissional_id)
+    primeira = client.post(f"/contatos/{contato.id}/aceitar")
+    aceito_original = primeira.json()["aceito_em"]
+
+    leitura_original = contato_service._contato_das_partes
+
+    def leitura_desatualizada(db, contato_id, user_id):
+        encontrado = leitura_original(db, contato_id, user_id)
+        set_committed_value(encontrado, "aceito_em", None)
+        return encontrado
+
+    with patch.object(contato_service, "_contato_das_partes", leitura_desatualizada):
+        segunda = client.post(f"/contatos/{contato.id}/aceitar")
+
+    assert segunda.status_code == 200
+    assert segunda.json()["aceito_em"] == aceito_original
+    autenticar(solicitante_id)
+    notificacoes = client.get("/notificacoes")
+    assert notificacoes.json()["total"] == 1
+
+
+def test_aceitar_comita_apos_registrar_notificacao(client, db_session):
+    solicitante_id = criar_empresa(db_session)
+    profissional_id = criar_profissional(db_session)
+    contato = criar_contato(db_session, solicitante_id, profissional_id)
+    db_session.commit()
+
+    autenticar(profissional_id)
+    with patch.object(db_session, "commit", wraps=db_session.commit) as commit_espiao:
+        resposta = client.post(f"/contatos/{contato.id}/aceitar")
+
+    assert resposta.status_code == 200
+    assert commit_espiao.call_count == 2, (
+        "aceitar_demanda_direta deve commitar o aceite e, separadamente, a "
+        "notificação — um commit só significa que ficou apenas flushed"
+    )

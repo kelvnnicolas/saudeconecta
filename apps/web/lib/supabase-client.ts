@@ -96,3 +96,17 @@ export async function signOut() {
   if (!supabase) return;
   await supabase.auth.signOut();
 }
+
+export async function requestPasswordReset(email: string) {
+  if (!supabase) throw new Error("Supabase não configurado (ver .env.example)");
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/entrar/nova-senha`,
+  });
+  if (error) throw error;
+}
+
+export async function updatePassword(password: string) {
+  if (!supabase) throw new Error("Supabase não configurado (ver .env.example)");
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) throw error;
+}

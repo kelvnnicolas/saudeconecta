@@ -7,6 +7,7 @@ from sqlalchemy import select
 
 from app.models.assinatura import Assinatura, StatusAssinatura
 from app.models.empresa import TipoEmpresa
+from app.services.entitlements import LIMITE_GRATUITO
 from tests.fabrica import (
     autenticar,
     criar_assinatura,
@@ -39,13 +40,30 @@ def stripe_mock():
         yield customer_create, checkout_create, portal_create, checkout_retrieve, checkout_expire
 
 
+def test_plano_gratuito_e_publico_e_usa_o_limite_que_o_backend_aplica(client):
+    response = client.get("/planos/gratuito")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "codigo": "gratuito",
+        "nome": "Gratuito",
+        "limite_mensal": LIMITE_GRATUITO,
+    }
+
+
+def test_plano_gratuito_nao_aparece_na_lista_de_planos_assinaveis(client):
+    codigos = [p["codigo"] for p in client.get("/planos").json()]
+
+    assert "gratuito" not in codigos
+
+
 def test_listar_planos_e_publico_e_nao_expoe_price_id(client):
     response = client.get("/planos")
 
     assert response.status_code == 200
     assert response.json() == [
-        {"codigo": "essencial", "nome": "Essencial", "limite_demandas_ativas": 5},
-        {"codigo": "pro", "nome": "Pro", "limite_demandas_ativas": None},
+        {"codigo": "essencial", "nome": "Essencial", "limite_mensal": 50},
+        {"codigo": "pro", "nome": "Pro", "limite_mensal": None},
     ]
 
 
@@ -53,16 +71,15 @@ def test_checkout_exige_autenticacao(client):
     assert client.post("/assinaturas/checkout", json={"plano_codigo": "pro"}).status_code == 401
 
 
-def test_checkout_recusa_empresa_pessoa_fisica(client, db_session, stripe_mock):
+def test_checkout_aceita_pessoa_fisica(client, db_session, stripe_mock):
     empresa_id = criar_empresa(db_session, tipo=TipoEmpresa.pessoa_fisica)
     db_session.commit()
     autenticar(empresa_id)
 
     response = client.post("/assinaturas/checkout", json={"plano_codigo": "pro"})
 
-    assert response.status_code == 403
-    assert response.json()["detail"]["code"] == "nao_elegivel"
-    stripe_mock[1].assert_not_called()
+    assert response.status_code == 200
+    stripe_mock[1].assert_called_once()
 
 
 def test_checkout_recusa_profissional(client, db_session, stripe_mock):
@@ -104,7 +121,7 @@ def test_checkout_cria_customer_sessao_e_assinatura_incomplete(client, db_sessio
     assert kwargs["line_items"] == [{"price": "price_test_pro", "quantity": 1}]
     assert kwargs["client_reference_id"] == str(empresa_id)
     assert kwargs["subscription_data"] == {"metadata": {"empresa_id": str(empresa_id)}}
-    assert kwargs["success_url"] == "http://localhost:3000/empresa/assinatura?status=processando"
+    assert kwargs["success_url"] == "http://localhost:3000/assinatura?status=processando"
     assert kwargs["cancel_url"] == "http://localhost:3000/empresa/planos"
 
     assinatura = db_session.scalar(select(Assinatura).where(Assinatura.empresa_id == empresa_id))
@@ -197,9 +214,7 @@ def test_portal_cria_sessao_com_return_url(client, db_session, stripe_mock):
     assert response.status_code == 200
     assert response.json() == {"portal_url": "https://billing.stripe.test/bps_1"}
     assert portal_create.call_args.kwargs["customer"] == "cus_portal"
-    assert portal_create.call_args.kwargs["return_url"] == (
-        "http://localhost:3000/empresa/assinatura"
-    )
+    assert portal_create.call_args.kwargs["return_url"] == "http://localhost:3000/assinatura"
 
 
 def test_minha_assinatura_sem_assinatura(client, db_session):
@@ -215,7 +230,7 @@ def test_minha_assinatura_sem_assinatura(client, db_session):
         "status": None,
         "current_period_end": None,
         "cancel_at_period_end": False,
-        "uso": {"demandas_ativas": 0, "limite": None},
+        "uso": {"usado": 0, "limite": 5},
     }
 
 
@@ -235,7 +250,7 @@ def test_minha_assinatura_mostra_plano_status_periodo_e_uso(client, db_session):
     assert body["status"] == "active"
     assert body["current_period_end"].startswith("2026-10-24")
     assert body["cancel_at_period_end"] is True
-    assert body["uso"] == {"demandas_ativas": 2, "limite": 5}
+    assert body["uso"] == {"usado": 2, "limite": 50}
 
 
 def test_minha_assinatura_recusa_profissional(client, db_session):

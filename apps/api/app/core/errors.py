@@ -21,6 +21,11 @@ class ErroNegocio(BaseModel):
     detail: ErroNegocioDetalhe
 
 
+PERFIL_NAO_CONCLUIDO = (
+    "Seu perfil ainda não foi concluído. Saia e entre novamente para finalizar o cadastro."
+)
+
+
 def erro_negocio(status_code: int, code: str, mensagem: str, **extra: Any) -> HTTPException:
     return HTTPException(
         status_code=status_code, detail={"code": code, "mensagem": mensagem, **extra}

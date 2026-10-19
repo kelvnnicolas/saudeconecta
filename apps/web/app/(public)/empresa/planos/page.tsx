@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Header } from "@/components/ui/Header";
+import { ListaEsqueleto } from "@/components/ui/Skeleton";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { api, ApiError } from "@/lib/api";
 import type { PlanoRead } from "@/lib/types";
@@ -18,7 +19,7 @@ const BENEFICIOS: Record<string, { preco: string; itens: string[]; destaque?: bo
     preco: "R$ 249/mês",
     itens: [
       "50 desbloqueios de contatos diretos/mês",
-      "Filtros por especialidade e registro ativo",
+      "Busca por nome e especialidade",
       "1 usuário recrutador",
     ],
   },
@@ -35,6 +36,7 @@ const BENEFICIOS: Record<string, { preco: string; itens: string[]; destaque?: bo
 
 export default function PlanosEmpresaPage() {
   const [planos, setPlanos] = useState<PlanoRead[]>([]);
+  const [limiteGratuito, setLimiteGratuito] = useState<number | null>(null);
   const [carregandoPlanos, setCarregandoPlanos] = useState(true);
   const [selecionado, setSelecionado] = useState<string | undefined>();
   const [carregando, setCarregando] = useState(false);
@@ -49,6 +51,15 @@ export default function PlanosEmpresaPage() {
       })
       .catch((e) => setErro(e instanceof Error ? e.message : "Não foi possível carregar os planos."))
       .finally(() => setCarregandoPlanos(false));
+  }, []);
+
+  // O limite gratuito vem da API (mesma regra que o backend aplica); se falhar, o cartão
+  // continua aparecendo, só sem o número.
+  useEffect(() => {
+    api
+      .getPlanoGratuito()
+      .then((gratuito) => setLimiteGratuito(gratuito.limite_mensal))
+      .catch(() => setLimiteGratuito(null));
   }, []);
 
   async function assinar() {
@@ -83,13 +94,35 @@ export default function PlanosEmpresaPage() {
           </p>
         </section>
 
-        {carregandoPlanos && (
-          <div className="flex justify-center py-space-lg">
-            <MaterialIcon name="progress_activity" className="text-[28px] text-primary animate-spin" />
-          </div>
-        )}
-
         <div className="flex flex-col gap-space-sm">
+          {/* O gratuito não vem de GET /planos e não tem checkout: aparece primeiro, sem seleção. */}
+          <section aria-label="Plano Gratuito" className="rounded-2xl p-space-md neu-surface bg-surface-container-lowest flex flex-col gap-space-sm">
+            <div className="flex items-center justify-between">
+              <span className="font-title-md text-title-md text-on-surface">Gratuito</span>
+              <span className="rounded-full bg-secondary-container px-space-sm py-1 font-label-sm text-label-sm text-on-secondary-container">
+                Já incluído
+              </span>
+            </div>
+            <span className="font-headline-md text-headline-md text-on-surface">R$ 0</span>
+            <ul className="flex flex-col gap-1">
+              {[
+                limiteGratuito != null
+                  ? `Até ${limiteGratuito} contatos e demandas por mês, somados`
+                  : "Uma cota mensal de contatos e demandas, somados",
+                "Busca e perfis de profissionais",
+                "Sem cartão de crédito",
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-1 font-body-md text-body-md text-on-surface-variant">
+                  <MaterialIcon name="check_circle" className="text-[16px] text-secondary" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <span className="font-caption text-caption text-on-surface-variant">
+              Passou do limite do mês? Os planos abaixo liberam mais usos.
+            </span>
+          </section>
+          {carregandoPlanos && <ListaEsqueleto quantidade={2} />}
           {planos.map((plano) => {
             const info = BENEFICIOS[plano.codigo];
             const ativo = selecionado === plano.codigo;
@@ -118,9 +151,9 @@ export default function PlanosEmpresaPage() {
                   ))}
                 </ul>
                 <span className="font-caption text-caption text-on-surface-variant">
-                  {plano.limite_demandas_ativas != null
-                    ? `Limite de ${plano.limite_demandas_ativas} demandas ativas`
-                    : "Demandas ativas ilimitadas"}
+                  {plano.limite_mensal != null
+                    ? `Até ${plano.limite_mensal} contatos e demandas por mês`
+                    : "Contatos e demandas ilimitados"}
                 </span>
               </button>
             );

@@ -7,7 +7,11 @@ import { useForm } from "react-hook-form";
 import { Header } from "@/components/ui/Header";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { type NovoContatoInput, novoContatoSchema } from "@/lib/validations/contato";
+import { UsoDaCota } from "@/components/ui/UsoDaCota";
+import { CamposDoFormulario } from "@/components/ui/CamposDoFormulario";
+import { useBloqueioDePlano } from "@/lib/use-bloqueio-de-plano";
 import { api } from "@/lib/api";
+import { useAvisoAoSair } from "@/lib/use-aviso-ao-sair";
 
 export default function NovoContatoPage() {
   const router = useRouter();
@@ -16,6 +20,7 @@ export default function NovoContatoPage() {
   const nome = searchParams.get("nome") ?? "o profissional";
   const [enviado, setEnviado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const { uso, plano, bloqueado, pagamentoPendente, tratarErro } = useBloqueioDePlano();
   const {
     register,
     handleSubmit,
@@ -23,6 +28,8 @@ export default function NovoContatoPage() {
     formState: { errors, isSubmitting },
   } = useForm<NovoContatoInput>({ resolver: zodResolver(novoContatoSchema) });
   const mensagem = watch("mensagem") ?? "";
+  const temAlteracoesNaoSalvas = mensagem.trim() !== "" && !isSubmitting && !enviado;
+  useAvisoAoSair(temAlteracoesNaoSalvas);
 
   async function onSubmit(data: NovoContatoInput) {
     setErro(null);
@@ -30,6 +37,7 @@ export default function NovoContatoPage() {
       await api.createContato({ profissional_id: profissionalId, mensagem: data.mensagem });
       setEnviado(true);
     } catch (e) {
+      if (tratarErro(e)) return;
       setErro(e instanceof Error ? e.message : "Não foi possível enviar. Tente novamente.");
     }
   }
@@ -54,33 +62,45 @@ export default function NovoContatoPage() {
 
   return (
     <>
-      <Header title="Novo Contato" backHref="/buscar" />
+      <Header
+        title="Novo Contato"
+        backHref="/buscar"
+        confirmarSaida={temAlteracoesNaoSalvas ? "Sair sem enviar? A mensagem escrita será perdida." : undefined}
+      />
       <main className="flex-1 pt-16 pb-space-xl px-gutter bg-surface min-h-screen">
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-space-md max-w-sm w-full mx-auto mt-space-sm">
           <div className="flex flex-col gap-1">
             <span className="font-caption text-caption text-on-surface-variant">Enviando para</span>
             <h1 className="font-title-md text-title-md text-on-surface">{nome}</h1>
           </div>
-          <label className="flex flex-col gap-1">
-            <span className="font-label-md text-label-md text-on-surface">Mensagem</span>
-            <textarea
-              {...register("mensagem")}
-              rows={5}
-              maxLength={1000}
-              placeholder="Descreva a necessidade, cuidados requeridos, medicamentos ou tipo de procedimento..."
-              className="px-space-md py-space-sm rounded-xl bg-surface-container-lowest neu-inset-sm resize-none"
-            />
-            <span className="self-end font-caption text-caption text-on-surface-variant">{mensagem.length}/1000</span>
-            {errors.mensagem && <span className="font-caption text-caption text-error">{errors.mensagem.message}</span>}
-          </label>
-          {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">{erro}</p>}
+
+          <UsoDaCota uso={uso} plano={plano} contexto="contato" pagamentoPendente={pagamentoPendente} />
+
+          <CamposDoFormulario bloqueado={bloqueado}>            <label className="flex flex-col gap-1">
+              <span className="font-label-md text-label-md text-on-surface">Mensagem</span>
+              <textarea
+                {...register("mensagem")}
+                rows={5}
+                maxLength={1000}
+                placeholder="Descreva a necessidade, cuidados requeridos, medicamentos ou tipo de procedimento..."
+                className="px-space-md py-space-sm rounded-xl bg-surface-container-lowest neu-inset-sm resize-none"
+              />
+              <span className="self-end font-caption text-caption text-on-surface-variant">{mensagem.length}/1000</span>
+              {errors.mensagem && <span className="font-caption text-caption text-error">{errors.mensagem.message}</span>}
+            </label>
+          </CamposDoFormulario>
+          {erro && (
+            <p role="alert" className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">
+              {erro}
+            </p>
+          )}
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || bloqueado}
             className="h-12 rounded-xl neu-surface neu-pressable bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center gap-space-xs disabled:opacity-60"
           >
-            <MaterialIcon name="send" className="text-[18px]" />
-            Enviar proposta
+            <MaterialIcon name={bloqueado ? "lock" : "send"} className="text-[18px]" />
+            {bloqueado ? (pagamentoPendente ? "Pagamento pendente" : "Limite do mês atingido") : "Enviar proposta"}
           </button>
         </form>
       </main>

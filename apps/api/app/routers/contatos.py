@@ -18,8 +18,7 @@ from app.services.contato_service import (
 
 router = APIRouter(prefix="/contatos", tags=["contatos"])
 
-ERRO_403_404 = {
-    403: {"model": ErroNegocio, "description": "code=nao_participante"},
+ERRO_404 = {
     404: {"model": ErroNegocio, "description": "code=contato_inexistente"},
 }
 
@@ -43,9 +42,7 @@ def list_own_contatos_route(
     return list_own_contatos(db, current_user.id)
 
 
-@router.get(
-    "/{contato_id}/mensagens", response_model=list[MensagemContatoRead], responses=ERRO_403_404
-)
+@router.get("/{contato_id}/mensagens", response_model=list[MensagemContatoRead], responses=ERRO_404)
 def listar_mensagens_route(
     contato_id: int,
     current_user: CurrentUser = Depends(get_current_user),
@@ -58,7 +55,7 @@ def listar_mensagens_route(
     "/{contato_id}/mensagens",
     response_model=MensagemContatoRead,
     status_code=201,
-    responses=ERRO_403_404,
+    responses=ERRO_404,
 )
 @limiter.limit("20/minute")
 def criar_mensagem_route(
@@ -75,10 +72,10 @@ def criar_mensagem_route(
     "/{contato_id}/aceitar",
     response_model=ContatoRead,
     responses={
-        **ERRO_403_404,
+        **ERRO_404,
         403: {
             "model": ErroNegocio,
-            "description": "code=nao_participante | apenas_profissional_aceita",
+            "description": "code=apenas_profissional_aceita",
         },
     },
 )

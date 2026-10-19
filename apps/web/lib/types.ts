@@ -141,7 +141,6 @@ export interface MensagemContatoCreateRequest {
 
 export interface AvaliacaoRead {
   id: number;
-  autor_id: string;
   alvo_id: string;
   nota: number;
   comentario: string | null;
@@ -203,6 +202,23 @@ export interface DemandaDetalheProfissional extends DemandaRead {
   ja_demonstrei_interesse: boolean;
 }
 
+export interface EmpresaDiretorioResult {
+  user_id: string;
+  nome_fantasia: string;
+  tipo: TipoEmpresa;
+  cidade: string | null;
+  estado: string | null;
+  avatar_url: string | null;
+  demandas_abertas: number;
+}
+
+export interface EmpresaDiretorioResponse {
+  items: EmpresaDiretorioResult[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 export interface OportunidadesResponse {
   items: DemandaRead[];
   total: number;
@@ -217,7 +233,7 @@ export interface InteresseResponse {
 export interface PlanoRead {
   codigo: string;
   nome: string;
-  limite_demandas_ativas: number | null;
+  limite_mensal: number | null;
 }
 
 export interface CheckoutResponse {
@@ -228,8 +244,8 @@ export interface PortalResponse {
   portal_url: string;
 }
 
-export interface UsoDemandas {
-  demandas_ativas: number;
+export interface UsoMensal {
+  usado: number;
   limite: number | null;
 }
 
@@ -238,7 +254,7 @@ export interface MinhaAssinaturaResponse {
   status: StatusAssinatura | null;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
-  uso: UsoDemandas;
+  uso: UsoMensal;
 }
 
 // Corpo estável de erro de regra de negócio (detail.code), conforme README/STATUS.
@@ -247,4 +263,32 @@ export interface ErroNegocio {
     code: string;
     [key: string]: unknown;
   };
+}
+
+export type TipoNotificacao =
+  | "novo_contato"
+  | "nova_mensagem"
+  | "aceite_demanda"
+  | "novo_interesse"
+  | "falha_pagamento"
+  | "nova_oportunidade"
+  | "cota_quase_no_limite"
+  | "cota_esgotada";
+
+export interface NotificacaoRead {
+  id: number;
+  tipo: TipoNotificacao;
+  titulo: string;
+  corpo: string;
+  link: string;
+  lida_em: string | null;
+  criado_em: string;
+}
+
+export interface ListaNotificacoesResponse {
+  items: NotificacaoRead[];
+  total: number;
+  total_nao_lidas: number;
+  limit: number;
+  offset: number;
 }

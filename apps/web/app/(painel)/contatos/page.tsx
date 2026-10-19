@@ -5,6 +5,8 @@ import Link from "next/link";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
+import { ListaEsqueleto } from "@/components/ui/Skeleton";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 import { ContatoStatusBadge } from "@/components/ui/StatusBadge";
 import { useCurrentUser } from "@/lib/use-current-user";
 import { api } from "@/lib/api";
@@ -70,21 +72,25 @@ export default function MeusContatosPage() {
       const bateFiltro = filtro === "todos" || c.status === filtro;
       const bateBusca = !busca || nome.includes(busca.toLowerCase()) || c.mensagem.toLowerCase().includes(busca.toLowerCase());
       return bateFiltro && bateBusca;
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     });
+    // nomeDaOutraParte só lê `nomes` e `papel`, que já estão na lista.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contatos, filtro, busca, nomes, papel]);
 
   return (
     <>
       <main className="flex-1 pt-space-md pb-24 px-gutter bg-surface min-h-screen flex flex-col gap-space-md">
-        <div>
-          <div className="flex items-center gap-1.5">
-            <Logo compact />
-            <h1 className="font-headline-md text-headline-md text-on-surface">Meus Contatos</h1>
+        <div className="flex items-start justify-between gap-space-sm">
+          <div>
+            <div className="flex items-center gap-1.5">
+              <Logo compact />
+              <h1 className="font-headline-md text-headline-md text-on-surface">Meus Contatos</h1>
+            </div>
+            <p className="font-body-md text-body-md text-on-surface-variant">
+              Gerencie conversas, propostas e atendimentos em andamento
+            </p>
           </div>
-          <p className="font-body-md text-body-md text-on-surface-variant">
-            Gerencie conversas, propostas e atendimentos em andamento
-          </p>
+          <NotificationBell />
         </div>
 
         <div className="relative w-full">
@@ -107,7 +113,7 @@ export default function MeusContatosPage() {
               <button
                 key={f.value}
                 onClick={() => setFiltro(f.value)}
-                className={`flex-shrink-0 px-space-md py-1.5 rounded-full font-label-sm text-label-sm transition-all ${
+                className={`flex-shrink-0 px-space-md py-1.5 rounded-full font-label-sm text-label-sm transition-[background-color,color,box-shadow] ${
                   ativo ? "bg-primary text-on-primary neu-surface" : "bg-surface-container-high text-on-surface-variant"
                 }`}
               >
@@ -117,11 +123,7 @@ export default function MeusContatosPage() {
           })}
         </div>
 
-        {carregando && (
-          <div className="flex justify-center py-space-lg">
-            <MaterialIcon name="progress_activity" className="text-[28px] text-primary animate-spin" />
-          </div>
-        )}
+        {carregando && <ListaEsqueleto />}
         {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">{erro}</p>}
 
         <div className="flex flex-col gap-space-sm">
@@ -129,7 +131,7 @@ export default function MeusContatosPage() {
             <Link
               key={c.id}
               href={`/contatos/${c.id}`}
-              className="bg-surface-container-lowest rounded-2xl p-space-md neu-surface neu-pressable transition-all active:scale-[0.99] flex flex-col gap-1"
+              className="bg-surface-container-lowest rounded-2xl p-space-md neu-surface neu-pressable active:scale-[0.99] flex flex-col gap-1"
             >
               <div className="flex items-center justify-between gap-space-xs">
                 <h2 className="font-title-md text-title-md text-on-surface truncate">{nomeDaOutraParte(c)}</h2>
@@ -153,21 +155,23 @@ export default function MeusContatosPage() {
           )}
         </div>
 
-        <Link
-          href="/buscar"
-          className="mt-space-sm w-full bg-gradient-to-br from-primary-fixed via-surface-container to-surface-container-low rounded-2xl p-space-md neu-surface flex items-center justify-between gap-space-md"
-        >
-          <div className="flex items-center gap-space-sm">
-            <div className="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center flex-shrink-0 neu-surface">
-              <MaterialIcon name="person_search" className="text-[22px]" />
+        {papel === "empresa" && (
+          <Link
+            href="/buscar"
+            className="mt-space-sm w-full bg-gradient-to-br from-secondary-container via-surface-container to-surface-container-low rounded-2xl p-space-md neu-surface flex items-center justify-between gap-space-md"
+          >
+            <div className="flex items-center gap-space-sm">
+              <div className="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center flex-shrink-0 neu-surface">
+                <MaterialIcon name="person_search" className="text-[22px]" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-title-md text-title-md text-on-surface leading-snug">Precisa de outro especialista?</span>
+                <span className="font-caption text-caption text-on-surface-variant">Encontre profissionais para o que você precisa</span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="font-title-md text-title-md text-on-surface leading-snug">Precisa de outro especialista?</span>
-              <span className="font-caption text-caption text-on-surface-variant">Centenas de profissionais verificados hoje</span>
-            </div>
-          </div>
-          <MaterialIcon name="arrow_forward" className="text-[20px]" />
-        </Link>
+            <MaterialIcon name="arrow_forward" className="text-[20px]" />
+          </Link>
+        )}
       </main>
       <BottomNav />
     </>

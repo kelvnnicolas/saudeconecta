@@ -33,27 +33,46 @@ def test_perfil_que_nao_e_empresa_recebe_403_nao_elegivel(client, db_session):
     assert response.json()["detail"]["code"] == "nao_elegivel"
 
 
-def test_empresa_pessoa_fisica_recebe_403_nao_elegivel(client, db_session):
+def test_pessoa_fisica_publica_no_plano_gratis(client, db_session):
     empresa_id = criar_empresa(db_session, tipo=TipoEmpresa.pessoa_fisica)
-    criar_assinatura(db_session, empresa_id)
+    db_session.commit()
+    autenticar(empresa_id)
+
+    assert _publicar(client, db_session).status_code == 201
+
+
+def test_pessoa_fisica_respeita_o_limite_do_plano_gratis(client, db_session):
+    empresa_id = criar_empresa(db_session, tipo=TipoEmpresa.pessoa_fisica)
+    for _ in range(5):
+        criar_demanda(db_session, empresa_id)
     db_session.commit()
     autenticar(empresa_id)
 
     response = _publicar(client, db_session)
 
-    assert response.status_code == 403
-    assert response.json()["detail"]["code"] == "nao_elegivel"
+    assert response.status_code == 409
+    assert response.json()["detail"]["code"] == "limite_atingido"
 
 
-def test_empresa_sem_assinatura_recebe_402_assinatura_necessaria(client, db_session):
+def test_nao_elegivel_explica_sem_citar_tipo_de_empresa(client, db_session):
+    profissional_id = criar_profissional(db_session)
+    db_session.commit()
+    autenticar(profissional_id)
+
+    mensagem = _publicar(client, db_session).json()["detail"]["mensagem"]
+
+    assert "clínica" not in mensagem.lower()
+    assert "hospital" not in mensagem.lower()
+
+
+def test_empresa_sem_assinatura_publica_no_plano_gratis(client, db_session):
     empresa_id = criar_empresa(db_session)
     db_session.commit()
     autenticar(empresa_id)
 
     response = _publicar(client, db_session)
 
-    assert response.status_code == 402
-    assert response.json()["detail"]["code"] == "assinatura_necessaria"
+    assert response.status_code == 201
 
 
 @pytest.mark.parametrize(
@@ -66,9 +85,7 @@ def test_empresa_sem_assinatura_recebe_402_assinatura_necessaria(client, db_sess
         StatusAssinatura.incomplete_expired,
     ],
 )
-def test_status_fora_de_active_trialing_recebe_402_assinatura_necessaria(
-    client, db_session, status
-):
+def test_status_fora_de_active_trialing_publica_no_plano_gratis(client, db_session, status):
     empresa_id = criar_empresa(db_session)
     criar_assinatura(db_session, empresa_id, status=status)
     db_session.commit()
@@ -76,8 +93,7 @@ def test_status_fora_de_active_trialing_recebe_402_assinatura_necessaria(
 
     response = _publicar(client, db_session)
 
-    assert response.status_code == 402
-    assert response.json()["detail"]["code"] == "assinatura_necessaria"
+    assert response.status_code == 201
 
 
 def test_status_past_due_recebe_402_pagamento_pendente(client, db_session):
@@ -105,9 +121,8 @@ def test_past_due_mantem_demandas_existentes_visiveis(client, db_session):
     assert len(response.json()) == 1
 
 
-def test_limite_do_plano_atingido_recebe_409_com_uso_e_limite(client, db_session):
+def test_limite_gratis_atingido_recebe_409_com_uso_e_limite(client, db_session):
     empresa_id = criar_empresa(db_session)
-    criar_assinatura(db_session, empresa_id, plano_codigo="essencial")
     for _ in range(5):
         criar_demanda(db_session, empresa_id)
     db_session.commit()
@@ -118,22 +133,21 @@ def test_limite_do_plano_atingido_recebe_409_com_uso_e_limite(client, db_session
     assert response.status_code == 409
     assert response.json()["detail"] == {
         "code": "limite_atingido",
-        "mensagem": "Você atingiu o limite de demandas abertas do seu plano.",
+        "mensagem": "Você atingiu o limite de contatos e demandas do seu plano neste mês.",
         "uso": 5,
         "limite": 5,
     }
 
 
-def test_demandas_expiradas_nao_contam_para_o_limite(client, db_session):
+def test_demandas_expiradas_ainda_contam_na_cota_do_mes(client, db_session):
     empresa_id = criar_empresa(db_session)
-    criar_assinatura(db_session, empresa_id, plano_codigo="essencial")
     for _ in range(4):
         criar_demanda(db_session, empresa_id)
     criar_demanda(db_session, empresa_id, expira_em=datetime.now(UTC) - timedelta(minutes=1))
     db_session.commit()
     autenticar(empresa_id)
 
-    assert _publicar(client, db_session).status_code == 201
+    assert _publicar(client, db_session).status_code == 409
 
 
 @pytest.mark.parametrize("status", [StatusAssinatura.active, StatusAssinatura.trialing])

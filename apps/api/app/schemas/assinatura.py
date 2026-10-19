@@ -10,7 +10,7 @@ class PlanoRead(BaseModel):
 
     codigo: str
     nome: str
-    limite_demandas_ativas: int | None
+    limite_mensal: int | None
 
 
 class CheckoutRequest(BaseModel):
@@ -25,8 +25,8 @@ class PortalResponse(BaseModel):
     portal_url: str
 
 
-class UsoDemandas(BaseModel):
-    demandas_ativas: int
+class UsoMensal(BaseModel):
+    usado: int
     limite: int | None
 
 
@@ -35,7 +35,7 @@ class MinhaAssinaturaResponse(BaseModel):
     status: StatusAssinatura | None
     current_period_end: datetime | None
     cancel_at_period_end: bool
-    uso: UsoDemandas
+    uso: UsoMensal
 
 
 class WebhookResponse(BaseModel):

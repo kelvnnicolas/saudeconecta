@@ -12,7 +12,7 @@ export function ProfessionalCard({ profissional }: { profissional: ProfissionalS
   return (
     <Link
       href={`/profissional/${profissional.user_id}`}
-      className="group bg-surface-container-lowest rounded-2xl p-space-md neu-surface neu-pressable transition-all active:scale-[0.99] flex flex-col gap-space-sm"
+      className="group bg-surface-container-lowest rounded-2xl p-space-md neu-surface neu-pressable active:scale-[0.99] flex flex-col gap-space-sm"
     >
       <div className="flex items-start gap-space-md">
         <div className="relative flex-shrink-0">

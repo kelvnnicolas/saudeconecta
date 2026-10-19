@@ -1,15 +1,21 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.auth import CurrentUser, get_current_user
 from app.core.database import get_db
+from app.core.rate_limit import limiter
 from app.models.empresa import TipoEmpresa
-from app.schemas.busca import EmpresaSearchResponse, EmpresaSearchResult
+from app.schemas.busca import (
+    EmpresaDiretorioResponse,
+    EmpresaSearchResponse,
+    EmpresaSearchResult,
+)
 from app.schemas.empresa import EmpresaRead, EmpresaUpdateRequest
 from app.services.empresa_service import (
     get_empresa_by_id,
+    listar_diretorio,
     search_empresas,
     to_empresa_read,
     upsert_empresa,
@@ -19,7 +25,9 @@ router = APIRouter(prefix="/empresas", tags=["empresas"])
 
 
 @router.get("", response_model=EmpresaSearchResponse)
+@limiter.limit("30/minute")
 def search_empresas_route(
+    request: Request,
     q: str | None = None,
     tipo: TipoEmpresa | None = None,
     cidade: str | None = None,
@@ -44,6 +52,24 @@ def search_empresas_route(
     return EmpresaSearchResponse(items=items, total=total, limit=limit, offset=offset)
 
 
+@router.get("/diretorio", response_model=EmpresaDiretorioResponse)
+@limiter.limit("30/minute")
+def diretorio_empresas(
+    request: Request,
+    q: str | None = None,
+    tipo: TipoEmpresa | None = None,
+    cidade: str | None = None,
+    estado: str | None = None,
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> EmpresaDiretorioResponse:
+    itens, total = listar_diretorio(db, current_user.id, q, tipo, cidade, estado, limit, offset)
+    return EmpresaDiretorioResponse(items=itens, total=total, limit=limit, offset=offset)
+
+
+# Declarada depois de "/diretorio" para que o literal não seja lido como user_id.
 @router.get("/{user_id}", response_model=EmpresaRead)
 def get_empresa(user_id: uuid.UUID, db: Session = Depends(get_db)) -> EmpresaRead:
     empresa = get_empresa_by_id(db, user_id)

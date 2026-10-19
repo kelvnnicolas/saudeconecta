@@ -21,7 +21,7 @@ class Plano(Base):
     codigo: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
     nome: Mapped[str] = mapped_column(Text, nullable=False)
     stripe_price_id: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
-    limite_demandas_ativas: Mapped[int | None] = mapped_column(Integer)
+    limite_mensal: Mapped[int | None] = mapped_column(Integer)
     ativo: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
     criado_em: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

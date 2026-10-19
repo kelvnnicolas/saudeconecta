@@ -1,16 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Header } from "@/components/ui/Header";
+import { CidadeEstadoFields } from "@/components/ui/CidadeEstadoFields";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
+import { CampoSenha, ChecklistSenha } from "@/components/ui/CampoSenha";
+import { mensagemDeErroAuth } from "@/lib/erros-auth";
 import { type CadastroEmpresaInput, cadastroEmpresaSchema } from "@/lib/validations/auth";
 import { signUpAndEnsureSession } from "@/lib/supabase-client";
 import { api } from "@/lib/api";
 import type { TipoEmpresa } from "@/lib/types";
+import { consumirEmailCadastro } from "@/lib/cadastro-prefill";
 
 const TIPOS: { value: TipoEmpresa; label: string; icon: string }[] = [
   { value: "pessoa_fisica", label: "Pessoa Física / Família", icon: "family_restroom" },
@@ -31,9 +35,20 @@ export default function CadastroEmpresaPage() {
     formState: { errors },
   } = useForm<CadastroEmpresaInput>({
     resolver: zodResolver(cadastroEmpresaSchema),
-    defaultValues: { tipo: "pessoa_fisica" },
+    defaultValues: { tipo: "pessoa_fisica", cidade: "", estado: "" },
   });
   const tipoSelecionado = watch("tipo");
+
+  // Vindo da landing: e-mail do cartão "comece pelo e-mail" (sessionStorage)
+  // e tipo de empresa dos cards por contratante (?tipo=clinica etc.). Lido no
+  // efeito, e não com useSearchParams, para a página continuar estática sem
+  // precisar de Suspense.
+  useEffect(() => {
+    const tipo = new URLSearchParams(window.location.search).get("tipo");
+    if (tipo && TIPOS.some((t) => t.value === tipo)) setValue("tipo", tipo as TipoEmpresa);
+    const email = consumirEmailCadastro();
+    if (email) setValue("email", email);
+  }, [setValue]);
 
   async function onSubmit(data: CadastroEmpresaInput) {
     setErro(null);
@@ -58,7 +73,7 @@ export default function CadastroEmpresaPage() {
       });
       router.push("/perfil");
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não foi possível concluir o cadastro.");
+      setErro(mensagemDeErroAuth(e, "Não foi possível concluir o cadastro."));
     } finally {
       setEnviando(false);
     }
@@ -66,7 +81,7 @@ export default function CadastroEmpresaPage() {
 
   return (
     <>
-      <Header title="Cadastro de Empresa/Pessoa" backHref="/entrar" />
+      <Header title="Cadastro de Empresa/Pessoa" backHref="/entrar" semEntrar />
       <main className="flex-1 pt-16 pb-space-xl px-gutter bg-surface min-h-screen">
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-space-md max-w-sm w-full mx-auto mt-space-sm">
           <h1 className="font-headline-md text-headline-md text-on-surface">Cadastre-se para contratar</h1>
@@ -116,24 +131,25 @@ export default function CadastroEmpresaPage() {
               <input {...register("telefone")} placeholder="(00) 00000-0000" className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
               {errors.telefone && <span className="font-caption text-caption text-error">{errors.telefone.message}</span>}
             </label>
-            <label className="flex flex-col gap-1">
-              <span className="font-label-md text-label-md text-on-surface">Senha</span>
-              <input type="password" {...register("password")} placeholder="••••••••" className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
-              {errors.password && <span className="font-caption text-caption text-error">{errors.password.message}</span>}
-            </label>
-            <div className="flex gap-space-sm">
-              <label className="flex-1 flex flex-col gap-1">
-                <span className="font-label-md text-label-md text-on-surface">Cidade</span>
-                <input {...register("cidade")} placeholder="ex: Florianópolis" className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm" />
+            <div className="flex flex-col gap-space-xs">
+              <label className="flex flex-col gap-1">
+                <span className="font-label-md text-label-md text-on-surface">Senha</span>
+                <CampoSenha autoComplete="new-password" {...register("password")} />
+                {errors.password && <span className="font-caption text-caption text-error">{errors.password.message}</span>}
               </label>
-              <label className="w-20 flex flex-col gap-1">
-                <span className="font-label-md text-label-md text-on-surface">UF</span>
-                <input {...register("estado")} placeholder="SC" maxLength={2} className="h-12 px-space-md rounded-xl bg-surface-container-lowest neu-inset-sm uppercase" />
+              <ChecklistSenha senha={watch("password") ?? ""} />
+              <label className="flex flex-col gap-1 mt-space-xs">
+                <span className="font-label-md text-label-md text-on-surface">Confirme a senha</span>
+                <CampoSenha autoComplete="new-password" {...register("confirmacao")} />
+                {errors.confirmacao && <span className="font-caption text-caption text-error">{errors.confirmacao.message}</span>}
               </label>
             </div>
-            {(errors.cidade || errors.estado) && (
-              <span className="font-caption text-caption text-error">{errors.cidade?.message ?? errors.estado?.message}</span>
-            )}
+            <CidadeEstadoFields
+              estado={watch("estado") ?? ""}
+              cidade={watch("cidade") ?? ""}
+              onChange={(campo, valor) => setValue(campo, valor, { shouldValidate: valor !== "", shouldDirty: true })}
+              erro={errors.cidade?.message ?? errors.estado?.message}
+            />
           </section>
 
           {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">{erro}</p>}

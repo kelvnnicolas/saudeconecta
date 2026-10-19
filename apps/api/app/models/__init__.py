@@ -7,6 +7,7 @@ from app.models.especialidade import Especialidade
 from app.models.evento_stripe import EventoStripe
 from app.models.link_pagamento import LinkPagamento, StatusPagamento
 from app.models.mensagem_contato import MensagemContato
+from app.models.notificacao import Notificacao, TipoNotificacao
 from app.models.plano import Plano
 from app.models.profile import Papel, Profile
 from app.models.profissional import Profissional
@@ -28,6 +29,8 @@ __all__ = [
     "LinkPagamento",
     "StatusPagamento",
     "MensagemContato",
+    "Notificacao",
+    "TipoNotificacao",
     "Plano",
     "Papel",
     "Profile",

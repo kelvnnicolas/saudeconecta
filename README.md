@@ -1,281 +1,269 @@
-# SaúdeConecta
+# SaúdeConecta — HealthTech Marketplace MVP
 
-Marketplace que conecta profissionais de saúde (enfermeiros(as), técnicos de
-enfermagem, médicos, fisioterapeutas, fonoaudiólogos(as), nutricionistas,
-psicólogos(as), cuidadores(as) de idosos e crianças, entre outras
-especialidades) a empresas e pessoas que precisam desses serviços (clínicas,
-hospitais, empresas de homecare, operadoras de saúde e famílias).
+**Marketplace de serviços de saúde | Full-stack Development | Backend Engineering | API Integration**
 
-Este repositório contém o **Plano Básico (MVP comercial)**: primeira versão
-publicável, funcional e de boa qualidade visual — não um protótipo
-descartável. Escopo e orçamento já aprovados pelo cliente.
+O **SaúdeConecta** é um MVP de marketplace desenvolvido para conectar profissionais de saúde a empresas e pessoas que precisam desses serviços. A plataforma foi concebida para facilitar a descoberta de profissionais, a gestão de contatos, a publicação de demandas e a conexão entre oferta e procura de serviços de saúde.
 
-## Status do projeto
+O projeto contempla profissionais como enfermeiros, técnicos de enfermagem, médicos, fisioterapeutas, fonoaudiólogos, nutricionistas, psicólogos e cuidadores, além de empresas como clínicas, hospitais e prestadores de homecare.
 
-| Etapa | Status |
-|---|---|
-| Design spec do MVP (escopo, stack, modelo de dados, critérios de aceite) | ✅ Aprovado — [`docs/superpowers/specs/2026-09-19-saudeconecta-mvp-design.md`](docs/superpowers/specs/2026-09-19-saudeconecta-mvp-design.md) |
-| Plano 1 — Fundação do backend (FastAPI, banco, modelos, migrations, Storage, Sentry) | ✅ Integrado à `main` |
-| Plano 2 — Autenticação (Supabase Auth via JWKS) + perfis/especialidades/profissionais/empresas | ✅ Integrado à `main` |
-| Plano 3 — Busca de profissionais, avaliações e contatos (+ e-mail via Resend) | ✅ Integrado à `main` |
-| Plano 4 — Upload de avatar/logo (Supabase Storage) | ✅ Integrado à `main` |
-| Plano 5 — Relatório de analytics (pandas) | ✅ Integrado à `main` |
-| Assinatura B2B (Stripe Checkout + Customer Portal) e demandas | ✅ Backend implementado e testado — checkout/webhook com Stripe real ⛔ ainda não testado ponta a ponta (ver [`STATUS.md`](STATUS.md)) |
-| CI (lint + testes a cada PR) | ✅ GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) — só o backend, frontend ainda não entrou no CI |
-| Link de pagamento por contato (Stripe/Pagar.me) | ⏳ Não iniciado |
-| Frontend (Next.js) | ✅ 19 telas, integrado ao backend real e testado ponta a ponta (auth, busca, contato, avaliação, upload de avatar) — [`apps/web/README.md`](apps/web/README.md) |
-| Deploy | ✅ Frontend na Vercel ([`saudeconecta-pi.vercel.app`](https://saudeconecta-pi.vercel.app)) + backend no Render ([`saudeconecta-api.onrender.com`](https://saudeconecta-api.onrender.com)), ambos apontando pro Supabase/Stripe test mode reais — falta configurar o Supabase (Site URL/Redirect URLs), ver seção abaixo |
+A solução foi estruturada como um produto digital full-stack, com frontend integrado a uma API própria, persistência relacional, autenticação, armazenamento de arquivos e integração com serviços externos.
 
-O trabalho é dividido em planos de implementação por fase (cada um validável
-e testável sozinho antes de avançar para o próximo), disponíveis em
-[`docs/superpowers/plans/`](docs/superpowers/plans/). Cada plano teve
-implementação por tarefa, revisão de código dedicada e uma revisão final de
-branch antes de ser integrado à `main`.
+> **Projeto de desenvolvimento de produto digital:** foco em arquitetura de software, implementação de regras de negócio, integração entre serviços, testes automatizados e preparação de um MVP para validação comercial.
 
-### O que já funciona (backend, na `main`)
+## Demonstração e documentação
 
-Backend FastAPI + SQLAlchemy 2.0 + Alembic, com 189 testes automatizados
-rodando contra Postgres real via Docker (não SQLite/mocks):
+* **Aplicação web:** https://saudeconecta-pi.vercel.app
+* **API e documentação interativa (Swagger):** https://saudeconecta-api.onrender.com/docs
+* **Repositório:** https://github.com/kelvnnicolas/saudeconecta
 
-- **Autenticação**: `POST /auth/sync` valida o JWT do Supabase (via JWKS) e
-  sincroniza o perfil do usuário autenticado.
-- **Perfis**: `GET /profissionais/{id}`, `PUT /profissionais/me`,
-  `GET /empresas/{id}`, `PUT /empresas/me`, `POST /perfis/me/avatar` (upload
-  de foto/logo para o Supabase Storage, com validação de formato e tamanho).
-- **Especialidades**: `GET /especialidades` (10 especialidades semeadas pela
-  migration inicial).
-- **Busca**: `GET /profissionais` com filtro por texto (nome/especialidade
-  via `pg_trgm`), cidade, estado, faixa de preço e nota mínima.
-- **Contato**: `POST /contatos` (registra a mensagem e dispara e-mail via
-  Resend, com falha de e-mail isolada — nunca quebra a criação do contato) e
-  `GET /contatos` (só para as partes envolvidas).
-- **Avaliações**: `POST /avaliacoes` (só entre quem já tem um contato
-  registrado) e `GET /avaliacoes` (leitura pública).
-- **Analytics**: `GET /analytics/relatorio?data_inicio&data_fim` — métricas
-  da plataforma (profissionais por especialidade, nota média geral, volume
-  de contatos no período) via funções pandas puras e testáveis.
-- **Assinatura B2B**: `GET /planos`, `POST /assinaturas/checkout` (Stripe
-  Checkout hospedado, cartão recorrente), `POST /assinaturas/portal` (Stripe
-  Customer Portal: trocar cartão, faturas, cancelar), `GET /assinaturas/me`
-  e `POST /webhooks/stripe` (assinatura validada, idempotente, estado sempre
-  relido do Stripe). Só empresas `clinica`/`hospital`/`homecare` assinam.
-- **Demandas**: empresas assinantes publicam (`POST /demandas`, limitado pelo
-  plano); profissionais veem oportunidades compatíveis
-  (`GET /demandas/oportunidades`) e demonstram interesse
-  (`POST /demandas/{id}/interesse`), o que cria um **contato** comum — que
-  segue o fluxo já existente (contato → avaliação). Erros de regra de negócio
-  trazem um `code` estável em `detail.code` (ex.: `nao_elegivel`,
-  `assinatura_necessaria`, `pagamento_pendente`, `limite_atingido`),
-  documentados por rota no `/docs`.
-- **LGPD**: `descricao` de demandas e `mensagem` de contatos são removidas de
-  qualquer evento enviado ao Sentry e nunca aparecem em log — inclusive quando
-  vêm dentro da mensagem de um erro do banco; payloads do Stripe não são
-  armazenados.
-- **Infra**: 12 tabelas, migrations com rollback testado, RLS nas tabelas de
-  billing/demandas, helper de upload para o Supabase Storage, Sentry
-  inicializado, `GET /health`, CI no GitHub Actions.
+*Observação: o backend roda no plano gratuito do Render, então o primeiro acesso após um período ocioso pode levar cerca de 30 segundos para responder. A demonstração depende da disponibilidade dos serviços externos. O fluxo de pagamentos utiliza o modo de teste do Stripe; a aplicação ainda requer validações de configuração e segurança antes de ser considerada pronta para produção.*
 
-Ainda **fora de escopo** nesta etapa (ver o design spec para a lista
-completa): link de pagamento por contato, deploy do backend.
+## Principais funcionalidades
 
-### O que já funciona (frontend, `apps/web`)
+### Marketplace e gestão de perfis
 
-Next.js 14 (App Router) + TypeScript + Tailwind, 19 telas geradas a partir de
-[`docs/design/telas/`](docs/design/telas/), com todo formulário e listagem
-chamando o backend real (`lib/api.ts`) — sem mock no caminho principal:
+* Cadastro e autenticação de profissionais e empresas, com recuperação de senha por e-mail.
+* Perfis públicos de profissionais e empresas.
+* Cadastro e consulta de especialidades.
+* Upload de fotos de perfil e logotipos.
+* Busca de profissionais por nome, especialidade, localização, faixa de preço e avaliação mínima.
+* Seleção de estado e cidade por lista, a partir da API pública de localidades do IBGE.
 
-- **Autenticação**: cadastro/login via Supabase Auth real, com sessão
-  restaurada de forma consistente entre reloads (`lib/use-current-user.ts`,
-  um único store por aba) e guard de rota no grupo `(painel)`.
-- **Busca e perfil público**: `GET /profissionais` com filtro, e
-  `GET /profissionais/{id}` + avaliações no perfil público.
-- **Contato e avaliação**: novo contato, lista de contatos (com nome da outra
-  parte resolvido), avaliação após contato.
-- **Upload de avatar**: `POST /perfis/me/avatar` pro Supabase Storage.
-- **B2B**: planos, checkout (Stripe Checkout hospedado), portal de
-  assinatura, demandas e oportunidades.
+### Comunicação e reputação
 
-Testado manualmente de ponta a ponta contra o backend real (Supabase +
-Stripe test mode): cadastro profissional/empresa, login/logout (inclusive
-sobrevivendo a reload completo da página), contato entre as partes,
-avaliação (gravada e conferida direto na API) e upload de avatar. Detalhes,
-gaps conhecidos e o que ainda falta testar em
-[`apps/web/INTEGRATION_CHECKLIST.md`](apps/web/INTEGRATION_CHECKLIST.md).
+* Registro de contatos entre profissionais e potenciais contratantes, com conversa por mensagens dentro de cada contato.
+* Aceite de demanda direta pelo profissional.
+* Notificações dentro do aplicativo (sino com itens não lidos e "marcar todas como lidas") e por e-mail via Resend.
+* Avaliações vinculadas a contatos previamente registrados.
+* Consulta pública das avaliações dos profissionais.
 
-### Rodando o backend localmente
+### Recursos B2B e monetização
+
+* Planos de assinatura para empresas elegíveis.
+* Checkout de assinatura recorrente via Stripe Checkout.
+* Portal de gerenciamento de assinaturas e faturas.
+* Publicação de demandas conforme o plano contratado.
+* Identificação de oportunidades compatíveis com os profissionais.
+* Manifestação de interesse em oportunidades, integrada ao fluxo de contatos.
+
+### Analytics e observabilidade
+
+* Relatórios de profissionais por especialidade.
+* Cálculo de nota média geral.
+* Métricas de contatos por período.
+* Monitoramento de erros via Sentry.
+* Endpoint de health check e pipeline de integração contínua.
+
+## Arquitetura e tecnologias
+
+O projeto utiliza uma arquitetura separada entre frontend e backend, com API REST, banco de dados relacional e serviços gerenciados para autenticação, storage e pagamentos.
+
+| Camada                    | Tecnologias                                 |
+| ------------------------- | ------------------------------------------- |
+| Frontend                  | Next.js 14, React, TypeScript, App Router   |
+| Interface e estilização   | Tailwind CSS                                |
+| Backend                   | Python 3.11+, FastAPI                       |
+| API e validação de dados  | REST, Pydantic                              |
+| ORM                       | SQLAlchemy 2.0                              |
+| Migrations                | Alembic                                     |
+| Banco de dados            | PostgreSQL 16                               |
+| Autenticação              | Supabase Auth, JWT e JWKS                   |
+| Armazenamento de arquivos | Supabase Storage                            |
+| Análise de dados          | Python, pandas                              |
+| Pagamentos                | Stripe Checkout, Customer Portal e Webhooks |
+| E-mail transacional       | Resend                                      |
+| Monitoramento             | Sentry                                      |
+| Testes                    | pytest, PostgreSQL real e Docker            |
+| Qualidade de código       | Ruff, Black                                 |
+| CI                        | GitHub Actions                              |
+| Deploy                    | Vercel (frontend) e Render (backend)        |
+
+## Engenharia de software e decisões técnicas
+
+Além da implementação das funcionalidades, o projeto aborda aspectos importantes da construção e manutenção de aplicações web.
+
+**API e regras de negócio**
+
+* Endpoints organizados por domínio funcional.
+* Separação entre rotas, schemas, modelos, serviços e configuração.
+* Validação de dados e tratamento consistente de erros de negócio.
+* Documentação interativa da API via Swagger/OpenAPI.
+
+**Banco de dados e evolução do esquema**
+
+* Modelagem relacional com PostgreSQL.
+* Migrations versionadas e reversíveis via Alembic.
+* Regras de autorização e políticas de Row-Level Security (RLS) em tabelas selecionadas de faturamento, demandas e notificações.
+
+**Autenticação e integrações**
+
+* Validação de tokens JWT do Supabase utilizando JWKS.
+* Sincronização do perfil autenticado com o backend.
+* Upload de arquivos com validação de formato e tamanho.
+* Integração com Stripe para assinaturas, eventos de webhook e consulta do estado da assinatura.
+* Processamento idempotente de webhooks e releitura do estado da assinatura na origem.
+
+**Testes e qualidade**
+
+* 243 testes automatizados de backend, executados contra PostgreSQL real em ambiente de desenvolvimento com Docker; lint com Ruff e Black sem pendências.
+* CI com GitHub Actions para lint e testes do backend.
+* Testes manuais ponta a ponta dos principais fluxos de autenticação, busca, contatos, avaliações e upload.
+* Validação de regras de negócio e isolamento de falhas de serviços externos em operações selecionadas.
+
+**Privacidade e tratamento de dados**
+
+* Cuidados específicos com dados potencialmente sensíveis em mensagens e descrições.
+* Remoção de conteúdo de contatos e demandas dos eventos enviados ao Sentry.
+* Não armazenamento de payloads de webhook do Stripe como mecanismo de persistência da aplicação.
+
+Essas medidas fazem parte da implementação atual e não substituem uma auditoria completa de segurança, privacidade e conformidade antes de uma operação real em produção.
+
+## Estrutura do repositório
+
+```text
+saudeconecta/
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+├── docs/
+│   ├── design/
+│   │   └── telas/
+│   └── superpowers/
+│       ├── specs/
+│       └── plans/
+├── apps/
+│   ├── api/
+│   │   ├── app/
+│   │   │   ├── analytics/
+│   │   │   ├── core/
+│   │   │   ├── jobs/
+│   │   │   ├── models/
+│   │   │   ├── routers/
+│   │   │   ├── schemas/
+│   │   │   ├── services/
+│   │   │   └── storage/
+│   │   ├── alembic/
+│   │   └── tests/
+│   └── web/
+│       ├── app/
+│       ├── components/
+│       └── lib/
+├── docker-compose.dev.yml
+└── README.md
+```
+
+### Organização por domínio
+
+* `analytics/`: funções de análise e geração de relatórios.
+* `core/`: configuração, autenticação, banco de dados, monitoramento e erros.
+* `jobs/`: tarefas operacionais executáveis sob demanda ou agendamento.
+* `models/`: modelos relacionais do SQLAlchemy.
+* `routers/`: endpoints da API.
+* `schemas/`: validação e serialização de dados.
+* `services/`: regras de negócio, autorização e integrações.
+* `storage/`: operações de armazenamento de arquivos.
+* `alembic/`: migrations do banco de dados.
+* `tests/`: testes automatizados do backend.
+* `apps/web/`: interface web, componentes e integração com a API.
+
+## Executando localmente
+
+### Pré-requisitos
+
+* Python 3.11 ou superior.
+* Node.js e npm.
+* Docker e Docker Compose.
+* Credenciais de desenvolvimento para os serviços externos necessários.
+
+### Backend
 
 ```bash
-# 1. Subir o Postgres local (dev + test) via Docker
 docker compose -f docker-compose.dev.yml up -d
 
-# 2. Criar o virtualenv e instalar dependências (requirements-dev.txt inclui
-#    requirements.txt via -r, mais pytest/ruff/black; em produção só o
-#    segundo é instalado)
 cd apps/api
 python3 -m venv .venv
 .venv/bin/pip install -r requirements-dev.txt
 
-# 3. Copiar o .env de exemplo e preencher as variáveis obrigatórias do Stripe
-#    e APP_URL (ver "Stripe (modo de teste)" abaixo) — sem elas a API se
-#    recusa a subir, com uma mensagem listando o que falta
 cp .env.example .env
+```
 
-# 4. Aplicar as migrations
+Configure as variáveis de ambiente no arquivo `.env`. A API não inicia sem estas seis: `DATABASE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ESSENCIAL`, `STRIPE_PRICE_PRO` e `APP_URL` (URL do frontend, usada também no CORS). As demais, como as do Supabase, Resend e Sentry, são opcionais para rodar localmente. Depois aplique as migrations:
+
+```bash
 .venv/bin/alembic upgrade head
-
-# 5. Rodar os testes
 .venv/bin/python -m pytest -q
-
-# 6. Subir a API
 .venv/bin/uvicorn app.main:app --reload
 ```
 
-A API sobe em `http://localhost:8000`; a documentação interativa (Swagger)
-fica em `http://localhost:8000/docs`.
+A API estará disponível em `http://localhost:8000`, com documentação interativa em `http://localhost:8000/docs`.
 
-Os testes **não** dependem do `.env`: `tests/conftest.py` força valores
-fictícios para Stripe/Sentry/Resend, então nenhum teste chama um serviço real.
+### Frontend
 
-### Rodando o frontend localmente
+Em outro terminal:
 
 ```bash
 cd apps/web
 npm install
-cp .env.example .env.local   # NEXT_PUBLIC_API_URL + chaves do mesmo projeto Supabase do backend
+cp .env.example .env.local
 npm run dev
 ```
 
-Abre em `http://localhost:3000`. Detalhes em
-[`apps/web/README.md`](apps/web/README.md).
+Configure as variáveis de ambiente do frontend, incluindo a URL da API e as credenciais públicas do projeto Supabase correspondente.
 
-#### Stripe (modo de teste)
+A aplicação estará disponível em `http://localhost:3000`.
 
-Tudo no painel do Stripe com o toggle **Test mode** ligado:
+**Importante:** consulte os arquivos de exemplo e a documentação antes de executar os serviços. Nunca publique chaves privadas, segredos de webhook ou arquivos `.env` no repositório.
 
-1. **Chave secreta** — Developers → API keys → *Secret key* (`sk_test_...`)
-   → `STRIPE_SECRET_KEY`.
-2. **Produtos e preços** — Product catalog → crie dois produtos (Essencial e
-   Pro), cada um com um preço **mensal recorrente**. Copie cada `price_...`
-   para `STRIPE_PRICE_ESSENCIAL` e `STRIPE_PRICE_PRO`. Se o banco já foi
-   migrado antes com outros valores, rode
-   `.venv/bin/python -m app.jobs.sincronizar_planos` para atualizar.
-3. **Customer Portal** — Settings → Billing → Customer portal → ative e
-   salve (sem isso, `POST /assinaturas/portal` falha).
-4. **`APP_URL`** — URL do frontend, usada nos redirecionamentos do Checkout
-   e do Portal (em dev: `http://localhost:3000`).
-5. **Webhook local** — instale o [Stripe CLI](https://docs.stripe.com/stripe-cli)
-   e rode:
+## Status de desenvolvimento
 
-   ```bash
-   stripe login
-   stripe listen --forward-to localhost:8000/webhooks/stripe
-   ```
+O MVP possui os principais fluxos funcionais implementados e integração entre frontend, backend e serviços externos. Entretanto, a conclusão de funcionalidades não significa que o produto esteja integralmente validado para operação comercial em produção.
 
-   O comando imprime um segredo `whsec_...` → `STRIPE_WEBHOOK_SECRET`
-   (reinicie a API depois). Deixe o `stripe listen` rodando enquanto testa.
-   Cartão de teste: `4242 4242 4242 4242`, qualquer data futura/CVC; para
-   simular falha de cobrança numa assinatura já ativa, use
-   `stripe trigger invoice.payment_failed` ou o cartão `4000 0000 0000 0341`.
+| Área                                     | Situação                                                                     |
+| ---------------------------------------- | ---------------------------------------------------------------------------- |
+| API e regras de negócio                  | Implementadas                                                                |
+| Autenticação e perfis                    | Implementados e testados                                                     |
+| Busca, contatos e avaliações             | Implementados e testados                                                     |
+| Analytics com pandas                     | Implementado                                                                 |
+| Assinaturas e demandas B2B               | Backend implementado; validação ponta a ponta de pagamentos ainda necessária |
+| Frontend                                 | 18 rotas integradas aos principais fluxos da API                             |
+| Testes automatizados                     | 243 testes de backend com PostgreSQL real                                    |
+| CI                                       | Lint e testes do backend via GitHub Actions                                  |
+| Deploy de demonstração                   | Frontend na Vercel e backend no Render                                       |
+| Configuração de autenticação em produção | Ajustes de URLs de redirecionamento do Supabase pendentes                    |
+| Preparação para produção                 | Revisões adicionais de segurança, estabilidade e configuração pendentes      |
 
-#### Jobs
+O projeto foi desenvolvido em fases, com especificação de requisitos, planos de implementação, revisões de código e validação incremental das funcionalidades.
 
-- `.venv/bin/python -m app.jobs.expirar_demandas` — marca como `expirada` as
-  demandas abertas vencidas (as leituras já tratam vencidas como expiradas;
-  o job só atualiza o status em lote). Pensado para rodar agendado (ex.: cron
-  diário).
-- `.venv/bin/python -m app.jobs.sincronizar_planos` — copia os `price_id` do
-  `.env` para a tabela `planos`.
+Documentação complementar:
 
-#### Variáveis de ambiente (`apps/api/.env`, nunca commitado)
+* [Especificação técnica do MVP](docs/superpowers/specs/2026-09-19-saudeconecta-mvp-design.md)
+* [Planos de implementação](docs/superpowers/plans/)
+* [Documentação do frontend](apps/web/README.md)
+* [Checklist de integração](apps/web/INTEGRATION_CHECKLIST.md)
+* [Status técnico detalhado](STATUS.md)
 
-| Variável | Obrigatória para rodar local? | Para quê |
-|---|---|---|
-| `DATABASE_URL` | Sim (já vem preenchida no `.env.example` para o Postgres local do Docker) | Conexão com o Postgres |
-| `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | Só para autenticação real e upload de avatar de ponta a ponta | Validação de JWT (JWKS) e Supabase Storage |
-| `SUPABASE_JWT_SECRET` | Não (mantida só como referência/fallback — a validação usa JWKS) | — |
-| `SUPABASE_STORAGE_BUCKET` | Não (default `avatars`) | Nome do bucket de upload |
-| `STRIPE_SECRET_KEY` | **Sim** | API do Stripe (assinaturas) |
-| `STRIPE_WEBHOOK_SECRET` | **Sim** | Validação da assinatura do webhook |
-| `STRIPE_PRICE_ESSENCIAL` / `STRIPE_PRICE_PRO` | **Sim** | `price_id` mensal de cada plano (lidos na migration de seed) |
-| `APP_URL` | **Sim** | URL do frontend para os redirecionamentos do Stripe e links de e-mail |
-| `RESEND_API_KEY` | Só para os e-mails saírem de verdade | API do Resend |
-| `SENTRY_DSN` | Não (testes forçam vazio automaticamente) | Captura de erro |
+## Competências demonstradas
 
-Os testes passam sem nenhuma credencial real. Para subir a API localmente,
-as variáveis marcadas como **Sim** precisam estar preenchidas (a aplicação
-falha rápido, listando só os nomes do que falta — nunca os valores).
+Este projeto reúne experiências práticas em:
 
-### Deploy
+* Desenvolvimento full-stack com Python, FastAPI e Next.js.
+* Construção e documentação de APIs REST.
+* Modelagem de dados relacionais e migrations.
+* Autenticação, autorização e integração com serviços gerenciados.
+* Integração de pagamentos recorrentes e webhooks.
+* Testes automatizados e CI.
+* Análise de dados com pandas.
+* Deploy e configuração de aplicações web.
+* Organização incremental do desenvolvimento e documentação técnica.
 
-- **Frontend**: Vercel, projeto `saudeconecta`, root directory `apps/web`,
-  framework Next.js detectado automaticamente. Produção em
-  [`saudeconecta-pi.vercel.app`](https://saudeconecta-pi.vercel.app) (mais dois
-  alias — time e branch `main`). Variáveis de ambiente configuradas no painel
-  do Vercel: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-  `NEXT_PUBLIC_API_URL` (apontando pro Render abaixo).
-- **Backend**: Render, serviço web `saudeconecta-api` (Python, plano free —
-  sobe do zero após período sem tráfego, então a primeira requisição depois
-  de um tempo demora mais), branch `main`, deploy automático a cada push.
-  Produção em [`saudeconecta-api.onrender.com`](https://saudeconecta-api.onrender.com).
-  Usa o **mesmo** Supabase real e Stripe test mode do desenvolvimento — não
-  um banco/projeto separado. `APP_URL` (usada pelo CORS) aponta pro domínio
-  Vercel acima; `STRIPE_WEBHOOK_SECRET` é de um webhook endpoint criado à
-  parte no Stripe (não o segredo do `stripe listen` local).
-- **Pendente, só configurável pelo painel do Supabase** (sem endpoint de API
-  pra isso): **Authentication → URL Configuration** — adicionar a URL da
-  Vercel em *Site URL* e *Redirect URLs*. Sem isso, o link de confirmação de
-  e-mail e o login com Google redirecionam pra um lugar errado em produção.
-- Ainda faltando antes de QA de segurança/estabilidade real: rate limiting,
-  health check consciente do banco, verificação de vulnerabilidades de
-  dependências, separação de dependências de produção/desenvolvimento, CI
-  cobrindo o frontend. Checklist completo em [`STATUS.md`](STATUS.md).
+## Contato profissional
 
-## Stack tecnológico
+Para oportunidades profissionais, projetos de desenvolvimento de software, integrações de APIs, automação de processos e construção de MVPs:
 
-| Camada | Tecnologia |
-|---|---|
-| Frontend | Next.js 14+ (App Router) + TypeScript |
-| Backend/API | Python 3.11+ + FastAPI |
-| ORM/Migrations | SQLAlchemy 2.0 + Alembic |
-| Banco de dados | PostgreSQL 16 |
-| Autenticação | Supabase Auth (JWT validado via JWKS) |
-| Storage | Supabase Storage |
-| Análise de dados | Python + pandas |
-| Pagamento | Stripe Payment Links / Pagar.me Link de Pagamento |
-| E-mail | Resend |
-| Monitoramento | Sentry |
-| CI/CD | GitHub Actions + Railway/Render (backend) + Vercel (frontend) |
+* **LinkedIn:** [adicione aqui a URL do seu perfil]
+* **Portfólio:** [adicione aqui o link do seu portfólio, se disponível]
+* **Contato profissional:** [adicione aqui seu canal de contato]
 
-Detalhes completos da stack, modelo de dados e critérios de aceite estão no
-[design spec](docs/superpowers/specs/2026-09-19-saudeconecta-mvp-design.md).
+---
 
-## Estrutura do repositório
-
-```
-saudeconecta/
-├── .github/workflows/ci.yml # lint + testes do backend a cada PR
-├── docker-compose.dev.yml   # Postgres local (dev + test) para desenvolvimento
-├── docs/
-│   ├── design/telas/        # mockups estáticos por tela (referência visual, não tocar)
-│   └── superpowers/
-│       ├── specs/     # design specs aprovados
-│       └── plans/     # planos de implementação por fase (um por branch/feature)
-└── apps/
-    ├── api/                 # backend FastAPI (na main)
-    │   ├── app/
-    │   │   ├── analytics/   # funções pandas puras (relatório)
-    │   │   ├── core/        # config, auth (JWKS), database, sentry, erros
-    │   │   ├── jobs/        # comandos avulsos (expirar demandas, sincronizar planos)
-    │   │   ├── models/      # SQLAlchemy ORM
-    │   │   ├── routers/     # endpoints FastAPI
-    │   │   ├── schemas/     # Pydantic
-    │   │   ├── services/    # regras de negócio, autorização, billing (único ponto que usa o Stripe)
-    │   │   └── storage/     # helper do Supabase Storage
-    │   ├── alembic/         # migrations
-    │   ├── tests/           # 192 testes, rodando contra Postgres real
-    │   └── .env.example
-    └── web/                 # frontend Next.js (App Router), integrado ao backend real
-        ├── app/             # (public), (auth), (painel) — ver apps/web/README.md
-        ├── components/
-        └── lib/             # api.ts, supabase-client.ts, use-current-user.ts, validations/
-```
+*SaúdeConecta — um projeto de engenharia de software aplicado à construção de um produto digital para o setor de saúde.*

@@ -6,8 +6,12 @@ import { useSearchParams } from "next/navigation";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
+import { ListaEsqueleto } from "@/components/ui/Skeleton";
+import { NotificationBell } from "@/components/ui/NotificationBell";
+import { BotaoEntrar } from "@/components/ui/BotaoEntrar";
 import { ProfessionalCard } from "@/components/busca/ProfessionalCard";
 import { api } from "@/lib/api";
+import { useCurrentUser } from "@/lib/use-current-user";
 import type { ProfissionalSearchResult } from "@/lib/types";
 
 // Agrupamento de UX só do frontend — GET /profissionais não tem conceito de
@@ -22,9 +26,31 @@ const CATEGORIAS = [
   { icon: "psychology", label: "Psicologia & Fono", q: "psicologia" },
 ];
 
+// A landing manda `?esp=<slug>`; cada slug vira o termo de busca que a tela já usa
+// (a busca por texto `q` casa o nome da especialidade). Slug desconhecido é ignorado.
+const TERMO_POR_ESPECIALIDADE: Record<string, string> = {
+  enfermagem: "enfermagem",
+  fisioterapia: "fisioterapia",
+  fonoaudiologia: "fonoaudiologia",
+  medicos: "medicina",
+  nutricao: "nutrição",
+  psicologia: "psicologia",
+  cuidadores: "cuidador",
+};
+
+function termoInicial(params: URLSearchParams) {
+  const q = params.get("q");
+  if (q !== null) return q;
+  const esp = params.get("esp");
+  return (esp && Object.hasOwn(TERMO_POR_ESPECIALIDADE, esp) ? TERMO_POR_ESPECIALIDADE[esp] : "") ?? "";
+}
+
 export default function BuscarPage() {
   const searchParams = useSearchParams();
-  const [query, setQuery] = useState(searchParams.get("q") ?? "");
+  const { papel, session } = useCurrentUser();
+  // Publicar demanda é de empresa; visitantes ainda veem e caem no login.
+  const ehProfissional = !!session && papel === "profissional";
+  const [query, setQuery] = useState(() => termoInicial(searchParams));
   const [resultados, setResultados] = useState<ProfissionalSearchResult[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -47,16 +73,14 @@ export default function BuscarPage() {
 
   return (
     <>
-      <main className="flex-1 pt-space-md pb-24 px-gutter flex flex-col gap-space-md bg-surface min-h-screen">
+      <main className={`flex-1 pt-space-md ${session ? "pb-24" : "pb-space-xl"} px-gutter flex flex-col gap-space-md bg-surface min-h-screen`}>
         <div className="flex items-center justify-between">
           <Logo />
           <div className="flex items-center gap-space-xs">
-            <button aria-label="Notificações" className="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant neu-surface-sm neu-pressable">
-              <MaterialIcon name="notifications" />
-            </button>
+            <BotaoEntrar />
+            <NotificationBell />
           </div>
         </div>
-        <p className="font-caption text-caption text-on-surface-variant">+1.400 profissionais ativos</p>
         <h1 className="font-headline-lg text-headline-lg text-on-surface">
           Encontre profissionais de saúde para o que você precisa.
         </h1>
@@ -70,8 +94,18 @@ export default function BuscarPage() {
             onChange={(e) => setQuery(e.target.value)}
             type="text"
             placeholder="Buscar por nome ou especialidade..."
-            className="w-full h-12 pl-11 pr-space-md rounded-xl bg-surface-container-lowest text-on-surface placeholder:text-outline neu-surface focus:outline-none focus:ring-2 focus:ring-primary-container"
+            className="w-full h-12 pl-11 pr-12 rounded-xl bg-surface-container-lowest text-on-surface placeholder:text-outline neu-surface focus:outline-none focus:ring-2 focus:ring-primary-container"
           />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label="Limpar busca"
+              className="absolute inset-y-0 right-1 w-11 flex items-center justify-center rounded-full text-on-surface-variant"
+            >
+              <MaterialIcon name="close" className="text-[20px]" />
+            </button>
+          )}
         </div>
 
         <div>
@@ -84,7 +118,10 @@ export default function BuscarPage() {
               <button
                 key={cat.label}
                 onClick={() => setQuery(cat.q)}
-                className="flex items-center gap-space-xs px-space-sm py-space-sm rounded-xl bg-surface-container-lowest neu-surface text-left"
+                aria-pressed={query.trim().toLowerCase() === cat.q}
+                className={`flex items-center gap-space-xs px-space-sm py-space-sm rounded-xl bg-surface-container-lowest neu-surface text-left ${
+                  query.trim().toLowerCase() === cat.q ? "ring-2 ring-primary" : ""
+                }`}
               >
                 <MaterialIcon name={cat.icon} className="text-primary text-[20px]" />
                 <span className="font-label-sm text-label-sm text-on-surface">{cat.label}</span>
@@ -93,16 +130,18 @@ export default function BuscarPage() {
           </div>
         </div>
 
-        <Link
-          href="/demandas/nova"
-          className="flex items-center justify-between bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-2xl p-space-md neu-surface"
-        >
-          <div className="flex items-center gap-space-sm">
-            <MaterialIcon name="emergency" className="text-[24px]" />
-            <span className="font-title-md text-title-md">Precisa com urgência? Publicar demanda</span>
-          </div>
-          <MaterialIcon name="arrow_forward" />
-        </Link>
+        {!ehProfissional && (
+          <Link
+            href="/demandas/nova"
+            className="flex items-center justify-between bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-2xl p-space-md neu-surface"
+          >
+            <div className="flex items-center gap-space-sm">
+              <MaterialIcon name="emergency" className="text-[24px]" />
+              <span className="font-title-md text-title-md">Precisa com urgência? Publicar demanda</span>
+            </div>
+            <MaterialIcon name="arrow_forward" />
+          </Link>
+        )}
 
         <div>
           <h2 className="font-title-md text-title-md text-on-surface mb-1">Profissionais em destaque</h2>
@@ -111,11 +150,7 @@ export default function BuscarPage() {
           </p>
           {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm mb-space-sm">{erro}</p>}
           <div className="flex flex-col gap-space-sm">
-            {carregando && (
-              <div className="flex justify-center py-space-lg">
-                <MaterialIcon name="progress_activity" className="text-[28px] text-primary animate-spin" />
-              </div>
-            )}
+            {carregando && <ListaEsqueleto quantidade={4} />}
             {!carregando && resultados.map((p) => (
               <ProfessionalCard key={p.user_id} profissional={p} />
             ))}
@@ -127,7 +162,8 @@ export default function BuscarPage() {
           </div>
         </div>
       </main>
-      <BottomNav />
+      {/* Visitante tem "Entrar" no topo; a barra leva a telas que exigem login. */}
+      {session && <BottomNav />}
     </>
   );
 }

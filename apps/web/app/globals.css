@@ -18,14 +18,17 @@
   --ink-mute: #837e9c;
   --line: #cac5de;
 
-  --accent: #6d3fd1;
-  --accent-2: #5527b8;
-  --accent-soft: #ded4f7;
+  --accent: #642fd9;
+  --accent-2: #4e22b0;
+  --accent-soft: #dcd2f8;
   --accent-ink: #ffffff;
 
-  --secondary: #2f9e6e;
-  --secondary-soft: #d9f2e6;
-  --on-secondary-soft: #1f6b4c;
+  /* Teal da marca: --secondary serve a texto e ícone (4,4:1 sobre o fundo); o teal
+     puro #14b8a6 só aparece em preenchimento e indicador (--secondary-fill). */
+  --secondary: #0f766e;
+  --secondary-fill: #14b8a6;
+  --secondary-soft: #d3f0ec;
+  --on-secondary-soft: #0b4f4a;
 
   --tertiary: #f5a623;
   --tertiary-soft: #fdecc8;
@@ -36,6 +39,16 @@
 
   --shadow-light: #ffffff;
   --shadow-dark: #c4c0da;
+
+  /* Vidro (ver docs/decisions/0001-regra-de-vidro.md): superfície translúcida do tema */
+  --vidro-tinta: #ffffff;
+  --vidro-opacidade: 52%;
+  --vidro-borda: rgba(255, 255, 255, 0.7);
+  --vidro-brilho: rgba(255, 255, 255, 0.95);
+  --vidro-sombra: rgba(51, 47, 74, 0.2);
+  --vidro-reflexo: rgba(255, 255, 255, 0.45);
+  /* Curva de mola suave, no estilo das transições do iOS */
+  --mola: cubic-bezier(0.32, 0.72, 0, 1);
 
   color-scheme: light;
 }
@@ -53,9 +66,10 @@
     --accent-soft: #423a5c;
     --accent-ink: #211a3a;
 
-    --secondary: #6bcf9f;
-    --secondary-soft: #1f3a30;
-    --on-secondary-soft: #a9e8c8;
+    --secondary: #2dd4bf;
+    --secondary-fill: #2dd4bf;
+    --secondary-soft: #17393a;
+    --on-secondary-soft: #99f0e3;
 
     --tertiary: #f7bb5c;
     --tertiary-soft: #4a3a1f;
@@ -66,6 +80,13 @@
 
     --shadow-light: #38374a;
     --shadow-dark: #1a1922;
+
+    --vidro-tinta: #ffffff;
+    --vidro-opacidade: 9%;
+    --vidro-borda: rgba(255, 255, 255, 0.16);
+    --vidro-brilho: rgba(255, 255, 255, 0.2);
+    --vidro-sombra: rgba(0, 0, 0, 0.5);
+    --vidro-reflexo: rgba(255, 255, 255, 0.07);
 
     color-scheme: dark;
   }
@@ -83,9 +104,10 @@
   --accent-soft: #423a5c;
   --accent-ink: #211a3a;
 
-  --secondary: #6bcf9f;
-  --secondary-soft: #1f3a30;
-  --on-secondary-soft: #a9e8c8;
+  --secondary: #2dd4bf;
+  --secondary-fill: #2dd4bf;
+  --secondary-soft: #17393a;
+  --on-secondary-soft: #99f0e3;
 
   --tertiary: #f7bb5c;
   --tertiary-soft: #4a3a1f;
@@ -96,6 +118,13 @@
 
   --shadow-light: #38374a;
   --shadow-dark: #1a1922;
+
+  --vidro-tinta: #ffffff;
+  --vidro-opacidade: 9%;
+  --vidro-borda: rgba(255, 255, 255, 0.16);
+  --vidro-brilho: rgba(255, 255, 255, 0.2);
+  --vidro-sombra: rgba(0, 0, 0, 0.5);
+  --vidro-reflexo: rgba(255, 255, 255, 0.07);
 
   color-scheme: dark;
 }
@@ -111,7 +140,7 @@
     overscroll-behavior: none;
     min-height: max(884px, 100dvh);
     background: var(--bg);
-    transition: background-color 0.25s ease, color 0.25s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
   button,
   a,
@@ -150,7 +179,7 @@
     box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
   }
   .neu-pressable {
-    transition: box-shadow 0.15s ease, transform 0.15s ease;
+    transition: box-shadow 0.2s var(--mola), transform 0.3s var(--mola);
   }
   .neu-pressable:active {
     box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
@@ -163,5 +192,249 @@
   }
   .btn-accent-neu:active {
     box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.35);
+  }
+}
+
+/* Movimento reduzido: sem deslocamento/escala e sem transições longas. O
+   spinner continua indicando atividade, mas só pulsa em opacidade. */
+@keyframes spin-reduzido {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+  .neu-pressable:active,
+  .vidro-acento:active,
+  [class*="active:scale"]:active {
+    transform: none !important;
+  }
+  .animate-spin {
+    animation: spin-reduzido 1.5s ease-in-out infinite !important;
+  }
+}
+
+/* iOS dá zoom automático ao focar campos com fonte < 16px. Em vez de travar o
+   zoom da página (ruim para acessibilidade), mantemos os campos em 16px no mobile. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Entrada ao rolar da landing (components/landing/Revelar.tsx). A classe .revelar só é
+   posta pelo JavaScript, então sem JS o conteúdo fica visível. */
+.revelar {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.5s ease,
+    transform 0.7s var(--mola);
+}
+.revelar[data-visivel] {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .revelar {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ---------- vidro (Liquid Glass) ----------
+   Regra universal em docs/decisions/0001-regra-de-vidro.md. Três famílias:
+   .vidro        sobre a superfície do tema (claro ou escuro)
+   .vidro-midia  sobre foto escura: sempre translúcido branco, texto branco
+   .vidro-acento botão principal, em vidro tingido com a cor de destaque
+   Barras fixas usam .vidro-topo / .vidro-base (só a borda do lado de dentro). */
+@layer components {
+  .vidro,
+  .vidro-topo,
+  .vidro-base {
+    background:
+      linear-gradient(180deg, var(--vidro-reflexo), transparent 45%),
+      color-mix(in srgb, var(--vidro-tinta) var(--vidro-opacidade), transparent);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
+    box-shadow:
+      inset 0 1px 0 var(--vidro-brilho),
+      0 8px 24px -10px var(--vidro-sombra);
+  }
+  .vidro {
+    border: 1px solid var(--vidro-borda);
+  }
+  .vidro-topo {
+    border-bottom: 1px solid var(--vidro-borda);
+  }
+  .vidro-base {
+    border-top: 1px solid var(--vidro-borda);
+  }
+  .vidro-midia {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    backdrop-filter: blur(22px) saturate(170%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      0 10px 28px -10px rgba(0, 0, 0, 0.45);
+  }
+  /* Barra sobre a parte clara da foto: mais densa, para o texto branco manter contraste. */
+  .vidro-midia-denso {
+    color: #fff;
+    background: rgba(27, 18, 56, 0.5);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    backdrop-filter: blur(22px) saturate(170%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      0 10px 28px -10px rgba(0, 0, 0, 0.5);
+  }
+  .vidro-acento {
+    color: var(--accent-ink);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 55%),
+      color-mix(in srgb, var(--accent) 80%, transparent);
+    transition: transform 0.35s var(--mola), filter 0.2s ease;
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    backdrop-filter: blur(18px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      0 10px 24px -8px color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+  .vidro-acento:active {
+    transform: scale(0.97);
+  }
+  /* Sem backdrop-filter o texto perderia contraste: cai para fundo quase opaco. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .vidro,
+    .vidro-topo,
+    .vidro-base {
+      background: color-mix(in srgb, var(--bg) 92%, transparent);
+    }
+    .vidro-midia,
+    .vidro-midia-denso {
+      background: rgba(27, 18, 56, 0.85);
+    }
+    .vidro-acento {
+      background: var(--accent);
+    }
+  }
+}
+
+/* Troca de painel em "Como funciona" (components/landing/ComoFunciona.tsx): fade de 200 ms. */
+@keyframes painel-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.painel-fade {
+  animation: painel-fade 0.2s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .painel-fade {
+    animation: none;
+  }
+}
+
+/* Fonte de ícones hospedada no projeto (T-016): arquivo de public/fonts, só com os eixos que
+   o app usa (peso 400 e preenchimento 0..1). Antes vinha do Google Fonts com todos os eixos
+   (3,9 MB) e com CSS externo bloqueando o primeiro desenho. Licença Apache 2.0.
+   Para mudar eixos, baixe outro arquivo em fonts.googleapis.com/css2?family=Material+Symbols+Outlined
+   e meça de novo (Lighthouse). `font-display: block` esconde o texto de reserva até a fonte chegar. */
+@font-face {
+  font-family: "Material Symbols Outlined";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("/fonts/material-symbols-outlined.woff2") format("woff2");
+}
+
+/* Mesmas propriedades que o CSS do Google definia para a classe, mais o tamanho fixo (1em):
+   enquanto a fonte não chega, o texto de reserva ("search", "domain_add"...) não pode alargar
+   o layout; sem isso tudo salta quando ela carrega (CLS medido de 0,046 nas caixas do hero). */
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: "liga";
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Campo de data (nova demanda): o controle nativo varia entre navegadores. Aqui ele tem a
+   altura dos outros campos, o texto alinhado à esquerda (o iOS centraliza) e o ícone do
+   calendário com área de toque de 44 px e legível no tema escuro. */
+.campo-data {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 3rem;
+  text-align: left;
+  display: block;
+}
+.campo-data::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.5em;
+}
+.campo-data::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  box-sizing: content-box;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0.625rem;
+  margin: 0 -0.5rem 0 0;
+  opacity: 0.7;
+}
+:root[data-theme="dark"] .campo-data::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .campo-data::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+}
+
+/* Cadeado do aviso de limite (components/ui/AvisoLimite.tsx): entra com um pequeno "pop". */
+@keyframes cadeado-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.cadeado-pop {
+  animation: cadeado-pop 0.4s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cadeado-pop {
+    animation: none;
   }
 }

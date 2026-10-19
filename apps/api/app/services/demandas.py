@@ -12,8 +12,10 @@ from app.models.contato import Contato, OrigemContato
 from app.models.demanda import Demanda, StatusDemanda
 from app.models.empresa import Empresa
 from app.models.especialidade import Especialidade
+from app.models.notificacao import TipoNotificacao
 from app.models.profile import Papel, Profile
 from app.models.profissional import Profissional
+from app.models.profissional_especialidade import profissional_especialidades
 from app.schemas.demanda import (
     DemandaCreate,
     DemandaDetalheEmpresa,
@@ -23,8 +25,13 @@ from app.schemas.demanda import (
     MinhaDemandaRead,
 )
 from app.services import email_templates
+from app.services.aviso_cota import avisar_cota_se_preciso
 from app.services.email_service import enviar_email
 from app.services.entitlements import verificar_publicacao_demanda
+from app.services.notificacao_service import (
+    registrar_notificacao,
+    registrar_notificacoes_em_lote,
+)
 
 MENSAGEM_INTERESSE_PADRAO = "Tenho interesse na sua demanda."
 TRANSICOES_PERMITIDAS = (StatusDemanda.preenchida, StatusDemanda.encerrada)
@@ -66,14 +73,38 @@ def _nome_empresa(db: Session, empresa_id: uuid.UUID) -> str:
     return db.get(Empresa, empresa_id).nome_fantasia
 
 
-def _exigir_papel(db: Session, user_id: uuid.UUID, papel: Papel) -> Profile:
+def exigir_papel(db: Session, user_id: uuid.UUID, papel: Papel) -> Profile:
     profile = db.get(Profile, user_id)
     if profile is None or profile.papel != papel:
-        code = "apenas_empresas" if papel == Papel.empresa else "apenas_profissionais"
+        plural = "empresas" if papel == Papel.empresa else "profissionais"
         raise erro_negocio(
-            status.HTTP_403_FORBIDDEN, code, f"Recurso disponível só para perfis {papel.value}"
+            status.HTTP_403_FORBIDDEN, f"apenas_{plural}", f"Recurso disponível só para {plural}"
         )
     return profile
+
+
+def _notificar_profissionais_compativeis(db: Session, demanda: Demanda) -> None:
+    profissional_ids = db.scalars(
+        select(Profissional.user_id)
+        .join(Profile, Profissional.user_id == Profile.id)
+        .join(
+            profissional_especialidades,
+            profissional_especialidades.c.profissional_id == Profissional.user_id,
+        )
+        .where(
+            profissional_especialidades.c.especialidade_id == demanda.especialidade_id,
+            func.lower(func.trim(Profile.cidade)) == demanda.cidade.strip().lower(),
+        )
+    ).all()
+    registrar_notificacoes_em_lote(
+        db,
+        destinatarios_ids=list(profissional_ids),
+        tipo=TipoNotificacao.nova_oportunidade,
+        titulo="Nova oportunidade compatível",
+        corpo=f"Uma nova demanda em {demanda.cidade} bate com sua especialidade.",
+        link="/oportunidades",
+    )
+    db.commit()
 
 
 def criar_demanda(db: Session, user_id: uuid.UUID, data: DemandaCreate) -> DemandaRead:
@@ -86,11 +117,14 @@ def criar_demanda(db: Session, user_id: uuid.UUID, data: DemandaCreate) -> Deman
     db.add(demanda)
     db.commit()
     db.refresh(demanda)
+    # O aviso de cota só dá flush; o commit do laço de notificações abaixo grava os dois.
+    avisar_cota_se_preciso(db, empresa.user_id)
+    _notificar_profissionais_compativeis(db, demanda)
     return DemandaRead(**_campos_leitura(demanda, empresa.nome_fantasia))
 
 
 def listar_minhas(db: Session, user_id: uuid.UUID) -> list[MinhaDemandaRead]:
-    _exigir_papel(db, user_id, Papel.empresa)
+    exigir_papel(db, user_id, Papel.empresa)
     empresa = db.get(Empresa, user_id)
     if empresa is None:
         return []
@@ -117,7 +151,7 @@ def listar_oportunidades(
     limit: int,
     offset: int,
 ) -> tuple[list[DemandaRead], int]:
-    profile = _exigir_papel(db, user_id, Papel.profissional)
+    profile = exigir_papel(db, user_id, Papel.profissional)
     filtros = [Demanda.status == StatusDemanda.aberta, Demanda.expira_em > func.now()]
 
     if especialidade_id is not None:
@@ -130,7 +164,7 @@ def listar_oportunidades(
 
     cidade_filtro = cidade or profile.cidade
     if cidade_filtro:
-        filtros.append(func.lower(Demanda.cidade) == cidade_filtro.strip().lower())
+        filtros.append(func.lower(func.trim(Demanda.cidade)) == cidade_filtro.strip().lower())
 
     total = db.scalar(select(func.count()).select_from(Demanda).where(*filtros))
     linhas = db.execute(
@@ -208,12 +242,12 @@ def atualizar_status(
 def demonstrar_interesse(
     db: Session, user_id: uuid.UUID, demanda_id: uuid.UUID, mensagem: str | None
 ) -> Contato:
-    _exigir_papel(db, user_id, Papel.profissional)
+    exigir_papel(db, user_id, Papel.profissional)
     if db.get(Profissional, user_id) is None:
         raise erro_negocio(
             status.HTTP_400_BAD_REQUEST,
             "perfil_profissional_incompleto",
-            "Complete seu perfil profissional (PUT /profissionais/me) antes",
+            "Complete seu perfil profissional antes de demonstrar interesse.",
         )
     demanda = db.get(Demanda, demanda_id)
     if demanda is None:
@@ -252,4 +286,14 @@ def demonstrar_interesse(
     if empresa_profile is not None and empresa_profile.email:
         link = f"{get_settings().app_url}/contatos/{contato.id}"
         enviar_email(empresa_profile.email, *email_templates.novo_interesse_em_demanda(link))
+
+    registrar_notificacao(
+        db,
+        destinatario_id=demanda.empresa_id,
+        tipo=TipoNotificacao.novo_interesse,
+        titulo="Novo interesse em demanda",
+        corpo="Um profissional demonstrou interesse na sua demanda.",
+        link=f"/contatos/{contato.id}",
+    )
+    db.commit()
     return contato

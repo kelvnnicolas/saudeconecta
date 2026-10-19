@@ -18,15 +18,17 @@ from app.core.errors import erro_negocio
 from app.models.assinatura import Assinatura, StatusAssinatura
 from app.models.empresa import Empresa
 from app.models.evento_stripe import EventoStripe
+from app.models.notificacao import TipoNotificacao
 from app.models.plano import Plano
 from app.models.profile import Papel, Profile
 from app.services import email_templates
 from app.services.email_service import enviar_email
 from app.services.entitlements import (
     assinatura_vigente,
-    contar_demandas_abertas,
+    contar_uso_mensal,
     obter_empresa_elegivel,
 )
+from app.services.notificacao_service import registrar_notificacao
 
 EVENTOS_ASSINATURA = (
     "customer.subscription.created",
@@ -150,7 +152,7 @@ def criar_checkout(db: Session, user_id: uuid.UUID, plano_codigo: str) -> str:
             line_items=[{"price": plano.stripe_price_id, "quantity": 1}],
             client_reference_id=str(empresa.user_id),
             subscription_data={"metadata": {"empresa_id": str(empresa.user_id)}},
-            success_url=f"{app_url}/empresa/assinatura?status=processando",
+            success_url=f"{app_url}/assinatura?status=processando",
             cancel_url=f"{app_url}/empresa/planos",
         )
 
@@ -187,7 +189,7 @@ def criar_portal(db: Session, user_id: uuid.UUID) -> str:
         sessao = stripe.billing_portal.Session.create(
             api_key=_api_key(),
             customer=customer_id,
-            return_url=f"{get_settings().app_url}/empresa/assinatura",
+            return_url=f"{get_settings().app_url}/assinatura",
         )
     return sessao["url"]
 
@@ -204,7 +206,7 @@ def obter_assinatura_da_empresa(db: Session, user_id: uuid.UUID) -> tuple[Assina
         .order_by(Assinatura.criado_em.desc())
         .limit(1)
     )
-    return assinatura, contar_demandas_abertas(db, user_id)
+    return assinatura, contar_uso_mensal(db, user_id)
 
 
 def construir_evento(payload: bytes, assinatura_header: str | None) -> Any:
@@ -311,8 +313,16 @@ def _pagamento_falhou(db: Session, invoice: Any) -> None:
     profile = db.get(Profile, assinatura.empresa_id)
     if profile is None or not profile.email:
         return
-    link = f"{get_settings().app_url}/empresa/assinatura"
+    link = f"{get_settings().app_url}/assinatura"
     enviar_email(profile.email, *email_templates.falha_pagamento_assinatura(link))
+    registrar_notificacao(
+        db,
+        destinatario_id=assinatura.empresa_id,
+        tipo=TipoNotificacao.falha_pagamento,
+        titulo="Falha no pagamento",
+        corpo="Não conseguimos processar o pagamento da sua assinatura.",
+        link="/assinatura",
+    )
 
 
 def _despachar(db: Session, tipo: str, objeto: Any) -> str | None:

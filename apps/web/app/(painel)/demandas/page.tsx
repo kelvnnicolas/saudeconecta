@@ -6,8 +6,12 @@ import Image from "next/image";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
+import { ListaEsqueleto } from "@/components/ui/Skeleton";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 import { DemandaStatusBadge } from "@/components/ui/StatusBadge";
+import { ModalLimite } from "@/components/ui/ModalLimite";
 import { api, ApiError } from "@/lib/api";
+import { estadoDaCota, useCota } from "@/lib/use-uso-mensal";
 import type { DemandaDetalheEmpresa, InteressadoRead, MinhaDemandaRead, StatusDemanda } from "@/lib/types";
 
 const ABAS: { value: "todas" | StatusDemanda; label: string }[] = [
@@ -18,6 +22,9 @@ const ABAS: { value: "todas" | StatusDemanda; label: string }[] = [
 ];
 
 export default function MinhasDemandasPage() {
+  const { uso, plano } = useCota();
+  const limiteAtingido = estadoDaCota(uso) === "esgotada";
+  const [limiteAberto, setLimiteAberto] = useState(false);
   const [demandas, setDemandas] = useState<MinhaDemandaRead[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -76,13 +83,28 @@ export default function MinhasDemandasPage() {
             <Logo compact />
             <h1 className="font-headline-md text-headline-md text-on-surface">Minhas Demandas</h1>
           </div>
-          <Link
-            href="/demandas/nova"
-            aria-label="Nova demanda"
-            className="w-11 h-11 flex items-center justify-center rounded-full bg-primary text-on-primary neu-surface"
-          >
-            <MaterialIcon name="add" />
-          </Link>
+          <div className="flex items-center gap-space-xs">
+            <NotificationBell />
+            {limiteAtingido && uso ? (
+              <button
+                type="button"
+                onClick={() => setLimiteAberto(true)}
+                aria-haspopup="dialog"
+                aria-label="Nova demanda (limite do mês atingido)"
+                className="w-11 h-11 flex items-center justify-center rounded-full bg-primary text-on-primary neu-surface"
+              >
+                <MaterialIcon name="lock" />
+              </button>
+            ) : (
+              <Link
+                href="/demandas/nova"
+                aria-label="Nova demanda"
+                className="w-11 h-11 flex items-center justify-center rounded-full bg-primary text-on-primary neu-surface"
+              >
+                <MaterialIcon name="add" />
+              </Link>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-space-xs overflow-x-auto no-scrollbar py-0.5">
@@ -103,11 +125,7 @@ export default function MinhasDemandasPage() {
           })}
         </div>
 
-        {carregando && (
-          <div className="flex justify-center py-space-lg">
-            <MaterialIcon name="progress_activity" className="text-[28px] text-primary animate-spin" />
-          </div>
-        )}
+        {carregando && <ListaEsqueleto />}
         {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm">{erro}</p>}
 
         <div className="flex flex-col gap-space-sm">
@@ -188,6 +206,9 @@ export default function MinhasDemandasPage() {
           )}
         </div>
       </main>
+      {uso && (
+        <ModalLimite aberto={limiteAberto} onFechar={() => setLimiteAberto(false)} uso={uso} plano={plano} contexto="demanda" />
+      )}
       <BottomNav />
     </>
   );
