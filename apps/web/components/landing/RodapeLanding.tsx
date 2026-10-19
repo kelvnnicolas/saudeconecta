@@ -13,7 +13,7 @@ export function RodapeLanding() {
     <footer className="max-w-6xl w-full mx-auto px-gutter md:px-gutter-lg py-space-lg flex flex-col gap-space-sm md:flex-row md:items-center md:justify-between font-caption text-caption text-on-surface-variant">
       <nav aria-label="Rodapé" className="flex flex-wrap gap-x-space-md">
         {LINKS.map((link) => (
-          <Link
+          <Link prefetch={false}
             key={link.href}
             href={link.href}
             className="inline-flex min-h-11 items-center hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
