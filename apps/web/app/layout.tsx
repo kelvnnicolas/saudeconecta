@@ -1,11 +1,23 @@
 import type { Metadata } from "next";
-import { Inter, Quicksand } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const quicksand = Quicksand({
-  subsets: ["latin"],
-  weight: ["600", "700"],
+// Fontes hospedadas no projeto (app/fonts/, subconjunto latino das variáveis do Google Fonts,
+// licença OFL). Com `next/font/google` o build buscava o CSS no Google duas vezes e, quando as
+// respostas diferiam, as classes do <html> e do CSS saíam com nomes diferentes: o site inteiro
+// caía em Times em produção (B-013). Arquivo local = build determinístico e sem rede.
+const inter = localFont({
+  src: "./fonts/inter-latin.woff2",
+  weight: "100 900",
+  style: "normal",
+  display: "swap",
+  variable: "--font-inter",
+});
+const quicksand = localFont({
+  src: "./fonts/quicksand-latin.woff2",
+  weight: "600 700",
+  style: "normal",
+  display: "swap",
   variable: "--font-quicksand",
 });
 

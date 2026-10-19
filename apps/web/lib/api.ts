@@ -226,6 +226,7 @@ export const api = {
 
   // Assinatura B2B
   listPlanos: () => request<PlanoRead[]>("/planos", { auth: false }),
+  getPlanoGratuito: () => request<PlanoRead>("/planos/gratuito", { auth: false }),
 
   iniciarCheckout: (planoCodigo: string) =>
     request<CheckoutResponse>("/assinaturas/checkout", {

@@ -7,6 +7,7 @@ from sqlalchemy import select
 
 from app.models.assinatura import Assinatura, StatusAssinatura
 from app.models.empresa import TipoEmpresa
+from app.services.entitlements import LIMITE_GRATUITO
 from tests.fabrica import (
     autenticar,
     criar_assinatura,
@@ -37,6 +38,23 @@ def stripe_mock():
             {"id": "cs_antiga", "status": "open"}, "k"
         )
         yield customer_create, checkout_create, portal_create, checkout_retrieve, checkout_expire
+
+
+def test_plano_gratuito_e_publico_e_usa_o_limite_que_o_backend_aplica(client):
+    response = client.get("/planos/gratuito")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "codigo": "gratuito",
+        "nome": "Gratuito",
+        "limite_mensal": LIMITE_GRATUITO,
+    }
+
+
+def test_plano_gratuito_nao_aparece_na_lista_de_planos_assinaveis(client):
+    codigos = [p["codigo"] for p in client.get("/planos").json()]
+
+    assert "gratuito" not in codigos
 
 
 def test_listar_planos_e_publico_e_nao_expoe_price_id(client):
