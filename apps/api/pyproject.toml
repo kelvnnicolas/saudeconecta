@@ -8,3 +8,6 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
+# UP042 (ruff 0.16) pede StrEnum no lugar de (str, Enum). Não trocamos: muda o resultado de str() e de
+# f-strings dos enums que o código e o SQLAlchemy usam, e os enums já funcionam e têm testes.
+ignore = ["UP042"]

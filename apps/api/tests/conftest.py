@@ -34,10 +34,10 @@ os.environ["RESEND_API_KEY"] = ""
 os.environ["RATE_LIMIT_ENABLED"] = "false"
 
 import pytest  # noqa: E402
+from alembic.config import Config  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 from alembic import command  # noqa: E402
-from alembic.config import Config  # noqa: E402
 from app.core.database import SessionLocal, engine, get_db  # noqa: E402
 from app.main import app  # noqa: E402
 
