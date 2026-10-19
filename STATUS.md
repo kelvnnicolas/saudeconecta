@@ -23,12 +23,12 @@
 |---|---|---|
 | Backend (FastAPI) | ✅ Produção (Render) | Spec do MVP, assinatura B2B, demandas, chat, aceite (idempotente), notificações, diretório de empresas, regras de contato e cota mensal (gratuito 5, Essencial 50, Pro ilimitado; pessoa física e família incluídas), avaliação única por autor e alvo e avaliações sem `autor_id`. Único item do spec fora: link de pagamento por contato (⏸️). |
 | Frontend (Next.js) | ✅ Produção (Vercel) | App Router + Supabase Auth (e-mail, Google e Facebook; configuração dos provedores no Supabase não reconfirmada). LinkedIn: PR #10 aberto e em conflito com a `main`. Fontes Inter e Quicksand hospedadas no projeto e favicon próprio, ambos conferidos em produção em 2026-10-17. |
-| Testes do backend | ✅ | 292 passando (validados localmente em 2026-10-16 no resultado combinado dos PRs #41 a #47, PostgreSQL real, com Black e Ruff limpos); CI verde na `main` em 2026-10-17. |
+| Testes do backend | ✅ | 309 passando (validados localmente em 2026-10-19, ambiente virtual novo e Postgres 16 em UTC, com Black e Ruff limpos); CI verde na `main`. |
 | Testes do frontend | ❌ | Sem suíte de testes. O CI roda `next lint` e `tsc` desde o PR #44; `build` fica com a Vercel. |
 | CI | ✅ | GitHub Actions a cada PR e push na `main`: Backend (Black, Ruff, pytest) e Frontend (lint + tipos). |
 | Deploy | ✅ | Render com auto-deploy por commit (desde 2026-10-12). Vercel por push. **Migrations não rodam no deploy:** aplicar à mão antes do merge (T-007). |
 | Stripe | 🟡 | Checkout validado só em modo de teste, em conta que não é a definitiva. |
-| Dependências | 🟡 | Dependabot ativo, com 22 PRs de atualização abertos no `origin`, nenhum testado. |
+| Dependências | 🟡 | Dependabot ativo. Dois lotes testados e mergeados em 2026-10-19 (#57 e #58). Seguem abertos os PRs de **versão maior**, bloqueados por migração (TypeScript 7, React 19, ESLint 10 e `eslint-config-next` 16, Tailwind 4, zod 4 com `@hookform/resolvers` 5; ver T-024), mais patches novos que o Dependabot reabriu. |
 
 ### Critérios de aceite do MVP
 
@@ -71,6 +71,10 @@
 ## Registro de entregas
 
 Mais recente primeiro. Uma linha por entrega; IDs referem-se ao `nextmove.md`.
+
+### 2026-10-19
+- **Dependências: lotes 1 e 2** (PRs #57 e #58, mergeados; substituem 12 PRs do Dependabot): lote 1 = pydantic 2.13.5, pydantic-settings 2.15.0, uvicorn 0.54.0, sentry-sdk 2.70.0, python-multipart 0.0.32, alembic 1.20.0, `supabase-js` 2.118.0 e `react-hook-form` 7.90.0; lote 2 = fastapi 0.141.1, supabase 2.31.0, PyJWT 2.15.1, pytest 9.1.1 e ruff 0.16.9. O CI de 30/set desses PRs não valia mais, então testei tudo contra o `main` de hoje: **309 testes** num ambiente virtual criado do zero e num Postgres 16 temporário em UTC, `ruff` e `black` limpos, build e formulários conferidos no navegador. **Achados que explicam as falhas antigas:** o `supabase` 2.31 exige `pyjwt>=2.12` e o projeto fixava 2.9.0 (o `pip` nem resolvia; a verificação do login tem testes e passou); o `package-lock.json` gerado com npm 11.6 faltava entradas `@emnapi/*` que o npm 11.19 do CI exige (regenerado com o npm do CI); o Alembic 1.20 pede `path_separator = os` no `alembic.ini`; o ruff 0.16 acusa `UP042` (`StrEnum`), ignorado de propósito porque mudaria o `str()` dos enums. **Conferido em produção:** `/ready` 200, `/planos/gratuito` 200 e token inválido recusado com 401. **Não verificado:** que o build novo do Render já está ativo (sem endpoint de versão e sem acesso ao painel) e o fluxo real de login e de upload de foto.
+- **GitHub Actions: `setup-python` 7** (PR #15, mergeado, CI verde). O `checkout` 7 (PR #59, refeito porque o #14 passou a conflitar) está no item correspondente quando for mergeado.
 
 ### 2026-10-17
 - **Validações em produção** (2026-10-17, conferidas por mim): **fontes (B-013, PR #54):** as classes de fonte do HTML e do CSS coincidem (`5bda0f`, `9d285e`), o título usa Quicksand e o corpo Inter, ambas carregadas, 0 erros no console; **favicon (T-021, PR #55):** `/favicon.ico` responde 200 como `image/x-icon` com os mesmos bytes do repositório e `/icon.svg` 200; **job de expiração (B-012, V-010):** as execuções agendadas de 14, 15, 16 e 17/10 passaram depois do secret `PROD_DATABASE_URL`. **Não verificado:** a aparência do favicon na aba real do Chrome, Safari e Firefox.
