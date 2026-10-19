@@ -1,18 +1,71 @@
 version: 2
 updates:
+  # Backend: um PR só para tudo que é menor ou patch. Versões maiores continuam em PRs
+  # separados, porque o backend tem uma suíte de testes (CI) para julgar cada uma.
   - package-ecosystem: pip
     directory: /apps/api
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
+    groups:
+      backend-menores:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
 
+  # Frontend: um PR só para menor e patch. As versões maiores abaixo ficam ignoradas até a migração
+  # (T-024 no nextmove.md): o frontend não tem testes automatizados e cada uma exige mexer no
+  # código ou na configuração (Next 14 sem TypeScript 7 nem React 19; ESLint 9+ pede config nova;
+  # Tailwind 4 muda a configuração; zod 4 e @hookform/resolvers 5 quebram o tipo dos formulários).
+  # Ao migrar um deles, apague a linha correspondente. Atualizações de segurança não passam por
+  # estas regras de ignorar versões, segundo a documentação do GitHub (não verificado aqui).
   - package-ecosystem: npm
     directory: /apps/web
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
+    groups:
+      frontend-menores:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+    ignore:
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint-config-next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "zod"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@hookform/resolvers"
+        update-types: ["version-update:semver-major"]
+      # Os tipos do Node devem acompanhar o runtime (Node 24), não a versão mais nova.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
+  # GitHub Actions: um PR só para tudo; o próprio CI exercita as mudanças.
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    groups:
+      actions:
+        patterns:
+          - "*"
