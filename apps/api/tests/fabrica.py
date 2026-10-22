@@ -14,6 +14,7 @@ from app.models.notificacao import Notificacao, TipoNotificacao
 from app.models.plano import Plano
 from app.models.profile import Papel, Profile
 from app.models.profissional import Profissional
+from app.models.verificacao import Administrador
 
 DESCRICAO_SENSIVEL = "Paciente com diagnóstico reservado, plantão em UTI"
 
@@ -52,6 +53,7 @@ def criar_profissional(
     cidade: str | None = "São Paulo",
     com_perfil_profissional: bool = True,
     nome: str = "Maria Silva",
+    registro_profissional: str | None = None,
 ) -> uuid.UUID:
     user_id = uuid.uuid4()
     db.add(
@@ -66,10 +68,17 @@ def criar_profissional(
     )
     db.flush()
     if com_perfil_profissional:
-        profissional = Profissional(user_id=user_id)
+        profissional = Profissional(user_id=user_id, registro_profissional=registro_profissional)
         profissional.especialidades = [especialidade(db, nome) for nome in especialidades]
         db.add(profissional)
         db.flush()
+    return user_id
+
+
+def criar_admin(db) -> uuid.UUID:
+    user_id = uuid.uuid4()
+    db.add(Administrador(user_id=user_id))
+    db.flush()
     return user_id
 
 
