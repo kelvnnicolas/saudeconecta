@@ -21,18 +21,16 @@ Diferenciar **registro informado** (autodeclarado) de **registro conferido** pel
 4. **Trilha sem texto livre:** só campos estruturados, para minimizar dados.
 
 ## 4. Modelo de dados (migration aditiva)
-**Enum** `status_verificacao_enum`: `unverified`, `pending`, `verified`, `irregular`, `unable_to_verify`.
+**Enums** `status_verificacao_enum` (`unverified`, `pending`, `verified`, `irregular`, `unable_to_verify`) e `ator_verificacao_enum` (`profissional`, `administrador`, `sistema`).
 
-**`profissionais`** ganha:
-- `verificacao_status` (enum, não nulo, padrão `unverified`);
-- `verificado_em` (timestamptz, nulo): data da última conferência com resultado `verified`.
+**Princípio de privacidade (ajuste feito na implementação):** as tabelas antigas do projeto, como `profissionais`, **não têm RLS** (decisão 1 do `STATUS.md`) e o Supabase as expõe pela API REST com a chave anônima, que é pública. Por isso **nenhum estado sensível vai para `profissionais`**: ali ficam só os dados que já são públicos. O estado detalhado (`pending`, `irregular`, `unable_to_verify`) vive só na trilha, em tabela com **RLS ligado**, acessada apenas pelo backend.
 
-`verificado` (booleano antigo) **continua na tabela e passa a ser mantido pelo serviço** (`verdadeiro` só quando `verified`), para não quebrar nada; a API passa a derivá-lo do estado. Remoção da coluna numa migration futura (dívida registrada no `nextmove.md`). A migration converte quem já tinha `verificado = true` em `verified`.
+**`profissionais`** ganha só `verificado_em` (timestamptz, nulo: data da última conferência com resultado `verified`). O booleano `verificado` que já existe **continua** e passa a ser a projeção pública do estado: verdadeiro só quando o estado atual é `verified`. Quem já tinha `verificado = true` ganha uma linha na trilha (`verified`, ator `sistema`).
 
-**`administradores`**: `user_id` (UUID, chave primária, sem FK: o administrador pode não ter perfil), `criado_em`.
+**`administradores`** (RLS ligado): `user_id` (UUID, chave primária, sem FK: o administrador pode não ter perfil), `criado_em`.
 
-**`verificacoes_registro`** (só inserção, a trilha de auditoria):
-`id`, `profissional_id` (FK `profissionais`, `ON DELETE CASCADE`), `status_anterior`, `status_novo`, `conselho` (até 20), `uf` (2), `numero_registro` (até 40), `metodo` (fixo `consulta_manual_fonte_oficial` nas conferências), `fonte` (até 255: nome ou endereço do portal consultado), `verificado_em`, `ator_tipo` (`profissional`, `administrador` ou `sistema`), `ator_id` (UUID, nulo para o sistema), `criado_em`. **Sem texto livre.**
+**`verificacoes_registro`** (RLS ligado, só inserção: a trilha e a fonte do **estado atual**, que é o `status_novo` da última linha; sem linhas = `unverified`):
+`id`, `profissional_id` (FK `profissionais`, `ON DELETE CASCADE`, com índice), `status_anterior`, `status_novo`, `conselho` (até 20), `uf` (2), `numero_registro` (até 40), `metodo` (fixo `consulta_manual_fonte_oficial` nas conferências), `fonte` (até 255: nome ou endereço do portal consultado), `verificado_em`, `ator_tipo`, `ator_id` (UUID, nulo para o sistema), `criado_em`. **Sem texto livre.**
 
 ## 5. Estados e transições
 | De | Para | Quem | Condição |
