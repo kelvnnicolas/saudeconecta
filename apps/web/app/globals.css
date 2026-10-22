@@ -330,6 +330,37 @@
   }
 }
 
+/* Controle segmentado (ThemeSettings, F-036): a opção marcada ganha relevo
+   e cor com a mesma curva de mola dos botões. */
+.segmento {
+  transition: color 0.2s ease, box-shadow 0.25s var(--mola);
+}
+
+/* Diálogo de confirmação (ConfirmarAcao, Radix AlertDialog). O Radix marca
+   data-state="open"/"closed"; só opacidade e transform (decisão 0001, regra 4). */
+@keyframes dialogo-fundo-entra {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes dialogo-painel-entra {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+.dialogo-fundo[data-state="open"] {
+  animation: dialogo-fundo-entra 0.2s ease-out;
+}
+.dialogo-painel[data-state="open"] {
+  animation: dialogo-painel-entra 0.25s var(--mola);
+}
+@media (prefers-reduced-motion: reduce) {
+  .segmento {
+    transition: none;
+  }
+  .dialogo-painel[data-state="open"] {
+    animation: dialogo-fundo-entra 0.15s ease-out;
+  }
+}
+
 /* Troca de painel em "Como funciona" (components/landing/ComoFunciona.tsx): fade de 200 ms. */
 @keyframes painel-fade {
   from {
