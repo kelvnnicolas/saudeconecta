@@ -95,7 +95,7 @@ export default function CriarNovaDemandaPage() {
       setEnviada(true);
     } catch (e) {
       if (tratarErro(e)) return;
-      setErro(e instanceof Error ? e.message : "Não foi possível publicar a demanda.");
+      setErro(e instanceof Error ? e.message : "Não conseguimos publicar sua demanda. Tente de novo em instantes.");
     }
   }
 
@@ -103,12 +103,12 @@ export default function CriarNovaDemandaPage() {
     return (
       <main className="flex-1 flex flex-col items-center justify-center gap-space-md bg-surface min-h-screen px-gutter text-center">
         <MaterialIcon name="check_circle" filled className="text-[56px] text-secondary" />
-        <h1 className="font-headline-md text-headline-md text-on-surface">Demanda publicada!</h1>
+        <h1 className="font-headline-md text-headline-md text-on-surface">Demanda publicada</h1>
         <p className="font-body-md text-body-md text-on-surface-variant max-w-xs">
-          Os profissionais qualificados na região já foram notificados da sua solicitação.
+          Ela já aparece para profissionais compatíveis da sua cidade. Você recebe um aviso no sino quando alguém demonstrar interesse.
         </p>
         <button onClick={() => router.push("/demandas")} className="px-space-md h-11 rounded-xl neu-surface neu-pressable bg-primary text-on-primary font-label-md text-label-md">
-          Acompanhar respostas
+          Ver minhas demandas
         </button>
       </main>
     );

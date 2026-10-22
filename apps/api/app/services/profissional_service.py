@@ -45,7 +45,7 @@ def upsert_profissional(
     if profile.papel != "profissional":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Apenas usuários com papel 'profissional' podem editar este recurso",
+            detail="Só contas de profissional podem editar este perfil.",
         )
 
     especialidades: list[Especialidade] = []

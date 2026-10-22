@@ -13,6 +13,7 @@ export function AvisoDialogo({
   titulo,
   descricao,
   rotulo = "Entendi",
+  rotuloSecundario,
   onConfirmar,
 }: {
   aberto: boolean;
@@ -20,6 +21,8 @@ export function AvisoDialogo({
   titulo: string;
   descricao: string;
   rotulo?: string;
+  /** Botão para dispensar sem agir (ex.: "Agora não"); sem ele só o principal aparece. */
+  rotuloSecundario?: string;
   /** Ação do botão principal; sem ela o botão só fecha o aviso. */
   onConfirmar?: () => void;
 }) {
@@ -32,7 +35,17 @@ export function AvisoDialogo({
           <AlertDialog.Description className="font-body-md text-body-md text-on-surface-variant">
             {descricao}
           </AlertDialog.Description>
-          <div className="flex justify-end pt-space-xs">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-space-xs pt-space-xs">
+            {rotuloSecundario && (
+              <AlertDialog.Cancel asChild>
+                <button
+                  type="button"
+                  className="h-11 px-space-md rounded-full font-label-md text-label-md text-on-surface neu-surface-sm neu-pressable focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  {rotuloSecundario}
+                </button>
+              </AlertDialog.Cancel>
+            )}
             <AlertDialog.Action asChild>
               <button
                 type="button"

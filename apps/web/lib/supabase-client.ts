@@ -1,5 +1,6 @@
 import { createClient, type Session } from "@supabase/supabase-js";
 import type { Papel } from "./types";
+import { MSG } from "./mensagens";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -9,6 +10,14 @@ const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 // com uma mensagem clara, em vez de um erro de módulo na primeira renderização.
 export const supabase =
   url && anonKey ? createClient(url, anonKey) : null;
+
+// Texto de tela sem nome de fornecedor nem de arquivo; o detalhe técnico fica no console de desenvolvimento.
+function semConfiguracao() {
+  if (process.env.NODE_ENV !== "production") {
+    console.error("Supabase não configurado (ver .env.example)");
+  }
+  return new Error(MSG.servicoDeLoginIndisponivel);
+}
 
 export async function getSession(): Promise<Session | null> {
   if (!supabase) return null;
@@ -35,14 +44,14 @@ export async function getAccessToken(): Promise<string | null> {
 }
 
 export async function signInWithPassword(email: string, password: string) {
-  if (!supabase) throw new Error("Supabase não configurado (ver .env.example)");
+  if (!supabase) throw semConfiguracao();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
   return data;
 }
 
 export async function signInWithGoogle() {
-  if (!supabase) throw new Error("Supabase não configurado (ver .env.example)");
+  if (!supabase) throw semConfiguracao();
   const { data, error } = await supabase.auth.signInWithOAuth({ provider: "google" });
   if (error) throw error;
   return data;
@@ -68,7 +77,7 @@ export async function provedorSocialAtivo(provider: string): Promise<boolean | n
 }
 
 export async function signInWithLinkedIn() {
-  if (!supabase) throw new Error("Supabase não configurado (ver .env.example)");
+  if (!supabase) throw semConfiguracao();
   // O Supabase usa "linkedin_oidc" (OpenID Connect); o provider "linkedin" antigo foi descontinuado.
   const { data, error } = await supabase.auth.signInWithOAuth({ provider: "linkedin_oidc" });
   if (error) throw error;
@@ -76,14 +85,14 @@ export async function signInWithLinkedIn() {
 }
 
 export async function signInWithFacebook() {
-  if (!supabase) throw new Error("Supabase não configurado (ver .env.example)");
+  if (!supabase) throw semConfiguracao();
   const { data, error } = await supabase.auth.signInWithOAuth({ provider: "facebook" });
   if (error) throw error;
   return data;
 }
 
 export async function signUpWithPassword(email: string, password: string, papel: Papel) {
-  if (!supabase) throw new Error("Supabase não configurado (ver .env.example)");
+  if (!supabase) throw semConfiguracao();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -95,7 +104,7 @@ export async function signUpWithPassword(email: string, password: string, papel:
 
 export class EmailNaoConfirmadoError extends Error {
   constructor() {
-    super("Enviamos um link de confirmação para o seu e-mail. Confirme antes de continuar.");
+    super(MSG.emailParaConfirmarNoCadastro);
   }
 }
 
@@ -125,7 +134,7 @@ export async function signOut() {
 }
 
 export async function requestPasswordReset(email: string) {
-  if (!supabase) throw new Error("Supabase não configurado (ver .env.example)");
+  if (!supabase) throw semConfiguracao();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/entrar/nova-senha`,
   });
@@ -133,7 +142,7 @@ export async function requestPasswordReset(email: string) {
 }
 
 export async function updatePassword(password: string) {
-  if (!supabase) throw new Error("Supabase não configurado (ver .env.example)");
+  if (!supabase) throw semConfiguracao();
   const { error } = await supabase.auth.updateUser({ password });
   if (error) throw error;
 }
