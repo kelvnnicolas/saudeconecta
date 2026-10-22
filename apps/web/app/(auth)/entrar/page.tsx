@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
+import { AvisoDialogo } from "@/components/ui/AvisoDialogo";
 import { CampoSenha } from "@/components/ui/CampoSenha";
 import { mensagemDeErroAuth } from "@/lib/erros-auth";
 import { type LoginInput, loginSchema } from "@/lib/validations/auth";
@@ -48,6 +49,8 @@ export default function EntrarPage() {
   const [provedorSocial, setProvedorSocial] = useState<"google" | "facebook" | "linkedin" | null>(null);
   const [papelEscolhido, setPapelEscolhido] = useState<PapelEntrada>("empresa");
   const [semCadastro, setSemCadastro] = useState(false);
+  // Conta de outro tipo que o escolhido: avisa em popup e oferece entrar no tipo certo.
+  const [avisoTipo, setAvisoTipo] = useState<{ papel: PapelEntrada; dados: LoginInput } | null>(null);
   // null = ainda não sabemos (carregando ou sem resposta do Supabase).
   const [linkedinAtivo, setLinkedinAtivo] = useState<boolean | null>(null);
 
@@ -105,11 +108,7 @@ export default function EntrarPage() {
       if ((papelDaConta === "empresa" || papelDaConta === "profissional") && papelDaConta !== papelEscolhido) {
         await signOut();
         escolherPapel(papelDaConta);
-        setErro(
-          papelDaConta === "empresa"
-            ? "Esta conta é de empresa ou pessoa. Ajustamos a opção acima: entre de novo."
-            : "Esta conta é de profissional. Ajustamos a opção acima: entre de novo.",
-        );
+        setAvisoTipo({ papel: papelDaConta, dados: data });
         return;
       }
       router.push("/buscar");
@@ -121,6 +120,13 @@ export default function EntrarPage() {
     } finally {
       setEnviando(false);
     }
+  }
+
+  async function entrarNoTipoCerto() {
+    if (!avisoTipo) return;
+    const { dados } = avisoTipo;
+    setAvisoTipo(null);
+    await onSubmit(dados);
   }
 
   async function entrarComGoogle() {
@@ -302,6 +308,14 @@ export default function EntrarPage() {
           {papelAtual.criar}
         </Link>
       </div>
+      <AvisoDialogo
+        aberto={avisoTipo !== null}
+        onFechar={() => setAvisoTipo(null)}
+        titulo={avisoTipo?.papel === "profissional" ? "Esta conta é de profissional" : "Esta conta é de empresa ou pessoa"}
+        descricao="O tipo de conta é definido no cadastro. Ajustamos a opção na tela para o tipo certo: quer entrar agora?"
+        rotulo={avisoTipo?.papel === "profissional" ? "Entrar como profissional" : "Entrar como empresa ou pessoa"}
+        onConfirmar={entrarNoTipoCerto}
+      />
     </main>
   );
 }
