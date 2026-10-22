@@ -57,11 +57,11 @@ def avisar_cota_se_preciso(db: Session, empresa_id: uuid.UUID) -> None:
             if tipo == TipoNotificacao.cota_esgotada:
                 titulo = "Você atingiu o limite do mês"
                 corpo = (
-                    f"Você usou os {limite} contatos e demandas deste mês. Para continuar "
-                    "encontrando profissionais de saúde, veja os planos e escolha a opção ideal."
+                    f"Você usou os {limite} contatos e demandas deste mês. "
+                    "Veja suas opções para continuar."
                 )
             else:
-                titulo = "Sua cota do mês está acabando"
+                titulo = "Seu limite do mês está acabando"
                 corpo = (
                     f"Você já usou {uso} de {limite} contatos e demandas deste mês. "
                     "Veja como ampliar o limite."

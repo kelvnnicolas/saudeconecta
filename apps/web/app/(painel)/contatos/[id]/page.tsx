@@ -116,7 +116,7 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
       setMensagens((atual) => [...atual, nova]);
       setCorpoMensagem("");
     } catch (e) {
-      setErroConversa(e instanceof Error ? e.message : "Não foi possível enviar a mensagem.");
+      setErroConversa(e instanceof Error ? e.message : "Não conseguimos enviar a mensagem. Tente de novo.");
     } finally {
       setEnviandoMensagem(false);
     }
@@ -130,7 +130,7 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
       const atualizado = await api.aceitarDemandaDireta(contato.id);
       setContato(atualizado);
     } catch (e) {
-      setErroConversa(e instanceof Error ? e.message : "Não foi possível aceitar a demanda.");
+      setErroConversa(e instanceof Error ? e.message : "Não conseguimos registrar o aceite. Tente de novo.");
     } finally {
       setAceitando(false);
     }
@@ -259,8 +259,8 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
         ) : avaliacaoEnviada ? (
           <section className="bg-surface-container-lowest rounded-2xl neu-surface p-space-md flex flex-col items-center gap-space-sm text-center">
             <MaterialIcon name="check_circle" filled className="text-[40px] text-secondary" />
-            <p className="font-title-md text-title-md text-on-surface">Avaliação enviada!</p>
-            <p className="font-body-md text-body-md text-on-surface-variant">Obrigado pelo retorno.</p>
+            <p className="font-title-md text-title-md text-on-surface">Avaliação enviada</p>
+            <p className="font-body-md text-body-md text-on-surface-variant">Obrigado por contar como foi.</p>
           </section>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="bg-surface-container-lowest rounded-2xl neu-surface p-space-md flex flex-col gap-space-sm">

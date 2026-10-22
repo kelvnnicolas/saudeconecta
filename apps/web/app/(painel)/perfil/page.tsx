@@ -33,7 +33,7 @@ export default function MeuPerfilPage() {
       await api.uploadAvatar(file);
       await refresh();
     } catch (err) {
-      setErroAvatar(err instanceof Error ? err.message : "Não foi possível enviar a foto.");
+      setErroAvatar(err instanceof Error ? err.message : "Não conseguimos enviar a foto. Tente de novo.");
     } finally {
       setEnviandoAvatar(false);
     }

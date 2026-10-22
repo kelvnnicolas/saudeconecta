@@ -21,6 +21,9 @@ class ErroNegocio(BaseModel):
     detail: ErroNegocioDetalhe
 
 
+MSG_SO_EMPRESAS = "Esta ação é só para contas de empresa ou pessoa."
+MSG_SO_PROFISSIONAIS = "Esta ação é só para contas de profissional."
+
 PERFIL_NAO_CONCLUIDO = (
     "Seu perfil ainda não foi concluído. Saia e entre novamente para finalizar o cadastro."
 )

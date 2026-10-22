@@ -19,6 +19,7 @@ def test_gratis_recebe_aviso_ao_chegar_a_80_por_cento(client, db_session):
 
     assert _tipos_de_aviso(client) == [QUASE]
     aviso = client.get("/notificacoes").json()["items"][0]
+    assert aviso["titulo"] == "Seu limite do mês está acabando"
     assert "4 de 5" in aviso["corpo"]
     assert aviso["link"] == "/empresa/planos"
 
@@ -29,6 +30,11 @@ def test_gratis_recebe_aviso_ao_esgotar_a_cota(client, db_session):
     assert _contatar(client, profissional_id).status_code in (200, 201)
 
     assert _tipos_de_aviso(client) == [ESGOTADA]
+    aviso = client.get("/notificacoes").json()["items"][0]
+    assert aviso["titulo"] == "Você atingiu o limite do mês"
+    assert aviso["corpo"] == (
+        "Você usou os 5 contatos e demandas deste mês. Veja suas opções para continuar."
+    )
 
 
 def test_abaixo_de_80_por_cento_nao_avisa(client, db_session):

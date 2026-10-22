@@ -11,6 +11,7 @@ import { ContatoStatusBadge } from "@/components/ui/StatusBadge";
 import { useCurrentUser } from "@/lib/use-current-user";
 import { api } from "@/lib/api";
 import type { ContatoRead, StatusContato } from "@/lib/types";
+import { falhaAoCarregar } from "@/lib/mensagens";
 
 const FILTROS: { value: "todos" | StatusContato; label: string }[] = [
   { value: "todos", label: "Todos" },
@@ -54,7 +55,7 @@ export default function MeusContatosPage() {
         );
         if (ativo) setNomes(Object.fromEntries(entradas));
       })
-      .catch((e) => ativo && setErro(e instanceof Error ? e.message : "Não foi possível carregar."))
+      .catch((e) => ativo && setErro(e instanceof Error ? e.message : falhaAoCarregar("seus contatos")))
       .finally(() => ativo && setCarregando(false));
     return () => {
       ativo = false;

@@ -5,7 +5,7 @@ from fastapi import status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.core.errors import PERFIL_NAO_CONCLUIDO, erro_negocio
+from app.core.errors import MSG_SO_EMPRESAS, PERFIL_NAO_CONCLUIDO, erro_negocio
 from app.models.assinatura import STATUS_ENCERRADOS, Assinatura, StatusAssinatura
 from app.models.contato import Contato, OrigemContato
 from app.models.demanda import Demanda
@@ -123,9 +123,7 @@ def verificar_publicacao_demanda(db: Session, user_id: uuid.UUID) -> Empresa:
 def verificar_contato_direto(db: Session, user_id: uuid.UUID) -> Empresa:
     profile = db.get(Profile, user_id)
     if profile is None or profile.papel != Papel.empresa:
-        raise erro_negocio(
-            status.HTTP_403_FORBIDDEN, "apenas_empresas", "Recurso disponível só para empresas"
-        )
+        raise erro_negocio(status.HTTP_403_FORBIDDEN, "apenas_empresas", MSG_SO_EMPRESAS)
     empresa = db.get(Empresa, user_id)
     if empresa is None:
         raise erro_negocio(

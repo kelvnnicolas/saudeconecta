@@ -10,6 +10,7 @@ import { Logo } from "@/components/ui/Logo";
 import { AvisoDialogo } from "@/components/ui/AvisoDialogo";
 import { CampoSenha } from "@/components/ui/CampoSenha";
 import { mensagemDeErroAuth } from "@/lib/erros-auth";
+import { MSG, avisoDeTipoDeConta, loginSocialFalhou } from "@/lib/mensagens";
 import { type LoginInput, loginSchema } from "@/lib/validations/auth";
 import {
   getSession,
@@ -113,10 +114,10 @@ export default function EntrarPage() {
       }
       router.push("/buscar");
     } catch (e) {
-      const mensagem = mensagemDeErroAuth(e, "Não foi possível entrar. Verifique os dados.");
+      const mensagem = mensagemDeErroAuth(e, MSG.loginIndisponivel);
       setErro(mensagem);
       // Credencial recusada: pode ser senha errada ou falta de cadastro (o Supabase não diz qual).
-      setSemCadastro(mensagem.startsWith("E-mail ou senha incorretos"));
+      setSemCadastro(mensagem === MSG.credenciaisIncorretas);
     } finally {
       setEnviando(false);
     }
@@ -135,7 +136,7 @@ export default function EntrarPage() {
     try {
       await signInWithGoogle();
     } catch (e) {
-      setErro(mensagemDeErroAuth(e, "Não foi possível entrar com o Google."));
+      setErro(mensagemDeErroAuth(e, loginSocialFalhou("Google")));
     } finally {
       setProvedorSocial(null);
     }
@@ -153,7 +154,7 @@ export default function EntrarPage() {
       }
       await signInWithLinkedIn();
     } catch (e) {
-      setErro(mensagemDeErroAuth(e, "Não foi possível entrar com o LinkedIn."));
+      setErro(mensagemDeErroAuth(e, loginSocialFalhou("LinkedIn")));
     } finally {
       setProvedorSocial(null);
     }
@@ -165,7 +166,7 @@ export default function EntrarPage() {
     try {
       await signInWithFacebook();
     } catch (e) {
-      setErro(mensagemDeErroAuth(e, "Não foi possível entrar com o Facebook."));
+      setErro(mensagemDeErroAuth(e, loginSocialFalhou("Facebook")));
     } finally {
       setProvedorSocial(null);
     }
@@ -228,11 +229,10 @@ export default function EntrarPage() {
             <p className="font-caption text-caption text-error">{erro}</p>
             {semCadastro && (
               <p className="font-caption text-caption text-on-surface-variant">
-                Se ainda não tem cadastro,{" "}
+                Ainda não tem conta?{" "}
                 <Link href={papelAtual.href} className="font-label-md text-label-md text-primary underline underline-offset-2">
-                  {papelAtual.criar.toLowerCase()}
+                  {papelAtual.criar}
                 </Link>
-                .
               </p>
             )}
           </div>
@@ -311,9 +311,7 @@ export default function EntrarPage() {
       <AvisoDialogo
         aberto={avisoTipo !== null}
         onFechar={() => setAvisoTipo(null)}
-        titulo={avisoTipo?.papel === "profissional" ? "Esta conta é de profissional" : "Esta conta é de empresa ou pessoa"}
-        descricao="O tipo de conta é definido no cadastro. Ajustamos a opção na tela para o tipo certo: quer entrar agora?"
-        rotulo={avisoTipo?.papel === "profissional" ? "Entrar como profissional" : "Entrar como empresa ou pessoa"}
+        {...avisoDeTipoDeConta(avisoTipo?.papel ?? "empresa")}
         onConfirmar={entrarNoTipoCerto}
       />
     </main>

@@ -82,12 +82,12 @@ export function montarAvisoDeLimite(entrada: {
   if (plano) {
     const pro = porCodigo(planos, "pro");
     return {
-      titulo: "Limite mensal atingido",
-      oQueAcabou: `Você utilizou os ${limite} usos do plano ${plano.nome} neste mês, entre demandas publicadas e contatos iniciados.`,
+      titulo: "Você atingiu o limite do mês",
+      oQueAcabou: `Você usou os ${limite} contatos e demandas do plano ${plano.nome} neste mês.`,
       beneficio:
         pro && pro.codigo !== plano.codigo
-          ? `Mude para o plano ${pro.nome} e continue encontrando profissionais de saúde sem limite.`
-          : "Fale com a gente para ampliar o seu limite.",
+          ? `Quer continuar antes disso? O plano ${pro.nome} não tem limite.`
+          : "Veja as opções da sua assinatura.",
       renovacao,
       principal: { rotulo: "Gerenciar assinatura", href: "/assinatura" },
       alternativa,
@@ -96,13 +96,13 @@ export function montarAvisoDeLimite(entrada: {
 
   const comparacao = descreverPlanos(planos);
   return {
-    titulo: "Limite mensal atingido",
-    oQueAcabou: `Você utilizou os ${limite} usos gratuitos deste mês, entre demandas publicadas e contatos iniciados.`,
+    titulo: "Você atingiu o limite do mês",
+    oQueAcabou: `Você usou os ${limite} contatos e demandas gratuitos deste mês.`,
     beneficio: comparacao
-      ? `Para continuar encontrando profissionais de saúde, conheça os planos do SaúdeConecta: ${comparacao}.`
-      : "Para continuar encontrando profissionais de saúde, conheça os planos do SaúdeConecta e escolha a opção ideal para a sua empresa.",
+      ? `Quer continuar antes disso? ${comparacao.charAt(0).toUpperCase()}${comparacao.slice(1)}.`
+      : "Quer continuar antes disso? Veja os planos do SaúdeConecta.",
     renovacao,
-    principal: { rotulo: "Conhecer os planos", href: "/empresa/planos" },
+    principal: { rotulo: "Ver os planos", href: "/empresa/planos" },
     alternativa,
   };
 }
@@ -112,7 +112,7 @@ export function montarAvisoDePagamento(contexto: ContextoLimite): TextoDoAviso {
   return {
     titulo: "Pagamento pendente",
     oQueAcabou: "Não conseguimos cobrar a sua assinatura, então novos contatos e demandas estão pausados.",
-    beneficio: "Atualize o cartão para voltar a publicar demandas e iniciar contatos agora mesmo.",
+    beneficio: "Atualize o cartão para voltar a publicar demandas e iniciar contatos.",
     renovacao: null,
     principal: { rotulo: "Atualizar pagamento", href: "/assinatura" },
     alternativa: ALTERNATIVA[contexto],

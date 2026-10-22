@@ -38,7 +38,7 @@ export function UsoDaCota({
         <span className={`inline-flex items-center gap-1 ${aviso ? "text-error" : "text-on-surface-variant"}`}>
           {aviso && <MaterialIcon name="warning" className="text-[16px]" />}
           {aviso
-            ? `Restam ${restantes} ${restantes === 1 ? "uso" : "usos"} neste mês`
+            ? `Restam ${restantes} neste mês`
             : "Contatos e demandas neste mês"}
         </span>
         <span className="text-on-surface-variant">
