@@ -90,7 +90,7 @@ export default function PlanosEmpresaPage() {
         <section className="flex flex-col gap-1 mt-space-sm">
           <h1 className="font-headline-md text-headline-md text-on-surface">Banco de Talentos Clínicos</h1>
           <p className="font-body-md text-body-md text-on-surface-variant">
-            Assine para publicar demandas e acessar profissionais verificados.
+            Assine para publicar demandas e entrar em contato com profissionais.
           </p>
         </section>
 
