@@ -352,7 +352,24 @@
 .dialogo-painel[data-state="open"] {
   animation: dialogo-painel-entra 0.25s var(--mola);
 }
+/* Folha de opções (AjusteAparencia, Radix Dialog): sobe da borda no celular,
+   aparece com leve escala na tela grande. */
+@keyframes folha-sobe {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.folha[data-state="open"] {
+  animation: folha-sobe 0.3s var(--mola);
+}
+@media (min-width: 640px) {
+  .folha[data-state="open"] {
+    animation: dialogo-painel-entra 0.25s var(--mola);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
+  .folha[data-state="open"] {
+    animation: dialogo-fundo-entra 0.15s ease-out;
+  }
   .segmento {
     transition: none;
   }
