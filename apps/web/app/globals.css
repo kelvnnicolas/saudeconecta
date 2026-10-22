@@ -383,6 +383,24 @@
   }
 }
 
+/* ModalLimite (sem Radix): mesmo ritmo do diálogo, mas o painel não é centralizado por transform. */
+@keyframes modal-painel-entra {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes modal-painel-sai {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(8px) scale(0.97); }
+}
+.modal-fundo[data-state="open"] { animation: dialogo-fundo-entra 0.2s ease-out; }
+.modal-fundo[data-state="closed"] { animation: dialogo-fundo-sai 0.15s ease-in forwards; }
+.modal-painel[data-state="open"] { animation: modal-painel-entra 0.25s var(--mola); }
+.modal-painel[data-state="closed"] { animation: modal-painel-sai 0.15s ease-in forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .modal-painel[data-state="open"] { animation: dialogo-fundo-entra 0.15s ease-out; }
+  .modal-painel[data-state="closed"] { animation: dialogo-fundo-sai 0.1s ease-in forwards; }
+}
+
 /* Troca de painel em "Como funciona" (components/landing/ComoFunciona.tsx): fade de 200 ms. */
 @keyframes painel-fade {
   from {
