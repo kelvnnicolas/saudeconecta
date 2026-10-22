@@ -53,7 +53,22 @@ export interface ProfissionalRead {
   bio: string | null;
   preco_hora: number | null;
   verificado: boolean;
+  /** Só vem quando verificado; data da conferência manual do registro. */
+  verificado_em?: string | null;
   especialidades: Especialidade[];
+}
+
+export type StatusVerificacao =
+  | "unverified"
+  | "pending"
+  | "verified"
+  | "irregular"
+  | "unable_to_verify";
+
+/** Estado completo, devolvido só ao próprio profissional (GET /profissionais/me/verificacao). */
+export interface VerificacaoPropria {
+  status: StatusVerificacao;
+  verificado_em: string | null;
 }
 
 export interface ProfissionalUpdateRequest {
@@ -89,6 +104,7 @@ export interface ProfissionalSearchParams {
   preco_min?: number;
   preco_max?: number;
   nota_min?: number;
+  verificado?: boolean;
   limit?: number;
   offset?: number;
 }

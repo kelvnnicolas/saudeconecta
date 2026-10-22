@@ -52,6 +52,7 @@ export default function BuscarPage() {
   const ehProfissional = !!session && papel === "profissional";
   const [query, setQuery] = useState(() => termoInicial(searchParams));
   const [resultados, setResultados] = useState<ProfissionalSearchResult[]>([]);
+  const [apenasConferidos, setApenasConferidos] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -60,7 +61,7 @@ export default function BuscarPage() {
     setCarregando(true);
     const id = setTimeout(() => {
       api
-        .searchProfissionais(termo ? { q: termo } : {})
+        .searchProfissionais({ ...(termo ? { q: termo } : {}), ...(apenasConferidos ? { verificado: true } : {}) })
         .then((resposta) => {
           setResultados(resposta.items);
           setErro(null);
@@ -69,7 +70,7 @@ export default function BuscarPage() {
         .finally(() => setCarregando(false));
     }, 300);
     return () => clearTimeout(id);
-  }, [query]);
+  }, [query, apenasConferidos]);
 
   return (
     <>
@@ -146,8 +147,19 @@ export default function BuscarPage() {
         <div>
           <h2 className="font-title-md text-title-md text-on-surface mb-1">Profissionais em destaque</h2>
           <p className="font-caption text-caption text-on-surface-variant mb-space-sm">
-            Prontos para atendimento e verificados &middot; {resultados.length} resultado(s)
+            {resultados.length} resultado(s)
           </p>
+          <button
+            type="button"
+            onClick={() => setApenasConferidos((v) => !v)}
+            aria-pressed={apenasConferidos}
+            className={`mb-space-sm inline-flex items-center gap-1 h-11 px-space-sm rounded-full bg-surface-container-lowest neu-surface font-label-sm text-label-sm text-on-surface ${
+              apenasConferidos ? "ring-2 ring-secondary" : ""
+            }`}
+          >
+            <MaterialIcon name="verified" className="text-[16px]" />
+            Só com registro conferido
+          </button>
           {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm mb-space-sm">{erro}</p>}
           <div className="flex flex-col gap-space-sm">
             {carregando && <ListaEsqueleto quantidade={4} />}
