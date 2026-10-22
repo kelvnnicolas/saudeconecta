@@ -346,11 +346,30 @@
   from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
   to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
+@keyframes dialogo-painel-sai {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
+}
+@keyframes dialogo-fundo-sai {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+/* Sombra própria do diálogo: o relevo neumórfico tem brilho claro (-x -y) que vira um halo
+   branco nas laterais sobre o fundo escurecido. */
+.dialogo-sombra {
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.28), 0 0 0 1px var(--shadow-dark);
+}
 .dialogo-fundo[data-state="open"] {
   animation: dialogo-fundo-entra 0.2s ease-out;
 }
+.dialogo-fundo[data-state="closed"] {
+  animation: dialogo-fundo-sai 0.15s ease-in forwards;
+}
 .dialogo-painel[data-state="open"] {
   animation: dialogo-painel-entra 0.25s var(--mola);
+}
+.dialogo-painel[data-state="closed"] {
+  animation: dialogo-painel-sai 0.15s ease-in forwards;
 }
 @media (prefers-reduced-motion: reduce) {
   .segmento {
@@ -358,6 +377,9 @@
   }
   .dialogo-painel[data-state="open"] {
     animation: dialogo-fundo-entra 0.15s ease-out;
+  }
+  .dialogo-painel[data-state="closed"] {
+    animation: dialogo-fundo-sai 0.1s ease-in forwards;
   }
 }
 

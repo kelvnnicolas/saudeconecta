@@ -26,8 +26,8 @@ export function AvisoDialogo({
   return (
     <AlertDialog.Root open={aberto} onOpenChange={(valor) => !valor && onFechar()}>
       <AlertDialog.Portal>
-        <AlertDialog.Overlay className="dialogo-fundo fixed inset-0 z-[70] bg-black/45 backdrop-blur-sm" />
-        <AlertDialog.Content className="dialogo-painel fixed z-[71] left-1/2 top-1/2 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-surface p-space-md neu-surface flex flex-col gap-space-sm focus:outline-none">
+        <AlertDialog.Overlay className="dialogo-fundo fixed inset-0 z-[70] bg-black/50" />
+        <AlertDialog.Content className="dialogo-painel fixed z-[71] left-1/2 top-1/2 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-surface p-space-md dialogo-sombra flex flex-col gap-space-sm focus:outline-none">
           <AlertDialog.Title className="font-title-md text-title-md text-on-surface">{titulo}</AlertDialog.Title>
           <AlertDialog.Description className="font-body-md text-body-md text-on-surface-variant">
             {descricao}
