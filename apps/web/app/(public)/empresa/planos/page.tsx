@@ -6,6 +6,7 @@ import { ListaEsqueleto } from "@/components/ui/Skeleton";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { api, ApiError } from "@/lib/api";
 import type { PlanoRead } from "@/lib/types";
+import { MSG } from "@/lib/mensagens";
 
 // Corrigido em relação ao mockup original do Stitch (checkout_corporativo_b2b):
 // removido formulário próprio de cartão/CVV/boleto/pix, "múltiplos logins" e
@@ -76,7 +77,7 @@ export default function PlanosEmpresaPage() {
       setErro(
         e instanceof ApiError
           ? e.message
-          : "Backend indisponível — em modo de exemplo, o redirecionamento para o Stripe aconteceria aqui.",
+          : MSG.pagamentoIndisponivel,
       );
     } finally {
       setCarregando(false);
@@ -85,7 +86,7 @@ export default function PlanosEmpresaPage() {
 
   return (
     <>
-      <Header title="Planos B2B" backHref="/buscar" />
+      <Header title="Planos" backHref="/buscar" />
       <main className="flex-1 pt-16 pb-space-xl px-gutter bg-surface min-h-screen flex flex-col gap-space-md">
         <section className="flex flex-col gap-1 mt-space-sm">
           <h1 className="font-headline-md text-headline-md text-on-surface">Banco de Talentos Clínicos</h1>

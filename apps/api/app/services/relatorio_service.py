@@ -20,7 +20,7 @@ def gerar_relatorio(db: Session, data_inicio: date, data_fim: date) -> Relatorio
     if data_fim < data_inicio:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="data_fim não pode ser anterior a data_inicio",
+            detail="A data final não pode ser anterior à data inicial.",
         )
 
     nomes_especialidades = list(

@@ -20,7 +20,7 @@ export const senhaForteSchema = z.string().min(1, "Crie uma senha").superRefine(
   if (faltando.length > 0) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: `A senha precisa de: ${faltando.map((r) => r.curto).join(", ")}`,
+      message: `Falta na senha: ${faltando.map((r) => r.curto).join(", ")}`,
     });
   }
 });

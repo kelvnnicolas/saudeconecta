@@ -3,18 +3,14 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
 import { NotificationBell } from "@/components/ui/NotificationBell";
-import { ThemeSettings } from "@/components/ui/ThemeSettings";
 import { useCurrentUser } from "@/lib/use-current-user";
-import { signOut } from "@/lib/supabase-client";
 import { api } from "@/lib/api";
 
 export default function MeuPerfilPage() {
-  const router = useRouter();
   const { session, profissional, empresa, refresh } = useCurrentUser();
   const fileRef = useRef<HTMLInputElement>(null);
   const [enviandoAvatar, setEnviandoAvatar] = useState(false);
@@ -37,15 +33,10 @@ export default function MeuPerfilPage() {
       await api.uploadAvatar(file);
       await refresh();
     } catch (err) {
-      setErroAvatar(err instanceof Error ? err.message : "Não foi possível enviar a foto.");
+      setErroAvatar(err instanceof Error ? err.message : "Não conseguimos enviar a foto. Tente de novo.");
     } finally {
       setEnviandoAvatar(false);
     }
-  }
-
-  async function sair() {
-    await signOut();
-    router.push("/entrar");
   }
 
   return (
@@ -58,9 +49,14 @@ export default function MeuPerfilPage() {
           </div>
           <div className="flex items-center gap-space-xs">
             <NotificationBell />
-            <button onClick={sair} aria-label="Sair" className="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant">
-              <MaterialIcon name="logout" />
-            </button>
+            <Link
+              href="/perfil/configuracoes"
+              aria-label="Configurações"
+              title="Configurações"
+              className="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant neu-surface-sm neu-pressable focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <MaterialIcon name="settings" />
+            </Link>
           </div>
         </div>
 
@@ -69,7 +65,7 @@ export default function MeuPerfilPage() {
             {avatarUrl ? (
               <Image src={avatarUrl} alt={nome} width={88} height={88} className="w-24 h-24 rounded-full object-cover" />
             ) : (
-              <div className="w-24 h-24 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+              <div className="w-24 h-24 rounded-full neu-inset flex items-center justify-center text-on-surface-variant">
                 <MaterialIcon name="person" className="text-[36px]" />
               </div>
             )}
@@ -81,6 +77,12 @@ export default function MeuPerfilPage() {
           <div className="text-center">
             <p className="font-title-md text-title-md text-on-surface">{nome}</p>
             <p className="font-caption text-caption text-on-surface-variant">{session?.user.email}</p>
+            <p className="mt-1 flex items-center justify-center gap-1 font-caption text-caption text-on-surface-variant">
+              <span aria-hidden="true" className="flex">
+                <MaterialIcon name="location_on" className="text-[16px]" />
+              </span>
+              {[cidade, estado].filter(Boolean).join(", ") || "Localização não informada"}
+            </p>
           </div>
           {erroAvatar && <p className="font-caption text-caption text-error">{erroAvatar}</p>}
         </section>
@@ -88,6 +90,11 @@ export default function MeuPerfilPage() {
         {profissional && (
           <section className="bg-surface-container-lowest rounded-2xl p-space-md neu-surface flex flex-col gap-space-xs">
             <h2 className="font-title-md text-title-md text-on-surface">Dados profissionais</h2>
+            {profissional.bio ? (
+              <p className="font-body-md text-body-md text-on-surface whitespace-pre-line">{profissional.bio}</p>
+            ) : (
+              <p className="font-body-md text-body-md text-on-surface-variant italic">Sem apresentação.</p>
+            )}
             {profissional.registro_profissional && (
               <p className="font-body-md text-body-md text-on-surface-variant">{profissional.registro_profissional}</p>
             )}
@@ -124,14 +131,6 @@ export default function MeuPerfilPage() {
           </section>
         )}
 
-        <section className="bg-surface-container-lowest rounded-2xl p-space-md neu-surface flex flex-col gap-space-xs">
-          <h2 className="font-title-md text-title-md text-on-surface">Localização</h2>
-          <p className="font-body-md text-body-md text-on-surface-variant">
-            {[cidade, estado].filter(Boolean).join(", ") || "Não informado"}
-          </p>
-        </section>
-
-        <ThemeSettings />
       </main>
       <BottomNav />
     </>

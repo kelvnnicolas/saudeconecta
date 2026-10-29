@@ -27,7 +27,7 @@ export const cadastroProfissionalSchema = z
   .object({
     nome: z.string().min(3, "Informe seu nome completo"),
     email: z.string().email("Informe um e-mail válido"),
-    telefone: z.string().min(8, "Informe um telefone válido"),
+    telefone: z.string().min(8, "Informe um telefone com DDD"),
     password: senhaForteSchema,
     confirmacao: z.string().min(1, "Confirme a senha"),
     especialidadeIds: z
@@ -39,7 +39,7 @@ export const cadastroProfissionalSchema = z
     // Opcional por enquanto: a validação do registro no conselho ainda será definida.
     registroProfissional: z.string().optional(),
     cidade: z.string().min(1, "Informe a cidade"),
-    estado: z.string().length(2, "UF com 2 letras"),
+    estado: z.string().length(2, "Informe a UF com 2 letras, como SP"),
     precoHora: optionalPositiveNumber(),
   })
   .refine((data) => data.password === data.confirmacao, CONFIRMACAO_DIFERENTE);
@@ -53,12 +53,12 @@ export const cadastroEmpresaSchema = z
     // empresa de verdade, checado abaixo em .refine().
     nomeFantasia: z.string().optional(),
     email: z.string().email("Informe um e-mail válido"),
-    telefone: z.string().min(8, "Informe um telefone válido"),
+    telefone: z.string().min(8, "Informe um telefone com DDD"),
     password: senhaForteSchema,
     confirmacao: z.string().min(1, "Confirme a senha"),
     tipo: z.enum(["clinica", "hospital", "homecare", "pessoa_fisica"]),
     cidade: z.string().min(1, "Informe a cidade"),
-    estado: z.string().length(2, "UF com 2 letras"),
+    estado: z.string().length(2, "Informe a UF com 2 letras, como SP"),
   })
   .refine((data) => data.tipo === "pessoa_fisica" || (data.nomeFantasia?.trim().length ?? 0) >= 2, {
     message: "Informe o nome da empresa",

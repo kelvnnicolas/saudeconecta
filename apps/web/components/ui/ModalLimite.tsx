@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AvisoLimite, carregarPlanos } from "./AvisoLimite";
 import { MaterialIcon } from "./MaterialIcon";
 import type { ContextoLimite, PlanoResumo } from "@/lib/limite-plano";
@@ -24,6 +24,8 @@ export function ModalLimite({
   plano: PlanoResumo | null;
   contexto: ContextoLimite;
 }) {
+  // Mantém o popup montado por um instante depois de fechar, para a animação de saída rodar.
+  const [montado, setMontado] = useState(aberto);
   const painel = useRef<HTMLDivElement>(null);
   const botaoFechar = useRef<HTMLButtonElement>(null);
   // A função de fechar muda a cada renderização da tela; guardá-la numa referência evita
@@ -35,6 +37,15 @@ export function ModalLimite({
   useEffect(() => {
     void carregarPlanos();
   }, []);
+
+  useEffect(() => {
+    if (aberto) {
+      setMontado(true);
+      return;
+    }
+    const t = setTimeout(() => setMontado(false), 150);
+    return () => clearTimeout(t);
+  }, [aberto]);
 
   useEffect(() => {
     if (!aberto) return;
@@ -69,15 +80,17 @@ export function ModalLimite({
     };
   }, [aberto]);
 
-  if (!aberto) return null;
+  if (!montado) return null;
+  const estado = aberto ? "open" : "closed";
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-end justify-center bg-black/45 p-gutter backdrop-blur-sm sm:items-center"
+      data-state={estado}
+      className="modal-fundo fixed inset-0 z-[70] flex items-end justify-center bg-black/50 p-gutter sm:items-center"
       onMouseDown={(evento) => {
         if (evento.target === evento.currentTarget) onFechar();
       }}
     >
-      <div ref={painel} role="dialog" aria-modal="true" aria-labelledby="titulo-aviso-limite" className="relative w-full max-w-sm">
+      <div ref={painel} role="dialog" aria-modal="true" aria-labelledby="titulo-aviso-limite" data-state={estado} className="modal-painel relative w-full max-w-sm">
         <button
           ref={botaoFechar}
           type="button"

@@ -6,10 +6,11 @@ import { useForm } from "react-hook-form";
 import { Header } from "@/components/ui/Header";
 import { PaginaEsqueleto } from "@/components/ui/Skeleton";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
+import { AvisoDialogo } from "@/components/ui/AvisoDialogo";
 import { useCurrentUser } from "@/lib/use-current-user";
 import { type AvaliacaoInput, avaliacaoSchema } from "@/lib/validations/contato";
 import { useNotificacoesLidasAoAbrir } from "@/lib/use-notificacoes-lidas-ao-abrir";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import type { ContatoRead, MensagemContatoRead } from "@/lib/types";
 
 export default function DetalheContatoPage({ params }: { params: { id: string } }) {
@@ -20,7 +21,8 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
   const [carregando, setCarregando] = useState(true);
   const [erroCarregar, setErroCarregar] = useState<string | null>(null);
   const [avaliacaoEnviada, setAvaliacaoEnviada] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
+  const [avaliacaoJaFeita, setAvaliacaoJaFeita] = useState(false);
+  const [avisoAvaliacao, setAvisoAvaliacao] = useState<{ titulo: string; descricao: string } | null>(null);
   const [mensagens, setMensagens] = useState<MensagemContatoRead[]>([]);
   const [corpoMensagem, setCorpoMensagem] = useState("");
   const [enviandoMensagem, setEnviandoMensagem] = useState(false);
@@ -85,13 +87,23 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
 
   async function onSubmit(data: AvaliacaoInput) {
     if (!contato) return;
-    setErro(null);
     try {
       const alvoId = papel === "profissional" ? contato.solicitante_id : contato.profissional_id;
       await api.createAvaliacao({ alvo_id: alvoId, nota: data.nota, comentario: data.comentario });
       setAvaliacaoEnviada(true);
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Não foi possível enviar a avaliação.");
+      if (e instanceof ApiError && e.code === "avaliacao_existente") {
+        setAvisoAvaliacao({
+          titulo: "Você já avaliou esta pessoa",
+          descricao: `Cada pessoa pode ser avaliada uma única vez, e a sua avaliação de ${nomeOutraParte.split(" ")[0]} já foi registrada.`,
+        });
+        setAvaliacaoJaFeita(true);
+        return;
+      }
+      setAvisoAvaliacao({
+        titulo: "Não foi possível enviar a avaliação",
+        descricao: e instanceof Error ? e.message : "Tente novamente em instantes.",
+      });
     }
   }
 
@@ -104,7 +116,7 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
       setMensagens((atual) => [...atual, nova]);
       setCorpoMensagem("");
     } catch (e) {
-      setErroConversa(e instanceof Error ? e.message : "Não foi possível enviar a mensagem.");
+      setErroConversa(e instanceof Error ? e.message : "Não conseguimos enviar a mensagem. Tente de novo.");
     } finally {
       setEnviandoMensagem(false);
     }
@@ -118,7 +130,7 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
       const atualizado = await api.aceitarDemandaDireta(contato.id);
       setContato(atualizado);
     } catch (e) {
-      setErroConversa(e instanceof Error ? e.message : "Não foi possível aceitar a demanda.");
+      setErroConversa(e instanceof Error ? e.message : "Não conseguimos registrar o aceite. Tente de novo.");
     } finally {
       setAceitando(false);
     }
@@ -238,11 +250,17 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
           )
         )}
 
-        {avaliacaoEnviada ? (
+        {avaliacaoJaFeita ? (
+          <section className="bg-surface-container-lowest rounded-2xl neu-surface p-space-md flex flex-col items-center gap-space-sm text-center">
+            <MaterialIcon name="task_alt" filled className="text-[40px] text-secondary" />
+            <p className="font-title-md text-title-md text-on-surface">Você já avaliou esta pessoa</p>
+            <p className="font-body-md text-body-md text-on-surface-variant">Cada pessoa pode ser avaliada uma única vez.</p>
+          </section>
+        ) : avaliacaoEnviada ? (
           <section className="bg-surface-container-lowest rounded-2xl neu-surface p-space-md flex flex-col items-center gap-space-sm text-center">
             <MaterialIcon name="check_circle" filled className="text-[40px] text-secondary" />
-            <p className="font-title-md text-title-md text-on-surface">Avaliação enviada!</p>
-            <p className="font-body-md text-body-md text-on-surface-variant">Obrigado pelo retorno.</p>
+            <p className="font-title-md text-title-md text-on-surface">Avaliação enviada</p>
+            <p className="font-body-md text-body-md text-on-surface-variant">Obrigado por contar como foi.</p>
           </section>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="bg-surface-container-lowest rounded-2xl neu-surface p-space-md flex flex-col gap-space-sm">
@@ -280,9 +298,14 @@ export default function DetalheContatoPage({ params }: { params: { id: string } 
             >
               Enviar avaliação
             </button>
-            {erro && <p className="font-caption text-caption text-error">{erro}</p>}
           </form>
         )}
+        <AvisoDialogo
+          aberto={avisoAvaliacao !== null}
+          onFechar={() => setAvisoAvaliacao(null)}
+          titulo={avisoAvaliacao?.titulo ?? ""}
+          descricao={avisoAvaliacao?.descricao ?? ""}
+        />
       </main>
     </>
   );

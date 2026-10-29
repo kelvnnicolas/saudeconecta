@@ -50,12 +50,12 @@ def update_avatar(
     if extension is None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Formato de imagem não suportado. Use JPEG, PNG ou WEBP.",
+            detail="Esse formato de imagem não é aceito. Use JPEG, PNG ou WEBP.",
         )
     if len(file_bytes) > _MAX_AVATAR_BYTES:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Imagem maior que o limite de 5MB.",
+            detail="A imagem passa de 5 MB. Escolha uma foto menor.",
         )
 
     avatar_url = upload_avatar(f"{user_id}.{extension}", file_bytes, normalized_content_type)

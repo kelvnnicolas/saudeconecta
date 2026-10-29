@@ -9,6 +9,7 @@ import { NotificationBell } from "@/components/ui/NotificationBell";
 import { useCurrentUser } from "@/lib/use-current-user";
 import { api } from "@/lib/api";
 import type { AvaliacaoRead } from "@/lib/types";
+import { falhaAoCarregar } from "@/lib/mensagens";
 
 export default function MinhasAvaliacoesPage() {
   const { session } = useCurrentUser();
@@ -22,7 +23,7 @@ export default function MinhasAvaliacoesPage() {
     api
       .listAvaliacoes(session.user.id)
       .then((lista) => ativo && setAvaliacoes(lista))
-      .catch((e) => ativo && setErro(e instanceof Error ? e.message : "Não foi possível carregar."))
+      .catch((e) => ativo && setErro(e instanceof Error ? e.message : falhaAoCarregar("suas avaliações")))
       .finally(() => ativo && setCarregando(false));
     return () => {
       ativo = false;

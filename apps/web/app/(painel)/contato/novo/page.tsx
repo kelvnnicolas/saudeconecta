@@ -38,7 +38,7 @@ export default function NovoContatoPage() {
       setEnviado(true);
     } catch (e) {
       if (tratarErro(e)) return;
-      setErro(e instanceof Error ? e.message : "Não foi possível enviar. Tente novamente.");
+      setErro(e instanceof Error ? e.message : "Não conseguimos enviar sua mensagem. Tente de novo em instantes.");
     }
   }
 
@@ -46,9 +46,9 @@ export default function NovoContatoPage() {
     return (
       <main className="flex-1 flex flex-col items-center justify-center gap-space-md bg-surface min-h-screen px-gutter text-center">
         <MaterialIcon name="check_circle" filled className="text-[56px] text-secondary" />
-        <h1 className="font-headline-md text-headline-md text-on-surface">Proposta enviada!</h1>
+        <h1 className="font-headline-md text-headline-md text-on-surface">Mensagem enviada</h1>
         <p className="font-body-md text-body-md text-on-surface-variant max-w-xs">
-          {nome} vai receber sua mensagem por e-mail e poderá te responder por aqui.
+          {nome} vai ver sua mensagem no SaúdeConecta e poderá responder por aqui. Você recebe um aviso no sino quando houver resposta.
         </p>
         <button
           onClick={() => router.push("/contatos")}
@@ -100,7 +100,7 @@ export default function NovoContatoPage() {
             className="h-12 rounded-xl neu-surface neu-pressable bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center gap-space-xs disabled:opacity-60"
           >
             <MaterialIcon name={bloqueado ? "lock" : "send"} className="text-[18px]" />
-            {bloqueado ? (pagamentoPendente ? "Pagamento pendente" : "Limite do mês atingido") : "Enviar proposta"}
+            {bloqueado ? (pagamentoPendente ? "Pagamento pendente" : "Limite do mês atingido") : "Enviar mensagem"}
           </button>
         </form>
       </main>

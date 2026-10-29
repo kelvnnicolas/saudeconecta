@@ -70,7 +70,7 @@ export default function MinhasDemandasPage() {
     } catch (e) {
       setDemandas(anterior); // reverte o optimistic update
       if (!(e instanceof ApiError && e.code === "transicao_invalida")) {
-        setErro(e instanceof Error ? e.message : "Não foi possível atualizar o status.");
+        setErro(e instanceof Error ? e.message : "Não conseguimos atualizar a demanda. Tente de novo.");
       }
     }
   }
