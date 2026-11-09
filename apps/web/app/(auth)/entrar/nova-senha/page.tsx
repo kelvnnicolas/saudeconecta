@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { Logo } from "@/components/ui/Logo";
 import { CampoSenha, ChecklistSenha } from "@/components/ui/CampoSenha";
 import { type NovaSenhaInput, novaSenhaSchema } from "@/lib/validations/auth";
+import { mensagemDeErroAuth } from "@/lib/erros-auth";
 import { getSession, onAuthStateChange, updatePassword } from "@/lib/supabase-client";
 
 export default function NovaSenhaPage() {
@@ -49,8 +50,8 @@ export default function NovaSenhaPage() {
     try {
       await updatePassword(data.password);
       router.push("/buscar");
-    } catch {
-      setErro("Não foi possível salvar a nova senha. Peça um novo link e tente de novo.");
+    } catch (e) {
+      setErro(mensagemDeErroAuth(e, "Não conseguimos salvar a nova senha. Tente de novo ou peça um novo link."));
     } finally {
       setEnviando(false);
     }

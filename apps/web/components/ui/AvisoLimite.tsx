@@ -59,7 +59,7 @@ export function AvisoLimite({
   return (
     <section
       role="status"
-      className={`${solido ? "bg-surface-container-lowest neu-surface" : "vidro"} painel-fade flex flex-col gap-space-sm rounded-2xl p-space-md`}
+      className={`${solido ? "bg-surface-container-lowest dialogo-sombra" : "vidro"} painel-fade flex flex-col gap-space-sm rounded-2xl p-space-md`}
     >
       <div className="flex items-center gap-space-sm">
         <span

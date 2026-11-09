@@ -45,6 +45,9 @@ def test_upload_avatar_rejects_unsupported_content_type(mock_upload, client, db_
     )
 
     assert response.status_code == 422
+    assert (
+        response.json()["detail"] == "Esse formato de imagem não é aceito. Use JPEG, PNG ou WEBP."
+    )
     mock_upload.assert_not_called()
 
 
@@ -65,6 +68,7 @@ def test_upload_avatar_rejects_file_over_size_limit(mock_upload, client, db_sess
     )
 
     assert response.status_code == 422
+    assert response.json()["detail"] == "A imagem passa de 5 MB. Escolha uma foto menor."
     mock_upload.assert_not_called()
 
 

@@ -11,6 +11,7 @@ import { assinaturaStatusLabel } from "@/components/ui/StatusBadge";
 import { useNotificacoesLidasAoAbrir } from "@/lib/use-notificacoes-lidas-ao-abrir";
 import { api, ApiError } from "@/lib/api";
 import type { MinhaAssinaturaResponse } from "@/lib/types";
+import { MSG } from "@/lib/mensagens";
 
 export default function MinhaAssinaturaPage() {
   useNotificacoesLidasAoAbrir("/assinatura");
@@ -38,7 +39,7 @@ export default function MinhaAssinaturaPage() {
       setErro(
         e instanceof ApiError
           ? e.message
-          : "Backend indisponível — em modo de exemplo, o Portal do Stripe abriria aqui.",
+          : MSG.pagamentoIndisponivel,
       );
     } finally {
       setCarregando(false);
@@ -133,7 +134,7 @@ export default function MinhaAssinaturaPage() {
               <h2 className="font-title-md text-title-md text-on-surface">Pagamento e faturas</h2>
             </div>
             <p className="font-body-md text-body-md text-on-surface-variant">
-              Trocar cartão, baixar faturas ou cancelar a assinatura é feito no portal seguro do Stripe.
+              Para trocar o cartão, baixar faturas ou cancelar, abriremos o portal seguro do Stripe.
             </p>
             {erro && <p className="font-caption text-caption text-error">{erro}</p>}
             <button

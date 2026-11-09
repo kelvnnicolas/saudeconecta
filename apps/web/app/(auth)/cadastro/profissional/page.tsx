@@ -62,7 +62,7 @@ export default function CadastroProfissionalPage() {
       });
       router.push("/perfil");
     } catch (e) {
-      setErro(mensagemDeErroAuth(e, "Não foi possível concluir o cadastro."));
+      setErro(mensagemDeErroAuth(e, "Não conseguimos concluir seu cadastro. Tente de novo."));
     } finally {
       setEnviando(false);
     }
