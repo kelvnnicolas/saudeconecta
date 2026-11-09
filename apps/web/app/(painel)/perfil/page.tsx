@@ -9,6 +9,7 @@ import { Logo } from "@/components/ui/Logo";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { useCurrentUser } from "@/lib/use-current-user";
 import { api } from "@/lib/api";
+import { VerificacaoDoRegistro } from "@/components/profissional/VerificacaoDoRegistro";
 
 export default function MeuPerfilPage() {
   const { session, profissional, empresa, refresh } = useCurrentUser();
@@ -104,6 +105,7 @@ export default function MeuPerfilPage() {
             <p className="font-body-md text-body-md text-on-surface-variant">
               {profissional.preco_hora != null ? `R$ ${profissional.preco_hora}/hora` : "Preço a combinar"}
             </p>
+            <VerificacaoDoRegistro registroInformado={!!profissional.registro_profissional} />
             <Link href={`/profissional/${profissional.user_id}`} className="self-start font-label-sm text-label-sm text-primary">
               Ver perfil público
             </Link>

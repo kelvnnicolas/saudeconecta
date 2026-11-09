@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Header } from "@/components/ui/Header";
 import { PaginaEsqueleto } from "@/components/ui/Skeleton";
+import { textoRegistroConferido } from "@/lib/verificacao";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { StarRating } from "@/components/ui/StarRating";
 import { api } from "@/lib/api";
@@ -90,8 +91,9 @@ export default function PerfilPublicoProfissionalPage({ params }: { params: { id
               </div>
             )}
             {profissional.verificado && (
-              <span className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center border-2 border-surface-container-lowest">
+              <span className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center border-2 border-surface-container-lowest" title="Registro conferido pelo SaúdeConecta">
                 <MaterialIcon name="verified" filled className="text-[18px] text-on-secondary-container" />
+                <span className="sr-only">Registro conferido pelo SaúdeConecta</span>
               </span>
             )}
           </div>
@@ -101,6 +103,9 @@ export default function PerfilPublicoProfissionalPage({ params }: { params: { id
               {profissional.especialidades.map((e) => e.nome).join(", ")}
               {profissional.registro_profissional ? ` · ${profissional.registro_profissional}` : ""}
             </p>
+            {profissional.registro_profissional && !profissional.verificado && (
+              <p className="font-caption text-caption text-on-surface-variant">Registro informado pelo profissional</p>
+            )}
           </div>
           <div className="flex items-center gap-space-sm flex-wrap justify-center">
             {notaMedia != null && (
@@ -154,7 +159,7 @@ export default function PerfilPublicoProfissionalPage({ params }: { params: { id
             {profissional.verificado && (
               <span className="inline-flex items-center gap-1 px-space-sm py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm">
                 <MaterialIcon name="check_circle" className="text-[14px]" />
-                Verificado
+                {textoRegistroConferido(profissional.verificado_em)}
               </span>
             )}
           </section>

@@ -31,6 +31,7 @@ import type {
   ProfissionalUpdateRequest,
   StatusDemanda,
   TipoEmpresa,
+  VerificacaoPropria,
 } from "./types";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -164,6 +165,11 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+
+  getMinhaVerificacao: () => request<VerificacaoPropria>("/profissionais/me/verificacao"),
+
+  solicitarConferencia: () =>
+    request<VerificacaoPropria>("/profissionais/me/verificacao/solicitar", { method: "POST" }),
 
   // Empresas
   getEmpresa: (userId: string) =>
