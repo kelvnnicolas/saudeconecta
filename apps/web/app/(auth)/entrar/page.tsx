@@ -7,8 +7,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
+import { AvisoDialogo } from "@/components/ui/AvisoDialogo";
 import { CampoSenha } from "@/components/ui/CampoSenha";
 import { mensagemDeErroAuth } from "@/lib/erros-auth";
+import { MSG, avisoDeTipoDeConta, loginSocialFalhou } from "@/lib/mensagens";
 import { type LoginInput, loginSchema } from "@/lib/validations/auth";
 import {
   getSession,
@@ -48,6 +50,8 @@ export default function EntrarPage() {
   const [provedorSocial, setProvedorSocial] = useState<"google" | "facebook" | "linkedin" | null>(null);
   const [papelEscolhido, setPapelEscolhido] = useState<PapelEntrada>("empresa");
   const [semCadastro, setSemCadastro] = useState(false);
+  // Conta de outro tipo que o escolhido: avisa em popup e oferece entrar no tipo certo.
+  const [avisoTipo, setAvisoTipo] = useState<{ papel: PapelEntrada; dados: LoginInput } | null>(null);
   // null = ainda não sabemos (carregando ou sem resposta do Supabase).
   const [linkedinAtivo, setLinkedinAtivo] = useState<boolean | null>(null);
 
@@ -105,22 +109,25 @@ export default function EntrarPage() {
       if ((papelDaConta === "empresa" || papelDaConta === "profissional") && papelDaConta !== papelEscolhido) {
         await signOut();
         escolherPapel(papelDaConta);
-        setErro(
-          papelDaConta === "empresa"
-            ? "Esta conta é de empresa ou pessoa. Ajustamos a opção acima: entre de novo."
-            : "Esta conta é de profissional. Ajustamos a opção acima: entre de novo.",
-        );
+        setAvisoTipo({ papel: papelDaConta, dados: data });
         return;
       }
       router.push("/buscar");
     } catch (e) {
-      const mensagem = mensagemDeErroAuth(e, "Não foi possível entrar. Verifique os dados.");
+      const mensagem = mensagemDeErroAuth(e, MSG.loginIndisponivel);
       setErro(mensagem);
       // Credencial recusada: pode ser senha errada ou falta de cadastro (o Supabase não diz qual).
-      setSemCadastro(mensagem.startsWith("E-mail ou senha incorretos"));
+      setSemCadastro(mensagem === MSG.credenciaisIncorretas);
     } finally {
       setEnviando(false);
     }
+  }
+
+  async function entrarNoTipoCerto() {
+    if (!avisoTipo) return;
+    const { dados } = avisoTipo;
+    setAvisoTipo(null);
+    await onSubmit(dados);
   }
 
   async function entrarComGoogle() {
@@ -129,7 +136,7 @@ export default function EntrarPage() {
     try {
       await signInWithGoogle();
     } catch (e) {
-      setErro(mensagemDeErroAuth(e, "Não foi possível entrar com o Google."));
+      setErro(mensagemDeErroAuth(e, loginSocialFalhou("Google")));
     } finally {
       setProvedorSocial(null);
     }
@@ -147,7 +154,7 @@ export default function EntrarPage() {
       }
       await signInWithLinkedIn();
     } catch (e) {
-      setErro(mensagemDeErroAuth(e, "Não foi possível entrar com o LinkedIn."));
+      setErro(mensagemDeErroAuth(e, loginSocialFalhou("LinkedIn")));
     } finally {
       setProvedorSocial(null);
     }
@@ -159,7 +166,7 @@ export default function EntrarPage() {
     try {
       await signInWithFacebook();
     } catch (e) {
-      setErro(mensagemDeErroAuth(e, "Não foi possível entrar com o Facebook."));
+      setErro(mensagemDeErroAuth(e, loginSocialFalhou("Facebook")));
     } finally {
       setProvedorSocial(null);
     }
@@ -222,11 +229,10 @@ export default function EntrarPage() {
             <p className="font-caption text-caption text-error">{erro}</p>
             {semCadastro && (
               <p className="font-caption text-caption text-on-surface-variant">
-                Se ainda não tem cadastro,{" "}
+                Ainda não tem conta?{" "}
                 <Link href={papelAtual.href} className="font-label-md text-label-md text-primary underline underline-offset-2">
-                  {papelAtual.criar.toLowerCase()}
+                  {papelAtual.criar}
                 </Link>
-                .
               </p>
             )}
           </div>
@@ -302,6 +308,12 @@ export default function EntrarPage() {
           {papelAtual.criar}
         </Link>
       </div>
+      <AvisoDialogo
+        aberto={avisoTipo !== null}
+        onFechar={() => setAvisoTipo(null)}
+        {...avisoDeTipoDeConta(avisoTipo?.papel ?? "empresa")}
+        onConfirmar={entrarNoTipoCerto}
+      />
     </main>
   );
 }

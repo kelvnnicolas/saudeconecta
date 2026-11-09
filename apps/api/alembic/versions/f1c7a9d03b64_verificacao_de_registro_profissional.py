@@ -11,7 +11,10 @@ As duas tabelas novas ligam RLS (nenhuma política = só o backend acessa). O es
 (`pending`, `irregular`, `unable_to_verify`) NÃO vai para `profissionais`: as tabelas antigas
 não têm RLS e o Supabase as expõe pela API pública.
 
-Quem já tinha `verificado = true` ganha uma linha na trilha (`verified`, ator `sistema`).
+Quem já tinha `verificado = true` perde o selo: nada escreve esse booleano no código, então ele
+não vem de conferência alguma, e publicar "conferido em <data da migração>" seria falso. O selo
+só passa a nascer de uma conferência registrada por administrador. (Produção tinha 0 de 4 perfis
+com o selo em 2026-10-22, então na prática nada muda.) O downgrade não devolve o selo.
 
 Migration aditiva. Aplicar à mão antes do deploy (T-007).
 
@@ -103,16 +106,8 @@ def upgrade() -> None:
     )
     op.execute("ALTER TABLE verificacoes_registro ENABLE ROW LEVEL SECURITY")
 
-    # Quem já estava marcado como verificado passa a ter a trilha coerente com o selo.
-    op.execute(
-        """
-        INSERT INTO verificacoes_registro
-            (profissional_id, status_anterior, status_novo, ator_tipo, verificado_em)
-        SELECT user_id, 'unverified', 'verified', 'sistema', now()
-        FROM profissionais WHERE verificado
-        """
-    )
-    op.execute("UPDATE profissionais SET verificado_em = now() WHERE verificado")
+    # O selo só pode nascer de uma conferência: zera o booleano legado, que nenhum fluxo gravava.
+    op.execute("UPDATE profissionais SET verificado = false WHERE verificado")
 
 
 def downgrade() -> None:

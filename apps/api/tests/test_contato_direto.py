@@ -21,7 +21,9 @@ def test_profissional_nao_pode_iniciar_contato_com_outro_profissional(client, db
 
     assert resposta.status_code == 403
     assert resposta.json()["detail"]["code"] == "apenas_empresas"
-    assert resposta.json()["detail"]["mensagem"] == "Recurso disponível só para empresas"
+    assert (
+        resposta.json()["detail"]["mensagem"] == "Esta ação é só para contas de empresa ou pessoa."
+    )
     assert db_session.scalar(select(func.count()).select_from(Contato)) == 0
 
 

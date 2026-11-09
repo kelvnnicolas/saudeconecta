@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from stripe import SignatureVerificationError
 
 from app.core.config import get_settings
-from app.core.errors import erro_negocio
+from app.core.errors import MSG_SO_EMPRESAS, erro_negocio
 from app.models.assinatura import Assinatura, StatusAssinatura
 from app.models.empresa import Empresa
 from app.models.evento_stripe import EventoStripe
@@ -54,7 +54,7 @@ def _chamada_stripe() -> Iterator[None]:
         raise erro_negocio(
             status.HTTP_502_BAD_GATEWAY,
             "stripe_indisponivel",
-            "Não foi possível concluir a operação com o Stripe. Tente novamente.",
+            "Não conseguimos falar com o serviço de pagamento agora. Tente de novo em instantes.",
         ) from exc
 
 
@@ -99,7 +99,7 @@ def _encerrar_checkout_anterior(sessao_id: str) -> None:
     em_processamento = erro_negocio(
         status.HTTP_409_CONFLICT,
         "assinatura_em_processamento",
-        "O pagamento de um checkout anterior já foi concluído e está sendo confirmado.",
+        "Seu pagamento anterior ainda está sendo confirmado. Acompanhe em Minha assinatura.",
     )
     try:
         sessao = stripe.checkout.Session.retrieve(sessao_id, api_key=_api_key())
@@ -137,7 +137,8 @@ def criar_checkout(db: Session, user_id: uuid.UUID, plano_codigo: str) -> str:
         raise erro_negocio(
             status.HTTP_409_CONFLICT,
             "assinatura_existente",
-            "Esta empresa já tem uma assinatura. Use o portal para trocar de plano ou cancelar.",
+            "Você já tem uma assinatura. "
+            "Para trocar de plano ou cancelar, use Gerenciar assinatura.",
         )
 
     with _chamada_stripe():
@@ -171,7 +172,7 @@ def criar_checkout(db: Session, user_id: uuid.UUID, plano_codigo: str) -> str:
         raise erro_negocio(
             status.HTTP_409_CONFLICT,
             "assinatura_existente",
-            "Esta empresa já tem uma assinatura em andamento.",
+            "Você já tem uma assinatura em andamento.",
         ) from exc
     return sessao["url"]
 
@@ -183,7 +184,7 @@ def criar_portal(db: Session, user_id: uuid.UUID) -> str:
         raise erro_negocio(
             status.HTTP_404_NOT_FOUND,
             "assinatura_inexistente",
-            "Esta empresa ainda não tem assinatura.",
+            "Você ainda não tem assinatura.",
         )
     with _chamada_stripe():
         sessao = stripe.billing_portal.Session.create(
@@ -197,9 +198,7 @@ def criar_portal(db: Session, user_id: uuid.UUID) -> str:
 def obter_assinatura_da_empresa(db: Session, user_id: uuid.UUID) -> tuple[Assinatura | None, int]:
     profile = db.get(Profile, user_id)
     if profile is None or profile.papel != Papel.empresa:
-        raise erro_negocio(
-            status.HTTP_403_FORBIDDEN, "nao_elegivel", "Recurso disponível só para empresas"
-        )
+        raise erro_negocio(status.HTTP_403_FORBIDDEN, "nao_elegivel", MSG_SO_EMPRESAS)
     assinatura = assinatura_vigente(db, user_id) or db.scalar(
         select(Assinatura)
         .where(Assinatura.empresa_id == user_id)
@@ -319,8 +318,8 @@ def _pagamento_falhou(db: Session, invoice: Any) -> None:
         db,
         destinatario_id=assinatura.empresa_id,
         tipo=TipoNotificacao.falha_pagamento,
-        titulo="Falha no pagamento",
-        corpo="Não conseguimos processar o pagamento da sua assinatura.",
+        titulo="Pagamento não processado",
+        corpo="Não conseguimos cobrar sua assinatura. Atualize o cartão em Minha assinatura.",
         link="/assinatura",
     )
 
