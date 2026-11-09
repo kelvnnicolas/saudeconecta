@@ -8,6 +8,7 @@ from app.core.errors import registrar_tratadores
 from app.core.rate_limit import limiter
 from app.core.sentry import init_sentry
 from app.routers import (
+    admin_verificacao,
     analytics,
     assinaturas,
     auth,
@@ -48,6 +49,7 @@ app.include_router(auth.router)
 app.include_router(especialidades.router)
 app.include_router(notificacoes.router)
 app.include_router(profissionais.router)
+app.include_router(admin_verificacao.router)
 app.include_router(empresas.router)
 app.include_router(perfis.router)
 app.include_router(contatos.router)

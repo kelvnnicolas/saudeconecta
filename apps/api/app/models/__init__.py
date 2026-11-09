@@ -12,6 +12,12 @@ from app.models.plano import Plano
 from app.models.profile import Papel, Profile
 from app.models.profissional import Profissional
 from app.models.profissional_especialidade import profissional_especialidades
+from app.models.verificacao import (
+    Administrador,
+    AtorVerificacao,
+    StatusVerificacao,
+    VerificacaoRegistro,
+)
 
 __all__ = [
     "Assinatura",
@@ -36,4 +42,8 @@ __all__ = [
     "Profile",
     "Profissional",
     "profissional_especialidades",
+    "Administrador",
+    "AtorVerificacao",
+    "StatusVerificacao",
+    "VerificacaoRegistro",
 ]

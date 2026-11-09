@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
@@ -24,4 +25,6 @@ class ProfissionalRead(BaseModel):
     bio: str | None
     preco_hora: float | None
     verificado: bool
+    # Data da conferência; só vem preenchida quando `verificado` é verdadeiro.
+    verificado_em: datetime | None = None
     especialidades: list[EspecialidadeRead]

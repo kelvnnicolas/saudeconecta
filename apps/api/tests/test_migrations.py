@@ -87,3 +87,37 @@ def test_migration_adds_origem_and_demanda_id_to_contatos():
 def test_migration_adds_aceito_em_to_contatos():
     colunas = {c["name"]: c for c in inspect(engine).get_columns("contatos")}
     assert colunas["aceito_em"]["nullable"] is True
+
+
+def test_migration_da_verificacao_zera_o_selo_legado_sem_criar_conferencia():
+    # `verificado` nunca foi gravado por código nenhum: quem o tinha não passou por conferência,
+    # então a migration não pode transformá-lo em "conferido em <data da migração>".
+    cfg = _alembic_config()
+    user_id = "00000000-0000-0000-0000-0000000000a1"
+    command.downgrade(cfg, "d3f8a1c26e57")
+    try:
+        with engine.begin() as conn:
+            conn.execute(
+                sa.text(
+                    "INSERT INTO profiles (id, papel, nome) VALUES (:id, 'profissional', 'Legado')"
+                ),
+                {"id": user_id},
+            )
+            conn.execute(
+                sa.text("INSERT INTO profissionais (user_id, verificado) VALUES (:id, true)"),
+                {"id": user_id},
+            )
+        command.upgrade(cfg, "head")
+        with engine.connect() as conn:
+            verificado, verificado_em = conn.execute(
+                sa.text("SELECT verificado, verificado_em FROM profissionais WHERE user_id = :id"),
+                {"id": user_id},
+            ).one()
+            trilha = conn.execute(sa.text("SELECT COUNT(*) FROM verificacoes_registro")).scalar()
+        assert verificado is False and verificado_em is None
+        assert trilha == 0
+    finally:
+        command.upgrade(cfg, "head")
+        with engine.begin() as conn:
+            conn.execute(sa.text("DELETE FROM profissionais WHERE user_id = :id"), {"id": user_id})
+            conn.execute(sa.text("DELETE FROM profiles WHERE id = :id"), {"id": user_id})

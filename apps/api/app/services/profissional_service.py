@@ -12,6 +12,7 @@ from app.models.profissional import Profissional
 from app.models.profissional_especialidade import profissional_especialidades
 from app.schemas.especialidade import EspecialidadeRead
 from app.schemas.profissional import ProfissionalRead, ProfissionalUpdateRequest
+from app.services.verificacao_service import invalidar_por_mudanca_de_registro
 
 
 def get_profissional_by_id(db: Session, user_id: uuid.UUID) -> Profissional | None:
@@ -29,6 +30,7 @@ def to_profissional_read(profissional: Profissional) -> ProfissionalRead:
         bio=profissional.bio,
         preco_hora=float(profissional.preco_hora) if profissional.preco_hora is not None else None,
         verificado=profissional.verificado,
+        verificado_em=profissional.verificado_em if profissional.verificado else None,
         especialidades=[EspecialidadeRead.model_validate(e) for e in profissional.especialidades],
     )
 
@@ -65,11 +67,17 @@ def upsert_profissional(
             )
 
     profissional = db.get(Profissional, user_id)
+    registro_novo = (data.registro_profissional or "").strip() or None
     if profissional is None:
         profissional = Profissional(user_id=user_id)
         db.add(profissional)
+    else:
+        registro_antigo = (profissional.registro_profissional or "").strip() or None
+        if registro_novo != registro_antigo:
+            # Outro número de registro: a conferência anterior deixa de valer (F-031).
+            invalidar_por_mudanca_de_registro(db, profissional)
 
-    profissional.registro_profissional = data.registro_profissional
+    profissional.registro_profissional = registro_novo
     profissional.bio = data.bio
     profissional.preco_hora = data.preco_hora
     profissional.especialidades = especialidades
@@ -117,6 +125,7 @@ def search_profissionais(
     nota_min: float | None = None,
     limit: int = 20,
     offset: int = 0,
+    verificado: bool | None = None,
 ) -> tuple[list[tuple[Profissional, float | None]], int]:
     nota_subq = (
         select(Avaliacao.alvo_id.label("alvo_id"), func.avg(Avaliacao.nota).label("nota_media"))
@@ -133,6 +142,8 @@ def search_profissionais(
     filters = _build_search_filters(q, cidade, estado, preco_min, preco_max)
     if nota_min is not None:
         filters.append(nota_subq.c.nota_media >= nota_min)
+    if verificado is not None:
+        filters.append(Profissional.verificado.is_(verificado))
     for condition in filters:
         base_query = base_query.where(condition)
 
