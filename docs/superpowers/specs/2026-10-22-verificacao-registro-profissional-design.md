@@ -76,4 +76,4 @@ Transições (todas as permitidas e as proibidas), permissões (sem login, profi
 - **Primeiro administrador:** `INSERT INTO administradores (user_id) VALUES ('<id do seu usuário no Supabase>')`; o id vem de `SELECT id, email FROM auth.users WHERE email = '...'`.
 
 ## 12. Fora de escopo (por enquanto)
-Consulta automática a qualquer fonte; importação de cadastros; upload de documentos; avisar o profissional do resultado por notificação (exigiria novos tipos de notificação e migration; fica como F-032 se você quiser); reautenticação reforçada do administrador.
+Consulta automática a qualquer fonte; importação de cadastros; upload de documentos; avisar o profissional do resultado por notificação (exigiria novos tipos de notificação e migration; fica como item novo se você quiser; o F-032 agora é o registro estruturado); reautenticação reforçada do administrador.

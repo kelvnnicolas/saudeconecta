@@ -8,7 +8,8 @@
 > MVP em `docs/superpowers/specs/2026-09-19-saudeconecta-mvp-design.md`; estado em
 > `STATUS.md`; fila em `nextmove.md`.
 >
-> **Última revisão:** 2026-10-14 · comparação feita sobre a `main` em `522b0ff`.
+> **Última revisão:** 2026-10-22 · seção 2.5 (perfil e configurações) e propostas M-AUT-3 e M-COM-5.
+> Comparação da linha de base feita sobre a `main` em `522b0ff` (2026-10-14).
 
 **Legenda de status**
 
@@ -47,7 +48,7 @@
 | Item do Anexo I | Status | Situação em 2026-10-14 |
 |---|---|---|
 | Cadastro e login de profissionais e contratantes | ✅ | E-mail, recuperação de senha e senha forte |
-| Perfis com especialidades, registro, região e valor | ✅ | Registro opcional e não validado; upload de foto sem reconfirmação no Storage (V-003) |
+| Perfis com especialidades, registro, região e valor | ✅ | Registro opcional; selo só por conferência manual (F-031). Upload de foto sem reconfirmação no Storage (V-003). Edição pelo próprio usuário e configurações da conta: ver 2.5 |
 | Busca com filtros (especialidade, cidade, preço, avaliação) | ✅ | `/buscar` |
 | Demandas publicadas por empresas e interesse de profissionais | ✅ | Regra de negócio mudou, ver 2.4 |
 | Contato e avaliação mútua | ✅ | Bug: mesma pessoa avaliada várias vezes (B-008) |
@@ -86,7 +87,7 @@ da versão inicial e congelar** (sem evolução fora de plano).
 | Diretório de empresas para profissionais (`/empresas`) | Módulo M-OFE | |
 | Plano gratuito, cota mensal e segundo plano pago (Pro) com avisos de limite | Decisão comercial da cliente | Ver 2.4 |
 | Login com Google e Facebook | Módulo M-AUT | LinkedIn com código pronto, sem configuração |
-| Tema escuro | Cortesia de UX | |
+| Tema escuro | Cortesia de UX | Reapresentação do controle em Configurações autorizada em 2026-10-22 (2.5); sem comportamento novo e congelado de novo depois da entrega |
 | Landing B2B elaborada (abas, simulação de chat, carrossel, animações, vidro) | Cortesia de UX | |
 | Rate limiting, `/ready`, Dependabot, auto-deploy, job de expiração | Fronteira com P-03 | Higiene básica; não vender de novo como "segurança reforçada" |
 
@@ -102,6 +103,28 @@ da versão inicial e congelar** (sem evolução fora de plano).
    que põe pagamento de atendimentos no Profissional (P-01).
 
 Nada disso deve ser revertido sem a cliente; só confirmado e registrado.
+
+### 2.5 Perfil e configurações da conta (enquadramento de 2026-10-22)
+
+Definido pelo responsável do projeto em 2026-10-22. Não é liberação de item bloqueado (não
+há aditivo), por isso não entra na seção 7: é o detalhamento do que o item ✅ "Perfis com
+especialidades, registro, região e valor" cobre. Execução no `nextmove.md` (F-035, F-036);
+desenho em `docs/superpowers/specs/2026-10-22-perfil-configuracoes-design.md`.
+
+| Recurso | Status | Limite |
+|---|---|---|
+| Ver o próprio perfil completo (dados pessoais, contato, profissionais ou da empresa) | ✅ Incluído | Telefone visível só para o dono |
+| Editar nome, telefone, cidade e UF | ✅ Incluído | E-mail só leitura enquanto o B-004 existir |
+| Editar bio, especialidades, preço por hora e registro (profissional) | ✅ Incluído | Mudar o registro tira o selo até nova conferência (F-031) |
+| Editar nome fantasia e tipo (empresa) | ✅ Incluído | |
+| Trocar a foto | ✅ Incluído | Já entregue |
+| Tela de configurações (`/perfil/configuracoes`) com conta e sair | ✅ Incluído | |
+| Aviso ao sair com alterações não salvas (F-004) | ✅ Incluído | |
+| Controle de aparência reapresentado em Configurações (F-036) | 🎁 Cortesia | Só lugar e formato; sem tema novo nem preferência sincronizada entre aparelhos |
+| Alterar senha estando logado | ❓ A decidir | D-019 no `nextmove.md`; enquadramento candidato: "Cadastro e login" |
+| Telefone visível a outros usuários | 🔒 Bloqueado | Contornaria a cota mensal; ver M-COM-5 |
+| Troca de e-mail pelo próprio usuário | 🔒 Bloqueado até o B-004 | Depende do link de confirmação no domínio certo |
+| Excluir a própria conta | 🔒 Bloqueado | Ver M-AUT-3 |
 
 ---
 
@@ -197,6 +220,7 @@ semanas, **G** acima de 3 semanas.
 | M-COM-2 | Preferências de notificação por tipo e canal (F-009) | P | — |
 | M-COM-3 | Aviso de limite por notificação e e-mail (F-024) | P | — |
 | M-COM-4 | WhatsApp com opt-in | M | Provedor aprovado pela Meta |
+| M-COM-5 | Telefone compartilhado só dentro de um contato aceito (proposto em 2026-10-22) | P | Regra de cota definida pela cliente |
 
 ### M-BUS · Busca e descoberta
 | ID | Recurso | Porte | Depende de |
@@ -209,6 +233,7 @@ semanas, **G** acima de 3 semanas.
 |---|---|---|---|
 | M-AUT-1 | Login com LinkedIn | P | Configuração externa |
 | M-AUT-2 | Login social respeitando o tipo de conta (T-013) | P | — |
+| M-AUT-3 | Exclusão da própria conta, com regra de retenção de avaliações, contatos e assinatura (proposto em 2026-10-22) | M | Revisão de LGPD |
 
 ### M-APP · Canais
 | ID | Recurso | Porte | Depende de |

@@ -31,7 +31,11 @@ import type {
   ProfissionalUpdateRequest,
   StatusDemanda,
   TipoEmpresa,
+  TrilhaVerificacaoItem,
+  ResultadoVerificacaoRequest,
+  VerificacaoAdminLista,
   VerificacaoPropria,
+  StatusVerificacao,
 } from "./types";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -170,6 +174,21 @@ export const api = {
 
   solicitarConferencia: () =>
     request<VerificacaoPropria>("/profissionais/me/verificacao/solicitar", { method: "POST" }),
+
+  // Administração (403 para quem não é administrador)
+  adminEu: () => request<{ admin: true }>("/admin/eu"),
+
+  adminListarVerificacoes: (status: StatusVerificacao, offset = 0) =>
+    request<VerificacaoAdminLista>(`/admin/verificacoes${qs({ status, offset })}`),
+
+  adminHistoricoVerificacao: (userId: string) =>
+    request<TrilhaVerificacaoItem[]>(`/admin/profissionais/${userId}/verificacoes`),
+
+  adminRegistrarConferencia: (userId: string, data: ResultadoVerificacaoRequest) =>
+    request<VerificacaoPropria>(`/admin/profissionais/${userId}/verificacao`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 
   // Empresas
   getEmpresa: (userId: string) =>

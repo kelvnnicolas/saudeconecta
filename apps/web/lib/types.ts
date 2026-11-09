@@ -65,6 +65,46 @@ export type StatusVerificacao =
   | "irregular"
   | "unable_to_verify";
 
+export interface VerificacaoAdminItem {
+  user_id: string;
+  nome: string;
+  cidade: string | null;
+  estado: string | null;
+  registro_informado: string | null;
+  status: StatusVerificacao;
+  atualizado_em: string;
+}
+
+export interface VerificacaoAdminLista {
+  items: VerificacaoAdminItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface TrilhaVerificacaoItem {
+  id: number;
+  status_anterior: StatusVerificacao;
+  status_novo: StatusVerificacao;
+  conselho: string | null;
+  uf: string | null;
+  numero_registro: string | null;
+  metodo: string | null;
+  fonte: string | null;
+  verificado_em: string | null;
+  ator_tipo: "profissional" | "administrador" | "sistema";
+  criado_em: string;
+}
+
+export interface ResultadoVerificacaoRequest {
+  status: "verified" | "irregular" | "unable_to_verify";
+  conselho?: string;
+  uf?: string;
+  numero_registro?: string;
+  fonte: string;
+  verificado_em?: string;
+}
+
 /** Estado completo, devolvido só ao próprio profissional (GET /profissionais/me/verificacao). */
 export interface VerificacaoPropria {
   status: StatusVerificacao;
