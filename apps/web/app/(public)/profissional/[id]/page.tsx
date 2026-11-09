@@ -192,7 +192,7 @@ export default function PerfilPublicoProfissionalPage({ params }: { params: { id
                 </div>
                 {a.comentario && <p className="font-body-md text-body-md text-on-surface">&quot;{a.comentario}&quot;</p>}
                 {/* GET /avaliacoes não expõe quem avaliou (B-009) — rótulo genérico. */}
-                <p className="font-caption text-caption text-on-surface-variant">Contratante verificado</p>
+                <p className="font-caption text-caption text-on-surface-variant">Avaliação de um contratante</p>
               </article>
             ))}
           </section>
