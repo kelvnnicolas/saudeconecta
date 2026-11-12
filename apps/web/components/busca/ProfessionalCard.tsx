@@ -32,9 +32,10 @@ export function ProfessionalCard({ profissional }: { profissional: ProfissionalS
           {profissional.verificado && (
             <span
               className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-secondary-container flex items-center justify-center border-2 border-surface-container-lowest"
-              title="Verificado"
+              title="Registro conferido pelo SaúdeConecta"
             >
               <MaterialIcon name="verified" filled className="text-[12px] text-on-secondary-container" />
+              <span className="sr-only">Registro conferido pelo SaúdeConecta</span>
             </span>
           )}
         </div>

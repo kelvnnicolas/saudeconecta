@@ -127,7 +127,7 @@ def upsert_empresa(db: Session, user_id: uuid.UUID, data: EmpresaUpdateRequest) 
     if profile.papel != "empresa":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Apenas usuários com papel 'empresa' podem editar este recurso",
+            detail="Só contas de empresa ou pessoa podem editar este perfil.",
         )
 
     empresa = db.get(Empresa, user_id)

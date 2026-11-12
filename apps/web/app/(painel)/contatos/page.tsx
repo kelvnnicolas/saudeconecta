@@ -1,16 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
-import { Logo } from "@/components/ui/Logo";
 import { ListaEsqueleto } from "@/components/ui/Skeleton";
-import { NotificationBell } from "@/components/ui/NotificationBell";
 import { ContatoStatusBadge } from "@/components/ui/StatusBadge";
 import { useCurrentUser } from "@/lib/use-current-user";
-import { api } from "@/lib/api";
-import type { ContatoRead, StatusContato } from "@/lib/types";
+import { useContatos } from "@/lib/use-contatos";
+import type { StatusContato } from "@/lib/types";
 
 const FILTROS: { value: "todos" | StatusContato; label: string }[] = [
   { value: "todos", label: "Todos" },
@@ -20,51 +17,10 @@ const FILTROS: { value: "todos" | StatusContato; label: string }[] = [
 ];
 
 export default function MeusContatosPage() {
+  const { contatos, carregando, erro, nomeDaOutraParte } = useContatos();
   const { papel } = useCurrentUser();
-  const [contatos, setContatos] = useState<ContatoRead[]>([]);
-  // ContatoRead só devolve solicitante_id/profissional_id (UUID) — sem
-  // endpoint em lote, resolve nome por perfil único conforme a lista chega.
-  const [nomes, setNomes] = useState<Record<string, string>>({});
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState<string | null>(null);
   const [filtro, setFiltro] = useState<(typeof FILTROS)[number]["value"]>("todos");
   const [busca, setBusca] = useState("");
-
-  useEffect(() => {
-    let ativo = true;
-    api
-      .listContatos()
-      .then(async (lista) => {
-        if (!ativo) return;
-        setContatos(lista);
-        // Eu sou profissional -> a outra parte é sempre a empresa (solicitante_id).
-        // Eu sou empresa -> a outra parte é sempre o profissional (profissional_id).
-        const outroIdDe = (c: ContatoRead) => (papel === "profissional" ? c.solicitante_id : c.profissional_id);
-        const idsUnicos = Array.from(new Set(lista.map(outroIdDe)));
-        const buscarNome = papel === "profissional" ? api.getEmpresa : api.getProfissional;
-        const entradas = await Promise.all(
-          idsUnicos.map(async (id) => {
-            try {
-              const perfil = await buscarNome(id);
-              return [id, perfil.nome] as const;
-            } catch {
-              return [id, papel === "profissional" ? "Empresa" : "Profissional"] as const;
-            }
-          }),
-        );
-        if (ativo) setNomes(Object.fromEntries(entradas));
-      })
-      .catch((e) => ativo && setErro(e instanceof Error ? e.message : "Não foi possível carregar."))
-      .finally(() => ativo && setCarregando(false));
-    return () => {
-      ativo = false;
-    };
-  }, [papel]);
-
-  function nomeDaOutraParte(c: ContatoRead) {
-    const id = papel === "profissional" ? c.solicitante_id : c.profissional_id;
-    return nomes[id] ?? "...";
-  }
 
   const filtrados = useMemo(() => {
     return contatos.filter((c) => {
@@ -73,24 +29,16 @@ export default function MeusContatosPage() {
       const bateBusca = !busca || nome.includes(busca.toLowerCase()) || c.mensagem.toLowerCase().includes(busca.toLowerCase());
       return bateFiltro && bateBusca;
     });
-    // nomeDaOutraParte só lê `nomes` e `papel`, que já estão na lista.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contatos, filtro, busca, nomes, papel]);
+  }, [contatos, filtro, busca, nomeDaOutraParte]);
 
   return (
     <>
       <main className="flex-1 pt-space-md pb-24 px-gutter bg-surface min-h-screen flex flex-col gap-space-md">
-        <div className="flex items-start justify-between gap-space-sm">
-          <div>
-            <div className="flex items-center gap-1.5">
-              <Logo compact />
-              <h1 className="font-headline-md text-headline-md text-on-surface">Meus Contatos</h1>
-            </div>
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              Gerencie conversas, propostas e atendimentos em andamento
-            </p>
-          </div>
-          <NotificationBell />
+        <div>
+          <h1 className="font-headline-md text-headline-md text-on-surface">Mensagens</h1>
+          <p className="font-body-md text-body-md text-on-surface-variant">
+            Suas conversas com {papel === "profissional" ? "empresas e contratantes" : "profissionais"}
+          </p>
         </div>
 
         <div className="relative w-full">
@@ -173,7 +121,6 @@ export default function MeusContatosPage() {
           </Link>
         )}
       </main>
-      <BottomNav />
     </>
   );
 }

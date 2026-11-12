@@ -3,11 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { Logo } from "@/components/ui/Logo";
 import { ListaEsqueleto } from "@/components/ui/Skeleton";
-import { NotificationBell } from "@/components/ui/NotificationBell";
 import { BotaoEntrar } from "@/components/ui/BotaoEntrar";
 import { ProfessionalCard } from "@/components/busca/ProfessionalCard";
 import { api } from "@/lib/api";
@@ -47,11 +45,12 @@ function termoInicial(params: URLSearchParams) {
 
 export default function BuscarPage() {
   const searchParams = useSearchParams();
-  const { papel, session } = useCurrentUser();
+  const { papel, session, loading } = useCurrentUser();
   // Publicar demanda é de empresa; visitantes ainda veem e caem no login.
   const ehProfissional = !!session && papel === "profissional";
   const [query, setQuery] = useState(() => termoInicial(searchParams));
   const [resultados, setResultados] = useState<ProfissionalSearchResult[]>([]);
+  const [apenasConferidos, setApenasConferidos] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -60,7 +59,7 @@ export default function BuscarPage() {
     setCarregando(true);
     const id = setTimeout(() => {
       api
-        .searchProfissionais(termo ? { q: termo } : {})
+        .searchProfissionais({ ...(termo ? { q: termo } : {}), ...(apenasConferidos ? { verificado: true } : {}) })
         .then((resposta) => {
           setResultados(resposta.items);
           setErro(null);
@@ -69,18 +68,18 @@ export default function BuscarPage() {
         .finally(() => setCarregando(false));
     }, 300);
     return () => clearTimeout(id);
-  }, [query]);
+  }, [query, apenasConferidos]);
 
   return (
     <>
-      <main className={`flex-1 pt-space-md ${session ? "pb-24" : "pb-space-xl"} px-gutter flex flex-col gap-space-md bg-surface min-h-screen`}>
-        <div className="flex items-center justify-between">
-          <Logo />
-          <div className="flex items-center gap-space-xs">
+      <main className={`flex-1 pt-space-md ${session ? "pb-24 lg:pb-space-xl" : "pb-space-xl"} px-gutter flex flex-col gap-space-md bg-surface min-h-screen`}>
+        {/* Quem está logado já tem a barra de navegação do app; visitante tem "Entrar". */}
+        {!loading && !session && (
+          <div className="flex items-center justify-between">
+            <Logo />
             <BotaoEntrar />
-            <NotificationBell />
           </div>
-        </div>
+        )}
         <h1 className="font-headline-lg text-headline-lg text-on-surface">
           Encontre profissionais de saúde para o que você precisa.
         </h1>
@@ -146,8 +145,19 @@ export default function BuscarPage() {
         <div>
           <h2 className="font-title-md text-title-md text-on-surface mb-1">Profissionais em destaque</h2>
           <p className="font-caption text-caption text-on-surface-variant mb-space-sm">
-            Prontos para atendimento e verificados &middot; {resultados.length} resultado(s)
+            {resultados.length} resultado(s)
           </p>
+          <button
+            type="button"
+            onClick={() => setApenasConferidos((v) => !v)}
+            aria-pressed={apenasConferidos}
+            className={`mb-space-sm inline-flex items-center gap-1 h-11 px-space-sm rounded-full bg-surface-container-lowest neu-surface font-label-sm text-label-sm text-on-surface ${
+              apenasConferidos ? "ring-2 ring-secondary" : ""
+            }`}
+          >
+            <MaterialIcon name="verified" className="text-[16px]" />
+            Só com registro conferido
+          </button>
           {erro && <p className="font-caption text-caption text-error bg-error-container rounded-lg p-space-sm mb-space-sm">{erro}</p>}
           <div className="flex flex-col gap-space-sm">
             {carregando && <ListaEsqueleto quantidade={4} />}
@@ -162,8 +172,6 @@ export default function BuscarPage() {
           </div>
         </div>
       </main>
-      {/* Visitante tem "Entrar" no topo; a barra leva a telas que exigem login. */}
-      {session && <BottomNav />}
     </>
   );
 }

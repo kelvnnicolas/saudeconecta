@@ -60,9 +60,9 @@ export default function CadastroProfissionalPage() {
         preco_hora: data.precoHora ?? null,
         especialidade_ids: data.especialidadeIds,
       });
-      router.push("/perfil");
+      router.push("/inicio");
     } catch (e) {
-      setErro(mensagemDeErroAuth(e, "Não foi possível concluir o cadastro."));
+      setErro(mensagemDeErroAuth(e, "Não conseguimos concluir seu cadastro. Tente de novo."));
     } finally {
       setEnviando(false);
     }

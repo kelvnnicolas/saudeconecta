@@ -71,9 +71,9 @@ export default function CadastroEmpresaPage() {
         cidade: data.cidade,
         estado: data.estado,
       });
-      router.push("/perfil");
+      router.push("/inicio");
     } catch (e) {
-      setErro(mensagemDeErroAuth(e, "Não foi possível concluir o cadastro."));
+      setErro(mensagemDeErroAuth(e, "Não conseguimos concluir seu cadastro. Tente de novo."));
     } finally {
       setEnviando(false);
     }

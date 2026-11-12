@@ -12,6 +12,9 @@ export function MaterialIcon({
 }) {
   return (
     <span
+      // Decorativo: o nome do ícone é texto da fonte (ligadura) e leitor de tela leria "home",
+      // "forum"... antes do rótulo. Quem precisa de nome acessível usa aria-label no botão/link.
+      aria-hidden="true"
       className={`material-symbols-outlined ${className}`}
       style={filled ? { fontVariationSettings: "'FILL' 1" } : undefined}
     >

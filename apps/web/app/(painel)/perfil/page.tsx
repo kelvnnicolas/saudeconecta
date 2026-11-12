@@ -3,13 +3,11 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
-import { Logo } from "@/components/ui/Logo";
-import { NotificationBell } from "@/components/ui/NotificationBell";
 import { Etiqueta, LinhaAjusteLink, LinhaInfo, TituloSecao } from "@/components/ui/Linhas";
 import { useCurrentUser } from "@/lib/use-current-user";
 import { api } from "@/lib/api";
+import { VerificacaoDoRegistro } from "@/components/profissional/VerificacaoDoRegistro";
 import type { TipoEmpresa } from "@/lib/types";
 
 const NOME_TIPO_EMPRESA: Record<TipoEmpresa, string> = {
@@ -50,7 +48,7 @@ export default function MeuPerfilPage() {
       await api.uploadAvatar(file);
       await refresh();
     } catch (err) {
-      setErroAvatar(err instanceof Error ? err.message : "Não foi possível enviar a foto.");
+      setErroAvatar(err instanceof Error ? err.message : "Não conseguimos enviar a foto. Tente de novo.");
     } finally {
       setEnviandoAvatar(false);
     }
@@ -60,23 +58,9 @@ export default function MeuPerfilPage() {
     <>
       <main className="flex-1 pt-space-md pb-28 px-gutter bg-surface min-h-screen">
         <div className="max-w-2xl w-full mx-auto flex flex-col gap-space-md">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <Logo compact />
-              <h1 className="font-headline-md text-headline-md text-on-surface">Meu Perfil</h1>
-            </div>
-            <div className="flex items-center gap-space-xs">
-              <NotificationBell />
-              <Link
-                href="/perfil/configuracoes"
-                aria-label="Configurações"
-                title="Configurações"
-                className="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant neu-surface-sm neu-pressable focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                <MaterialIcon name="settings" />
-              </Link>
-            </div>
-          </div>
+          <h1 className="font-headline-md text-headline-md text-on-surface">
+            {empresa ? "Perfil da organização" : "Meu perfil"}
+          </h1>
 
           {/* Cartão do topo: quem eu sou */}
           <section aria-label="Resumo do perfil" className="bg-surface-container-lowest rounded-3xl neu-surface px-space-md pt-space-lg pb-space-md flex flex-col items-center gap-space-sm text-center">
@@ -208,6 +192,9 @@ export default function MeuPerfilPage() {
                     )}
                   </LinhaInfo>
                 </div>
+                <div id="registro" className="scroll-mt-32">
+                  <VerificacaoDoRegistro registroInformado={!!profissional.registro_profissional} />
+                </div>
                 <div className="-mx-space-md -mb-space-md border-t border-outline-variant/60">
                   <LinhaAjusteLink href={`/profissional/${profissional.user_id}`} icone="visibility" nome="Ver meu perfil público" />
                 </div>
@@ -245,7 +232,6 @@ export default function MeuPerfilPage() {
           )}
         </div>
       </main>
-      <BottomNav />
     </>
   );
 }

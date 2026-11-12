@@ -23,12 +23,25 @@ def upsert_profile(
     if profile is None:
         profile = Profile(id=user_id, papel=data.papel, nome=data.nome)
         db.add(profile)
+    elif profile.papel != data.papel:
+        # T-031: o papel só vale na criação. Trocar depois deixaria linhas órfãs
+        # em profissionais/empresas e daria ao usuário o acesso do outro tipo.
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"Esta conta foi criada como {profile.papel.value} "
+                "e o tipo de conta não pode ser alterado."
+            ),
+        )
     else:
-        profile.papel = data.papel
         profile.nome = data.nome
-    profile.telefone = data.telefone
-    profile.cidade = data.cidade
-    profile.estado = data.estado
+    # Chamada repetida sem estes campos não apaga o que já foi salvo.
+    if data.telefone is not None:
+        profile.telefone = data.telefone
+    if data.cidade is not None:
+        profile.cidade = data.cidade
+    if data.estado is not None:
+        profile.estado = data.estado
     profile.email = email
     db.commit()
     db.refresh(profile)
@@ -50,12 +63,12 @@ def update_avatar(
     if extension is None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Formato de imagem não suportado. Use JPEG, PNG ou WEBP.",
+            detail="Esse formato de imagem não é aceito. Use JPEG, PNG ou WEBP.",
         )
     if len(file_bytes) > _MAX_AVATAR_BYTES:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Imagem maior que o limite de 5MB.",
+            detail="A imagem passa de 5 MB. Escolha uma foto menor.",
         )
 
     avatar_url = upload_avatar(f"{user_id}.{extension}", file_bytes, normalized_content_type)

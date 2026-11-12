@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.errors import erro_negocio
+from app.core.errors import MSG_SO_EMPRESAS, MSG_SO_PROFISSIONAIS, erro_negocio
 from app.models.contato import Contato, OrigemContato
 from app.models.demanda import Demanda, StatusDemanda
 from app.models.empresa import Empresa
@@ -73,12 +73,17 @@ def _nome_empresa(db: Session, empresa_id: uuid.UUID) -> str:
     return db.get(Empresa, empresa_id).nome_fantasia
 
 
+MSG_SO_PARA = {Papel.empresa: MSG_SO_EMPRESAS, Papel.profissional: MSG_SO_PROFISSIONAIS}
+
+
 def exigir_papel(db: Session, user_id: uuid.UUID, papel: Papel) -> Profile:
     profile = db.get(Profile, user_id)
     if profile is None or profile.papel != papel:
         plural = "empresas" if papel == Papel.empresa else "profissionais"
         raise erro_negocio(
-            status.HTTP_403_FORBIDDEN, f"apenas_{plural}", f"Recurso disponível só para {plural}"
+            status.HTTP_403_FORBIDDEN,
+            f"apenas_{plural}",
+            MSG_SO_PARA[papel],
         )
     return profile
 
@@ -101,7 +106,7 @@ def _notificar_profissionais_compativeis(db: Session, demanda: Demanda) -> None:
         destinatarios_ids=list(profissional_ids),
         tipo=TipoNotificacao.nova_oportunidade,
         titulo="Nova oportunidade compatível",
-        corpo=f"Uma nova demanda em {demanda.cidade} bate com sua especialidade.",
+        corpo=f"Há uma nova demanda em {demanda.cidade} para a sua especialidade.",
         link="/oportunidades",
     )
     db.commit()
@@ -231,7 +236,7 @@ def atualizar_status(
         raise erro_negocio(
             status.HTTP_409_CONFLICT,
             "transicao_invalida",
-            "Só é possível mudar uma demanda aberta para preenchida ou encerrada",
+            "Esta demanda não está mais aberta, então não dá para alterá-la.",
         )
     demanda.status = novo_status
     db.commit()

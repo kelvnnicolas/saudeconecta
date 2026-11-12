@@ -12,10 +12,10 @@ export default function GlobalError({
   // TODO(integração): reportar `error` ao Sentry (@sentry/nextjs), conforme o spec.
   return (
     <main className="flex-1 flex flex-col items-center justify-center gap-space-md bg-surface min-h-screen px-gutter text-center">
-      <MaterialIcon name="wifi_off" className="text-[56px] text-error" />
-      <h1 className="font-headline-md text-headline-md text-on-surface">Erro de conexão</h1>
+      <MaterialIcon name="error" className="text-[56px] text-error" />
+      <h1 className="font-headline-md text-headline-md text-on-surface">Algo deu errado</h1>
       <p className="font-body-md text-body-md text-on-surface-variant max-w-xs">
-        Não conseguimos falar com o servidor agora. Verifique sua conexão e tente de novo.
+        Não foi possível mostrar esta tela. Tente de novo; se continuar, recarregue a página.
       </p>
       <button
         onClick={reset}

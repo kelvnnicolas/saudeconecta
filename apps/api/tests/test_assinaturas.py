@@ -142,6 +142,10 @@ def test_checkout_recusa_segunda_assinatura(client, db_session, stripe_mock):
 
     assert response.status_code == 409
     assert response.json()["detail"]["code"] == "assinatura_existente"
+    # Fala com a própria pessoa e usa o nome do botão da tela, não "portal".
+    mensagem = response.json()["detail"]["mensagem"]
+    assert mensagem.startswith("Você já tem uma assinatura")
+    assert "Gerenciar assinatura" in mensagem
     stripe_mock[1].assert_not_called()
 
 
@@ -340,6 +344,8 @@ def test_falha_do_stripe_no_checkout_vira_502_com_code_estavel(client, db_sessio
 
     assert response.status_code == 502
     assert response.json()["detail"]["code"] == "stripe_indisponivel"
+    # Sem nome de fornecedor na frase que chega à tela.
+    assert "Stripe" not in response.json()["detail"]["mensagem"]
     assert db_session.scalar(select(Assinatura).where(Assinatura.empresa_id == empresa_id)) is None
 
 

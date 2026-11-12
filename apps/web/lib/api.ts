@@ -1,4 +1,5 @@
 import { getAccessToken } from "./supabase-client";
+import { MSG } from "./mensagens";
 import type {
   AuthSyncRequest,
   AvaliacaoCreateRequest,
@@ -30,6 +31,11 @@ import type {
   ProfissionalUpdateRequest,
   StatusDemanda,
   TipoEmpresa,
+  TrilhaVerificacaoItem,
+  ResultadoVerificacaoRequest,
+  VerificacaoAdminLista,
+  VerificacaoPropria,
+  StatusVerificacao,
 } from "./types";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -37,13 +43,13 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 // Mensagens do backend que não devem chegar ao usuário como estão (inglês do
 // Pydantic/slowapi, "Internal Server Error", "Erro HTTP 500"). Regras de negócio
 // {code, mensagem} e validadores próprios já vêm em português e passam direto.
-const MSG_GENERICA = "Não foi possível concluir a ação. Tente novamente.";
-const MSG_SESSAO = "Sua sessão expirou. Entre novamente para continuar.";
-const MSG_SERVIDOR = "Algo deu errado do nosso lado. Tente novamente em instantes.";
-const MSG_LIMITE = "Muitas tentativas em pouco tempo. Aguarde um instante e tente de novo.";
-const MSG_REDE = "Não foi possível conectar ao servidor. Verifique sua conexão e tente de novo.";
-const MSG_DADOS_INVALIDOS = "Alguns dados estão inválidos. Revise os campos e tente de novo.";
-const MSG_CAMPOS_OBRIGATORIOS = "Preencha todos os campos obrigatórios.";
+const MSG_GENERICA = MSG.generica;
+const MSG_SESSAO = MSG.sessaoExpirada;
+const MSG_SERVIDOR = MSG.servidor;
+const MSG_LIMITE = MSG.muitasTentativas;
+const MSG_REDE = MSG.semConexao;
+const MSG_DADOS_INVALIDOS = MSG.dadosInvalidos;
+const MSG_CAMPOS_OBRIGATORIOS = MSG.camposObrigatorios;
 
 function mensagemDeValidacao(itens: unknown[]): string | null {
   const primeiro = itens[0];
@@ -60,7 +66,7 @@ function mensagemAmigavel(status: number, mensagem: string | null): string {
   if (status === 401) return MSG_SESSAO;
   if (status === 429) return MSG_LIMITE;
   if (status >= 500) return MSG_SERVIDOR;
-  if (mensagem === null) return MSG_GENERICA;
+  if (mensagem === null) return status === 403 ? MSG.semPermissao : MSG_GENERICA;
   // Regras de negócio e validações próprias já têm frase pronta.
   return mensagem;
 }
@@ -161,6 +167,26 @@ export const api = {
   updateOwnProfissional: (data: ProfissionalUpdateRequest) =>
     request<ProfissionalRead>("/profissionais/me", {
       method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  getMinhaVerificacao: () => request<VerificacaoPropria>("/profissionais/me/verificacao"),
+
+  solicitarConferencia: () =>
+    request<VerificacaoPropria>("/profissionais/me/verificacao/solicitar", { method: "POST" }),
+
+  // Administração (403 para quem não é administrador)
+  adminEu: () => request<{ admin: true }>("/admin/eu"),
+
+  adminListarVerificacoes: (status: StatusVerificacao, offset = 0) =>
+    request<VerificacaoAdminLista>(`/admin/verificacoes${qs({ status, offset })}`),
+
+  adminHistoricoVerificacao: (userId: string) =>
+    request<TrilhaVerificacaoItem[]>(`/admin/profissionais/${userId}/verificacoes`),
+
+  adminRegistrarConferencia: (userId: string, data: ResultadoVerificacaoRequest) =>
+    request<VerificacaoPropria>(`/admin/profissionais/${userId}/verificacao`, {
+      method: "POST",
       body: JSON.stringify(data),
     }),
 

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BottomNav } from "@/components/ui/BottomNav";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { GrupoAjustes, LinhaAjuste, LinhaAjusteBotao, LinhaAjusteLink } from "@/components/ui/Linhas";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
@@ -67,7 +66,6 @@ export default function ConfiguracoesPage() {
 
         </div>
       </main>
-      <BottomNav />
     </>
   );
 }
