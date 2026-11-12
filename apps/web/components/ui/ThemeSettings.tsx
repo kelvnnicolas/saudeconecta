@@ -1,24 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
 import * as RadioGroup from "@radix-ui/react-radio-group";
+import { LinhaAjusteBotao } from "./Linhas";
 import { MaterialIcon } from "./MaterialIcon";
 
 const STORAGE_KEY = "saudeconecta:theme";
 
 type Tema = "light" | "dark" | "system";
 
-const OPCOES: { value: Tema; label: string; icon: string }[] = [
-  { value: "light", label: "Claro", icon: "light_mode" },
-  { value: "dark", label: "Escuro", icon: "dark_mode" },
-  { value: "system", label: "Sistema", icon: "brightness_auto" },
+const OPCOES: { value: Tema; label: string; icon: string; ajuda: string }[] = [
+  { value: "light", label: "Claro", icon: "light_mode", ajuda: "Fundo claro o tempo todo" },
+  { value: "dark", label: "Escuro", icon: "dark_mode", ajuda: "Fundo escuro o tempo todo" },
+  { value: "system", label: "Sistema", icon: "brightness_auto", ajuda: "Segue o modo do seu aparelho" },
 ];
 
 function applyTheme(tema: Tema) {
   const root = document.documentElement;
   // "system" remove o atributo de propósito — deixa a media query
-  // prefers-color-scheme do globals.css decidir, sem precisar duplicar
-  // lógica de detecção aqui.
+  // prefers-color-scheme do globals.css decidir.
   if (tema === "system") root.removeAttribute("data-theme");
   else root.setAttribute("data-theme", tema);
 }
@@ -28,16 +29,14 @@ function ehTema(valor: string | null): valor is Tema {
 }
 
 /**
- * Controle de aparência (F-036). Único controle de tema do app (B-006): vive em
- * /perfil/configuracoes. A inicialização do tema (padrão "light", aplicado antes
- * da pintura) continua no script inline de app/layout.tsx; aqui só se lê o
- * estado salvo e se troca.
+ * Aparência (F-036). Único controle de tema do app (B-006), em /perfil/configuracoes.
+ * A inicialização do tema antes da pintura continua no script inline de app/layout.tsx.
  *
- * Controle segmentado sobre o RadioGroup do Radix: setas, Tab, foco e
- * `aria-checked` vêm da biblioteca; o visual é só dos nossos tokens (trilho
- * afundado, opção ativa em relevo). Ver docs/decisions/0002.
+ * Linha de ajuste que abre uma folha (Dialog do Radix) com as três opções num
+ * RadioGroup: foco preso, Esc, setas e aria-checked vêm da biblioteca; o visual
+ * é dos nossos tokens. A escolha vale na hora, sem botão de salvar.
  */
-export function ThemeSettings() {
+export function AjusteAparencia() {
   const [tema, setTema] = useState<Tema | null>(null);
 
   useEffect(() => {
@@ -61,37 +60,73 @@ export function ThemeSettings() {
     }
   }
 
+  const atual = OPCOES.find((op) => op.value === tema);
+
   return (
-    <div className="flex flex-col gap-space-xs">
-      <span id="rotulo-aparencia" className="font-label-md text-label-md text-on-surface">
-        Aparência
-      </span>
-      <RadioGroup.Root
-        aria-labelledby="rotulo-aparencia"
-        aria-describedby="ajuda-aparencia"
-        orientation="horizontal"
-        // Antes de ler o localStorage o valor é "" (nenhuma opção marcada), para
-        // não piscar "Claro" em quem usa o escuro.
-        value={tema ?? ""}
-        onValueChange={escolher}
-        className="grid grid-cols-3 gap-1 p-1 rounded-full neu-inset-sm"
-      >
-        {OPCOES.map((op) => (
-          <RadioGroup.Item
-            key={op.value}
-            value={op.value}
-            className="segmento h-10 rounded-full flex items-center justify-center gap-1.5 font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface data-[state=checked]:text-primary data-[state=checked]:neu-surface-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+    <Dialog.Root>
+      <Dialog.Trigger asChild>
+        <LinhaAjusteBotao icone="contrast" nome="Aparência" valor={atual?.label ?? ""} />
+      </Dialog.Trigger>
+      <Dialog.Portal>
+        <Dialog.Overlay className="dialogo-fundo fixed inset-0 z-[70] bg-black/45 backdrop-blur-sm" />
+        <Dialog.Content
+          aria-describedby={undefined}
+          // Foco inicial na opção marcada (não no "Fechar"): quem usa teclado já
+          // troca com as setas, e o leitor de tela anuncia a escolha atual.
+          onOpenAutoFocus={(evento) => {
+            const marcada = (evento.currentTarget as HTMLElement).querySelector<HTMLElement>('[role="radio"][data-state="checked"]');
+            if (marcada) {
+              evento.preventDefault();
+              marcada.focus();
+            }
+          }}
+          className="folha fixed z-[71] inset-x-0 bottom-0 sm:inset-auto sm:left-1/2 sm:top-1/2 sm:w-full sm:max-w-sm sm:-translate-x-1/2 sm:-translate-y-1/2 rounded-t-3xl sm:rounded-2xl bg-surface px-space-md pt-space-sm pb-[calc(env(safe-area-inset-bottom)+1.5rem)] sm:pb-space-md neu-surface flex flex-col gap-space-sm focus:outline-none"
+        >
+          <span aria-hidden="true" className="sm:hidden mx-auto mt-1 h-1.5 w-10 rounded-full bg-on-surface/20" />
+          <div className="flex items-center justify-between">
+            <Dialog.Title className="font-title-md text-title-md text-on-surface">Aparência</Dialog.Title>
+            <Dialog.Close
+              aria-label="Fechar"
+              className="w-11 h-11 -mr-2 flex items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <MaterialIcon name="close" />
+            </Dialog.Close>
+          </div>
+          <RadioGroup.Root
+            aria-label="Aparência"
+            value={tema ?? ""}
+            onValueChange={escolher}
+            className="flex flex-col gap-space-xs"
           >
-            <span aria-hidden="true" className="flex">
-              <MaterialIcon name={op.icon} className="text-[18px]" filled={tema === op.value} />
-            </span>
-            {op.label}
-          </RadioGroup.Item>
-        ))}
-      </RadioGroup.Root>
-      <p id="ajuda-aparencia" className="font-caption text-caption text-on-surface-variant">
-        Sistema segue o modo claro ou escuro do seu aparelho.
-      </p>
-    </div>
+            {OPCOES.map((op) => (
+              <RadioGroup.Item
+                key={op.value}
+                value={op.value}
+                className="segmento group min-h-[60px] px-space-sm rounded-2xl flex items-center gap-space-sm text-left text-on-surface data-[state=checked]:neu-inset-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <span
+                  aria-hidden="true"
+                  className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-on-surface/[0.06] text-on-surface-variant group-data-[state=checked]:bg-primary/10 group-data-[state=checked]:text-primary"
+                >
+                  <MaterialIcon name={op.icon} className="text-[20px]" />
+                </span>
+                <span className="flex-1 flex flex-col">
+                  <span className="font-body-lg text-body-lg">{op.label}</span>
+                  <span className="font-caption text-caption text-on-surface-variant">{op.ajuda}</span>
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="w-6 h-6 rounded-full flex items-center justify-center border-2 border-outline-variant group-data-[state=checked]:border-primary group-data-[state=checked]:bg-primary group-data-[state=checked]:text-on-primary"
+                >
+                  <RadioGroup.Indicator className="flex">
+                    <MaterialIcon name="check" className="text-[16px]" />
+                  </RadioGroup.Indicator>
+                </span>
+              </RadioGroup.Item>
+            ))}
+          </RadioGroup.Root>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
