@@ -4,16 +4,18 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { MaterialIcon } from "./MaterialIcon";
 import { useCurrentUser } from "@/lib/use-current-user";
-import { api } from "@/lib/api";
-import { EVENTO_NOTIFICACOES_MUDARAM } from "@/lib/use-notificacoes-lidas-ao-abrir";
-import type { NotificacaoRead } from "@/lib/types";
+import { useNotificacoes } from "@/lib/use-notificacoes";
+import { linkInterno } from "@/lib/navegacao";
+
+// A lista do sino mostra as 10 mais recentes; o lote carregado é maior para os contadores.
+const NO_SINO = 10;
 
 export function NotificationBell() {
   const { session } = useCurrentUser();
+  const { itens, totalNaoLidas, marcarComoLida, marcarTodasComoLidas } = useNotificacoes();
   const [aberto, setAberto] = useState(false);
-  const [notificacoes, setNotificacoes] = useState<NotificacaoRead[]>([]);
-  const [totalNaoLidas, setTotalNaoLidas] = useState(0);
   const raiz = useRef<HTMLDivElement>(null);
+  const notificacoes = itens.slice(0, NO_SINO);
 
   useEffect(() => {
     if (!aberto) return;
@@ -31,62 +33,16 @@ export function NotificationBell() {
     };
   }, [aberto]);
 
-  useEffect(() => {
-    if (!session) return;
-    let cancelado = false;
-    async function buscar() {
-      try {
-        const resposta = await api.listarNotificacoes({ limit: 10 });
-        if (!cancelado) {
-          setNotificacoes(resposta.items);
-          setTotalNaoLidas(resposta.total_nao_lidas);
-        }
-      } catch {
-        // poll silencioso — próxima tentativa em 20s
-      }
-    }
-    buscar();
-    const intervalo = setInterval(buscar, 20000);
-    window.addEventListener(EVENTO_NOTIFICACOES_MUDARAM, buscar);
-    return () => {
-      cancelado = true;
-      clearInterval(intervalo);
-      window.removeEventListener(EVENTO_NOTIFICACOES_MUDARAM, buscar);
-    };
-  }, [session]);
-
-  async function marcarComoLida(id: number) {
-    try {
-      await api.marcarNotificacaoLida(id);
-      setNotificacoes((atual) =>
-        atual.map((n) => (n.id === id ? { ...n, lida_em: new Date().toISOString() } : n)),
-      );
-      setTotalNaoLidas((atual) => Math.max(0, atual - 1));
-    } catch {
-      // ignora — próximo poll corrige
-    }
-  }
-
-  async function marcarTodasComoLidas() {
-    try {
-      await api.marcarTodasNotificacoesLidas();
-      setNotificacoes((atual) => atual.map((n) => (n.lida_em ? n : { ...n, lida_em: new Date().toISOString() })));
-      setTotalNaoLidas(0);
-    } catch {
-      // ignora — próximo poll corrige
-    }
-  }
-
   if (!session) return null;
 
   return (
     <div className="relative" ref={raiz}>
       <button
         type="button"
-        aria-label="Notificações"
+        aria-label={totalNaoLidas > 0 ? `Notificações, ${totalNaoLidas} não lidas` : "Notificações"}
         aria-expanded={aberto}
         onClick={() => setAberto((atual) => !atual)}
-        className="relative w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-on-surface-variant neu-surface-sm neu-pressable"
+        className="relative w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-on-surface-variant neu-surface-sm neu-pressable focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         <MaterialIcon name="notifications" />
         {totalNaoLidas > 0 && (
@@ -114,7 +70,7 @@ export function NotificationBell() {
           {notificacoes.map((n) => (
             <Link
               key={n.id}
-              href={n.link}
+              href={linkInterno(n.link)}
               onClick={() => {
                 if (!n.lida_em) marcarComoLida(n.id);
                 setAberto(false);

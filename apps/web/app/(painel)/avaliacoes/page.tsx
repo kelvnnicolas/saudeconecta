@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BottomNav } from "@/components/ui/BottomNav";
 import { StarRating } from "@/components/ui/StarRating";
-import { Logo } from "@/components/ui/Logo";
 import { ListaEsqueleto } from "@/components/ui/Skeleton";
-import { NotificationBell } from "@/components/ui/NotificationBell";
 import { useCurrentUser } from "@/lib/use-current-user";
 import { api } from "@/lib/api";
 import type { AvaliacaoRead } from "@/lib/types";
@@ -38,12 +35,8 @@ export default function MinhasAvaliacoesPage() {
     <>
       <main className="flex-1 pt-space-md pb-24 px-gutter bg-surface min-h-screen flex flex-col gap-space-md">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <Logo compact />
-            <h1 className="font-headline-md text-headline-md text-on-surface">Minhas Avaliações</h1>
-          </div>
+          <h1 className="font-headline-md text-headline-md text-on-surface">Minhas Avaliações</h1>
           <div className="flex items-center gap-space-xs">
-            <NotificationBell />
             {media != null && (
               <span className="inline-flex items-center gap-1 font-label-md text-label-md text-on-surface">
                 <StarRating nota={media} /> {media.toFixed(1)}
@@ -76,7 +69,6 @@ export default function MinhasAvaliacoesPage() {
           ))}
         </div>
       </main>
-      <BottomNav />
     </>
   );
 }

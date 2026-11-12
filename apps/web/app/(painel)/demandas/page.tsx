@@ -3,11 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
-import { Logo } from "@/components/ui/Logo";
 import { ListaEsqueleto } from "@/components/ui/Skeleton";
-import { NotificationBell } from "@/components/ui/NotificationBell";
 import { DemandaStatusBadge } from "@/components/ui/StatusBadge";
 import { ModalLimite } from "@/components/ui/ModalLimite";
 import { api, ApiError } from "@/lib/api";
@@ -79,12 +76,8 @@ export default function MinhasDemandasPage() {
     <>
       <main className="flex-1 pt-space-md pb-24 px-gutter bg-surface min-h-screen flex flex-col gap-space-md">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <Logo compact />
-            <h1 className="font-headline-md text-headline-md text-on-surface">Minhas Demandas</h1>
-          </div>
+          <h1 className="font-headline-md text-headline-md text-on-surface min-w-0">Minhas Demandas</h1>
           <div className="flex items-center gap-space-xs">
-            <NotificationBell />
             {limiteAtingido && uso ? (
               <button
                 type="button"
@@ -209,7 +202,6 @@ export default function MinhasDemandasPage() {
       {uso && (
         <ModalLimite aberto={limiteAberto} onFechar={() => setLimiteAberto(false)} uso={uso} plano={plano} contexto="demanda" />
       )}
-      <BottomNav />
     </>
   );
 }

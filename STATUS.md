@@ -3,7 +3,7 @@
 > **Função:** registro do que já foi feito e do estado atual verificado. Serve para retomar o projeto.
 > **Não guarda tarefas pendentes.** O que fazer a seguir está no [`nextmove.md`](nextmove.md).
 
-**Última atualização:** 2026-11-09 · `main` em `05eda8b` (PRs #72, #73, #74, #75, #77 e #78 mergeados desde 2026-10-22; produção com a migration `f1c7a9d03b64` aplicada)
+**Última atualização:** 2026-11-12 · `main` em `05eda8b` (PRs #72, #73, #74, #75, #77 e #78 mergeados desde 2026-10-22; produção com a migration `f1c7a9d03b64` aplicada)
 **Produção:** frontend <https://saudeconecta-pi.vercel.app> · API <https://saudeconecta-api.onrender.com> (free tier: ~15 s no primeiro request depois de ociosidade)
 
 ## Como manter este arquivo
@@ -71,6 +71,10 @@
 ## Registro de entregas
 
 Mais recente primeiro. Uma linha por entrega; IDs referem-se ao `nextmove.md`.
+
+### 2026-11-12
+
+- **Navegação por papel** (F-037, PR a registrar após a abertura; sem mudança de backend, banco ou migration). Moldura única de navegação para quem está logado: barra superior no desktop (≥ 1024 px), barra inferior no celular e tablet, menu "Eu" no avatar, contadores só de pendência (mensagem não lida, convite, interesse novo) e telas novas `/inicio` e `/propostas`, montadas só com endpoints que já existiam. Configuração única em `apps/web/lib/navegacao.ts`; o `BottomNav` antigo e o topo repetido de cada tela saíram. **Segurança:** o papel do app passou a vir do perfil confirmado pelo servidor (o `user_metadata.papel` é editável pelo usuário); `useEhAdmin` consulta `GET /admin/eu` uma vez por sessão e só decide se um link aparece; `admin/layout.tsx` é defesa de interface (a barreira real segue em `exigir_admin`); links de notificação só passam se forem caminho interno; teste de consistência garante que todo destino do menu tem o guard do seu papel. **Verificado:** `tsc`, `next lint`, 76 testes do frontend e `next build` passam; a 375, 768, 1024 e 1280 px, com API simulada em `localhost` e sessão de teste (sem rolagem horizontal, alvos de 44 px, `aria-current`, teclado do menu "Eu", troca de papel pelo servidor, 403 do admin, link externo neutralizado). **Não verificado:** contas reais em produção, leitor de tela de verdade e o poll de 20 s por mais de um ciclo (V-016).
 
 ### 2026-11-09
 

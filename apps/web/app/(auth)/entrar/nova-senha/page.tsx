@@ -49,7 +49,7 @@ export default function NovaSenhaPage() {
     setEnviando(true);
     try {
       await updatePassword(data.password);
-      router.push("/buscar");
+      router.push("/inicio");
     } catch (e) {
       setErro(mensagemDeErroAuth(e, "Não conseguimos salvar a nova senha. Tente de novo ou peça um novo link."));
     } finally {
