@@ -23,7 +23,7 @@
 |---|---|---|
 | Backend (FastAPI) | ✅ Produção (Render) | Spec do MVP, assinatura B2B, demandas, chat, aceite (idempotente), notificações, diretório de empresas, regras de contato e cota mensal (gratuito 5, Essencial 50, Pro ilimitado; pessoa física e família incluídas), avaliação única por autor e alvo e avaliações sem `autor_id`. Único item do spec fora: link de pagamento por contato (⏸️). |
 | Frontend (Next.js) | ✅ Produção (Vercel) | App Router + Supabase Auth (e-mail e Google ativos; **Facebook e LinkedIn estão desativados no Supabase**, conferido em 2026-10-19). Facebook escondido; LinkedIn visível com "Em breve" até o provedor ser ativado (falta o app no LinkedIn Developers e ativar o provider no Supabase). Fontes Inter e Quicksand hospedadas no projeto e favicon próprio, ambos conferidos em produção em 2026-10-17. |
-| Testes do backend | ✅ | 337 passando (2026-11-09, Postgres 16 em UTC); CI verde na `main`. |
+| Testes do backend | ✅ | 343 passando (2026-11-12, Postgres 16 em UTC); CI verde na `main`. |
 | Testes do frontend | ❌ | Sem suíte de testes. O CI roda `next lint` e `tsc` desde o PR #44; `build` fica com a Vercel. |
 | CI | ✅ | GitHub Actions a cada PR e push na `main`: Backend (Black, Ruff, pytest) e Frontend (lint + tipos). |
 | Deploy | ✅ | Render com auto-deploy por commit (desde 2026-10-12). Vercel por push. **Migrations não rodam no deploy:** aplicar à mão antes do merge (T-007). |
@@ -41,7 +41,7 @@
 | Perfil público com avaliações | ✅ | |
 | Contato registra mensagem e envia e-mail | ✅ | Mais chat completo (2026-09-29). |
 | Link de pagamento abre checkout válido | ⏸️ | Ver decisão 12. |
-| Relatório pandas | ✅ | `GET /analytics/relatorio` |
+| Relatório pandas | ✅ | `GET /analytics/relatorio`, só administrador (B-007) |
 | Erro forçado aparece no Sentry | 🟡 | Código pronto, não reconfirmado. |
 | CI passa | ✅ | |
 | Layout responsivo | ✅ | Viewport mobile; zoom do iOS corrigido em 2026-10-12. |
@@ -71,6 +71,10 @@
 ## Registro de entregas
 
 Mais recente primeiro. Uma linha por entrega; IDs referem-se ao `nextmove.md`.
+
+### 2026-11-12
+
+- **Relatório de analytics restrito a administrador** (B-007, D-010; PR #90): `GET /analytics/relatorio` era público e devolvia as métricas do negócio (profissionais por especialidade, nota média, volume de contatos) a qualquer pessoa. Agora usa `Depends(exigir_admin)` (mesma dependência e mesmo limite de 60/minuto de `/admin/*`): sem token 401, usuário comum 403 `apenas_admin`, administrador 200. Testes escritos antes (5 falharam pelo motivo certo); os 6 testes existentes passaram a autenticar como administrador. **337 → 343 testes passam**, `black` e `ruff` limpos em `app tests`. Análise de regressão: o único chamador conhecido é o próprio teste; o frontend (`apps/web`), os jobs, o CI e os scripts não consomem a rota, então nada quebra; `exigir_admin` e o schema da resposta não mudaram; sem migration e sem mudança de banco. **Fora do escopo (decisão do responsável):** tela de relatório para o administrador no frontend (painel P-02, só proposto em `docs/escopo-planos.md`, não liberado). **Pendente fora do PR:** a linha "hoje público (B-007)" em `docs/escopo-planos.md` fica desatualizada; só o responsável a altera. Validação em produção só depois do deploy.
 
 ### 2026-11-09
 
@@ -284,3 +288,4 @@ Decisões técnicas e de produto já tomadas. Decisões **em aberto** ficam no `
 28. **Verificação de registro profissional (F-031, D-009 resolvida)**: `verificado` é só a projeção pública de uma conferência manual feita por administrador (tabela `administradores`), nunca declarada pelo profissional. O estado completo (`pending`, `irregular`, `unable_to_verify`) fica apenas em `verificacoes_registro`, com RLS ativado, porque as tabelas antigas não têm RLS e a chave pública do Supabase as lê; o perfil público expõe só `verificado` e `verificado_em`. A trilha não guarda texto livre. O texto público é "Registro conferido pelo SaúdeConecta em DD/MM/AAAA", nunca "validado pelo COREN".
 29. **Perfil editável e configurações (D-019, 2026-10-22)**: a edição do próprio perfil e a tela de configurações fazem parte do item ✅ "Perfis…" do Essencial, e a reapresentação do controle de aparência foi autorizada como cortesia, sem comportamento novo. O telefone é visível só para o dono. O que entra e o que fica de fora está em `docs/escopo-planos.md`, seção 2.5; o desenho, em `docs/superpowers/specs/2026-10-22-perfil-configuracoes-design.md`.
 30. **Radix UI para comportamento de componentes (D-020, 2026-10-22)**: diálogos, grupos de opção, menus e abas usam primitivas do Radix (pacotes avulsos, sem visual próprio); o visual vem só dos tokens de `globals.css`. Preline descartado como dependência (exige Tailwind 4 e mexe no DOM fora do React). Animação continua em CSS. Detalhes em `docs/decisions/0002-biblioteca-de-componentes-e-movimento.md`. (As decisões 28 e 29 entram com os PRs da verificação de registro.)
+31. **Relatório de analytics só para administrador (D-010, 2026-11-12)**: `GET /analytics/relatorio` exige a dependência `exigir_admin` (tabela `administradores`), com limite de 60/minuto. Escolhida a forma mínima, só administrador, em vez de "qualquer usuário logado": as métricas são do negócio, não do usuário. A tela do administrador para o relatório fica no painel P-02, ainda não liberado.
