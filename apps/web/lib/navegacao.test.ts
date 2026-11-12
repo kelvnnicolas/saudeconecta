@@ -13,6 +13,7 @@ import {
   navegacaoDoPapel,
   rotuloDoContador,
   todosOsItens,
+  totalDePaginas,
   type Acesso,
 } from "./navegacao";
 import type { NotificacaoRead, TipoNotificacao } from "./types";
@@ -159,11 +160,22 @@ describe("contadores de pendência", () => {
     });
   });
 
-  it("formata o contador: some no zero e limita em 9+", () => {
+  it("formata o contador: some no zero, mostra até 10 e depois 10+", () => {
     expect(rotuloDoContador(0)).toBeNull();
     expect(rotuloDoContador(-1)).toBeNull();
     expect(rotuloDoContador(3)).toBe("3");
-    expect(rotuloDoContador(10)).toBe("9+");
+    expect(rotuloDoContador(9)).toBe("9");
+    expect(rotuloDoContador(10)).toBe("10");
+    expect(rotuloDoContador(11)).toBe("10+");
+    expect(rotuloDoContador(250)).toBe("10+");
+  });
+
+  it("divide as notificações do pop-up em páginas de 10", () => {
+    expect(totalDePaginas(0)).toBe(1);
+    expect(totalDePaginas(10)).toBe(1);
+    expect(totalDePaginas(11)).toBe(2);
+    expect(totalDePaginas(25)).toBe(3);
+    expect(totalDePaginas(-4)).toBe(1);
   });
 });
 

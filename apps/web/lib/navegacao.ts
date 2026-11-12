@@ -280,10 +280,21 @@ export function contarPendencias(notificacoes: NotificacaoRead[]): Pendencias {
   return resultado;
 }
 
-/** Texto do contador: some quando é zero e limita em 9+. */
+/** Limite do número exibido nos contadores: acima disso aparece "10+". */
+export const LIMITE_DO_CONTADOR = 10;
+
+/** Texto do contador: some quando é zero, mostra o número até 10 e "10+" acima disso. */
 export function rotuloDoContador(total: number): string | null {
   if (total <= 0) return null;
-  return total > 9 ? "9+" : String(total);
+  return total > LIMITE_DO_CONTADOR ? `${LIMITE_DO_CONTADOR}+` : String(total);
+}
+
+/** Notificações por página no pop-up do sino. */
+export const NOTIFICACOES_POR_PAGINA = 10;
+
+/** Quantas páginas cabem em `total` itens (no mínimo 1, para a tela vazia). */
+export function totalDePaginas(total: number, porPagina = NOTIFICACOES_POR_PAGINA): number {
+  return Math.max(1, Math.ceil(Math.max(0, total) / porPagina));
 }
 
 // ---------------------------------------------------------------------------------------------
