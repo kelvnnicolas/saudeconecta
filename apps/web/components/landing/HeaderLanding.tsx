@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
+import { navegacaoDoPapel } from "@/lib/navegacao";
 import { ehChaveDeSessao, lerSessaoLeve, type SessaoLeve } from "@/lib/sessao-leve";
 
 /**
@@ -68,14 +69,14 @@ export function HeaderLanding() {
   const carregando = sessao === undefined;
   const logado = !!sessao;
   const papel = sessao?.papel ?? "profissional";
+  // Mesmos destinos, nomes e ícones da navegação do app (lib/navegacao.ts), sem lista própria.
+  const config = navegacaoDoPapel(papel);
   const itensMenu = [
-    { href: "/buscar", rotulo: "Buscar profissionais", icone: "explore" },
-    papel === "profissional"
-      ? { href: "/oportunidades", rotulo: "Oportunidades", icone: "assignment" }
-      : { href: "/demandas", rotulo: "Minhas demandas", icone: "assignment" },
-    { href: "/contatos", rotulo: "Contatos", icone: "forum" },
-    { href: "/perfil", rotulo: "Perfil", icone: "person" },
-  ];
+    ...config.principais,
+    config.mensagens,
+    ...(config.acao ? [config.acao] : []),
+    ...config.menuEu.slice(0, 1),
+  ].map((item) => ({ href: item.href, rotulo: item.rotulo, icone: item.icone }));
 
   async function sair() {
     setAberto(false);

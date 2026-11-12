@@ -3,10 +3,7 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
-import { Logo } from "@/components/ui/Logo";
-import { NotificationBell } from "@/components/ui/NotificationBell";
 import { useCurrentUser } from "@/lib/use-current-user";
 import { api } from "@/lib/api";
 import { VerificacaoDoRegistro } from "@/components/profissional/VerificacaoDoRegistro";
@@ -43,23 +40,9 @@ export default function MeuPerfilPage() {
   return (
     <>
       <main className="flex-1 pt-space-md pb-24 px-gutter bg-surface min-h-screen flex flex-col gap-space-md">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <Logo compact />
-            <span className="font-headline-md text-headline-md text-on-surface">Meu Perfil</span>
-          </div>
-          <div className="flex items-center gap-space-xs">
-            <NotificationBell />
-            <Link
-              href="/perfil/configuracoes"
-              aria-label="Configurações"
-              title="Configurações"
-              className="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant neu-surface-sm neu-pressable focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <MaterialIcon name="settings" />
-            </Link>
-          </div>
-        </div>
+        <h1 className="font-headline-md text-headline-md text-on-surface">
+          {empresa ? "Perfil da organização" : "Meu perfil"}
+        </h1>
 
         <section className="flex flex-col items-center gap-space-sm bg-surface-container-lowest rounded-2xl p-space-md neu-surface">
           <button onClick={() => fileRef.current?.click()} className="relative" aria-label="Trocar foto">
@@ -105,7 +88,9 @@ export default function MeuPerfilPage() {
             <p className="font-body-md text-body-md text-on-surface-variant">
               {profissional.preco_hora != null ? `R$ ${profissional.preco_hora}/hora` : "Preço a combinar"}
             </p>
-            <VerificacaoDoRegistro registroInformado={!!profissional.registro_profissional} />
+            <div id="registro" className="scroll-mt-24">
+              <VerificacaoDoRegistro registroInformado={!!profissional.registro_profissional} />
+            </div>
             <Link href={`/profissional/${profissional.user_id}`} className="self-start font-label-sm text-label-sm text-primary">
               Ver perfil público
             </Link>
@@ -134,7 +119,6 @@ export default function MeuPerfilPage() {
         )}
 
       </main>
-      <BottomNav />
     </>
   );
 }

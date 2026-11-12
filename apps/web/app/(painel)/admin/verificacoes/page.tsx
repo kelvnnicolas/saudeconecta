@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { BottomNav } from "@/components/ui/BottomNav";
-import { Logo } from "@/components/ui/Logo";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { ListaEsqueleto } from "@/components/ui/Skeleton";
 import { FormularioConferencia } from "@/components/admin/FormularioConferencia";
@@ -89,18 +87,16 @@ export default function AdminVerificacoesPage() {
     return (
       <>
         <main className="flex-1 pt-space-md pb-24 px-gutter bg-surface min-h-screen flex flex-col gap-space-md">
-          <Logo compact />
           <p className="font-body-md text-body-md text-on-surface-variant">
             {acesso === "negado"
               ? "Esta área é restrita a administradores."
               : "Não foi possível verificar seu acesso agora. Tente de novo em instantes."}
           </p>
-          <Link href="/buscar" className="self-start font-label-sm text-label-sm text-primary">
-            Voltar para a busca
+          <Link href="/inicio" className="self-start font-label-sm text-label-sm text-primary">
+            Voltar ao início
           </Link>
         </main>
-        <BottomNav />
-      </>
+        </>
     );
   }
 
@@ -108,10 +104,7 @@ export default function AdminVerificacoesPage() {
     <>
       <main className="flex-1 pt-space-md pb-24 px-gutter bg-surface min-h-screen flex flex-col gap-space-md">
         <div>
-          <div className="flex items-center gap-1.5">
-            <Logo compact />
-            <h1 className="font-headline-md text-headline-md text-on-surface">Conferência de registros</h1>
-          </div>
+          <h1 className="font-headline-md text-headline-md text-on-surface">Conferência de registros</h1>
           <p className="font-body-md text-body-md text-on-surface-variant">
             Confira o registro informado numa fonte oficial e registre o resultado. O selo público só aparece para &quot;Registro conferido&quot;.
           </p>
@@ -213,7 +206,6 @@ export default function AdminVerificacoesPage() {
           )}
         </div>
       </main>
-      <BottomNav />
     </>
   );
 }

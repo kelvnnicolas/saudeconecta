@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { CascaDaNavegacao } from "@/components/navegacao/CascaDaNavegacao";
 import { useCurrentUser } from "@/lib/use-current-user";
 import { PaginaEsqueleto } from "@/components/ui/Skeleton";
 
@@ -9,6 +10,10 @@ import { PaginaEsqueleto } from "@/components/ui/Skeleton";
 // mocks). Redireciona pra /entrar assim que ficar claro que não há sessão —
 // nunca antes do useCurrentUser() resolver, senão todo refresh de página
 // manda quem já está logado de volta pro login por uma fração de segundo.
+//
+// Este guard é só experiência de uso: a autorização de verdade está na API, que valida o
+// token e o papel em toda chamada. A moldura de navegação (barras superior e inferior) vive
+// aqui para que todas as telas do painel tenham a mesma navegação.
 export default function PainelLayout({ children }: { children: React.ReactNode }) {
   const { loading, session } = useCurrentUser();
   const router = useRouter();
@@ -25,5 +30,5 @@ export default function PainelLayout({ children }: { children: React.ReactNode }
     );
   }
 
-  return <>{children}</>;
+  return <CascaDaNavegacao>{children}</CascaDaNavegacao>;
 }

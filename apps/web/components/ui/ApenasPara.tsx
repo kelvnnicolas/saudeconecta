@@ -30,8 +30,8 @@ export function ApenasPara({
   const papelErrado = !loading && !!session && papelAtual !== papel;
 
   useEffect(() => {
-    if (papelErrado) router.replace(papelAtual === "empresa" ? "/demandas" : "/oportunidades");
-  }, [papelErrado, papelAtual, router]);
+    if (papelErrado) router.replace("/inicio");
+  }, [papelErrado, router]);
 
   if (loading || papelErrado || (visitante && !permitirVisitante)) {
     return (

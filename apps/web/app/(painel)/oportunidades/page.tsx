@@ -2,11 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { BottomNav } from "@/components/ui/BottomNav";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
-import { Logo } from "@/components/ui/Logo";
 import { ListaEsqueleto } from "@/components/ui/Skeleton";
-import { NotificationBell } from "@/components/ui/NotificationBell";
 import { DemandCard } from "@/components/demandas/DemandCard";
 import { useNotificacoesLidasAoAbrir } from "@/lib/use-notificacoes-lidas-ao-abrir";
 import { api, ApiError } from "@/lib/api";
@@ -51,17 +48,11 @@ export default function OportunidadesPage() {
   return (
     <>
       <main className="flex-1 pt-space-md pb-24 px-gutter bg-surface min-h-screen flex flex-col gap-space-md">
-        <div className="flex items-start justify-between gap-space-sm">
-          <div>
-            <div className="flex items-center gap-1.5">
-              <Logo compact />
-              <h1 className="font-headline-md text-headline-md text-on-surface">Oportunidades</h1>
-            </div>
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              Demandas abertas por empresas compatíveis com suas especialidades e cidade.
-            </p>
-          </div>
-          <NotificationBell />
+        <div>
+          <h1 className="font-headline-md text-headline-md text-on-surface">Oportunidades</h1>
+          <p className="font-body-md text-body-md text-on-surface-variant">
+            Demandas abertas por empresas compatíveis com suas especialidades e cidade.
+          </p>
         </div>
 
         <Link
@@ -105,7 +96,6 @@ export default function OportunidadesPage() {
           )}
         </div>
       </main>
-      <BottomNav />
     </>
   );
 }
