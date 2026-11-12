@@ -5,6 +5,7 @@ import { MaterialIcon } from "./MaterialIcon";
 import { Logo } from "./Logo";
 import { NotificationBell } from "./NotificationBell";
 import { BotaoEntrar } from "./BotaoEntrar";
+import { useDentroDaCasca } from "@/components/navegacao/CascaDaNavegacao";
 
 export function Header({
   title,
@@ -23,9 +24,15 @@ export function Header({
   /** Esconde o "Entrar" (telas de cadastro, que já têm o caminho de volta ao login). */
   semEntrar?: boolean;
 }) {
+  // Dentro da navegação do app, a barra principal já tem logo, sino e menu da conta: este
+  // cabeçalho vira só a barra de contexto (voltar + título) logo abaixo dela.
+  const naCasca = useDentroDaCasca();
   return (
-    <header className="vidro-topo fixed top-0 w-full z-50 pt-safe">
-      <div className="h-16 px-gutter flex items-center gap-space-sm">
+    <header
+      className={`vidro-topo fixed w-full ${naCasca ? "z-40" : "top-0 z-50 pt-safe"}`}
+      style={naCasca ? { top: "calc(4rem + env(safe-area-inset-top, 0px))" } : undefined}
+    >
+      <div className={`h-16 px-gutter flex items-center gap-space-sm ${naCasca ? "mx-auto max-w-5xl" : ""}`}>
         {backHref && (
           <Link
             aria-label="Voltar"
@@ -45,7 +52,7 @@ export function Header({
             </span>
           )}
           <div className="flex items-center gap-1.5 min-w-0">
-            <Logo compact />
+            {!naCasca && <Logo compact />}
             <span className="text-title-md font-title-md text-on-surface line-clamp-1 min-w-0">
               {title}
             </span>
@@ -69,8 +76,8 @@ export function Header({
               <MaterialIcon name={action.icon} />
             </button>
           ))}
-        {!semEntrar && <BotaoEntrar />}
-        <NotificationBell />
+        {!naCasca && !semEntrar && <BotaoEntrar />}
+        {!naCasca && <NotificationBell />}
       </div>
     </header>
   );

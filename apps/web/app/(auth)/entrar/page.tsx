@@ -112,7 +112,7 @@ export default function EntrarPage() {
         setAvisoTipo({ papel: papelDaConta, dados: data });
         return;
       }
-      router.push("/buscar");
+      router.push("/inicio");
     } catch (e) {
       const mensagem = mensagemDeErroAuth(e, MSG.loginIndisponivel);
       setErro(mensagem);

@@ -23,11 +23,22 @@ function LogoMark({ size = 28 }: { size?: number }) {
  * sem `compact`, mostra marca + "SaúdeConecta" (telas de entrada: landing,
  * busca, login).
  */
-export function Logo({ compact = false, className = "" }: { compact?: boolean; className?: string }) {
+export function Logo({
+  compact = false,
+  className = "",
+  href = "/",
+  rotulo = "Ir para a página inicial",
+}: {
+  compact?: boolean;
+  className?: string;
+  /** Quem está logado usa o início do painel, não a landing. */
+  href?: string;
+  rotulo?: string;
+}) {
   return (
     <Link
-      href="/"
-      aria-label="Ir para a página inicial"
+      href={href}
+      aria-label={rotulo}
       className={`inline-flex items-center gap-2 flex-shrink-0 ${className}`}
     >
       <LogoMark size={compact ? 20 : 28} />
