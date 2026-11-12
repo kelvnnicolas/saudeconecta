@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BottomNav } from "@/components/ui/BottomNav";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { MaterialIcon } from "@/components/ui/MaterialIcon";
 import { ThemeSettings } from "@/components/ui/ThemeSettings";
@@ -81,7 +80,6 @@ export default function ConfiguracoesPage() {
           }
         />
       </main>
-      <BottomNav />
     </>
   );
 }
